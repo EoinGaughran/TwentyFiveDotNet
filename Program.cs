@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+using System.Reflection;
 
 namespace TwentyFiveDotNet
 {
@@ -28,6 +30,19 @@ namespace TwentyFiveDotNet
         King = 11,
         Ace = 12
     }
+
+    public enum GameState
+    {
+        NotStarted,
+        Initialize,
+        DealCards,
+        LeadTurn,
+        PlayerTurn,
+        NewRound,
+        PlayAgain,
+        EndGame
+    }
+
     public class Card
     {
         public Suits Suit { get; set; }
@@ -49,6 +64,7 @@ namespace TwentyFiveDotNet
                 Score += 100;
             }
         }
+
         public override string ToString()
         {
             return $"{Rank} of {Suit}";
@@ -58,10 +74,12 @@ namespace TwentyFiveDotNet
     public class Deck
     {
         public List<Card> cards;
+        public List<Card> DealtCards;
 
         public Deck()
         {
             cards = new List<Card>();
+            DealtCards = new List<Card>();
 
             foreach (Suits suit in Enum.GetValues(typeof(Suits)))
             {
@@ -92,7 +110,9 @@ namespace TwentyFiveDotNet
                 else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Four) return 3;
                 else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Three) return 2;
                 else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Two) return 1;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Ace) return 0;
+                else if ((suit == Suits.Diamonds) && rank == Ranks.Ace) return 0;
+
+                else if ((suit == Suits.Hearts) && rank == Ranks.Ace) return 100;
 
                 else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.King) return 12;
                 else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Queen) return 11;
@@ -122,7 +142,49 @@ namespace TwentyFiveDotNet
         {
             Card card = cards[0];
             cards.RemoveAt(0);
+            DealtCards.Add(card);
             return card;
+        }
+
+        public void AdjustForTrump(Card TrumpCard)
+        {
+            for (int i = 0; i < cards.Count; i++)
+            {
+                ScanTrumpList(cards, TrumpCard, i);
+            }
+
+            for (int i = 0; i < DealtCards.Count; i++)
+            {
+                ScanTrumpList(DealtCards, TrumpCard, i);
+            }
+
+            Console.WriteLine();
+        }
+
+        private void ScanTrumpList(List<Card> CardList, Card TrumpCard, int index)
+        {
+            if (CardList.ElementAt(index).Suit == TrumpCard.Suit)
+            {
+
+                if (CardList.ElementAt(index).Rank == Ranks.Ace)
+                {
+                    CardList.ElementAt(index).Score += 50;
+                }
+                else if (CardList.ElementAt(index).Rank == Ranks.Jack)
+                {
+                    CardList.ElementAt(index).Score += 200;
+                }
+                else if (CardList.ElementAt(index).Rank == Ranks.Five)
+                {
+                    CardList.ElementAt(index).Score += 300;
+                }
+                else
+                {
+                    CardList.ElementAt(index).Score += 15;
+                }
+
+                Console.WriteLine($"{CardList.ElementAt(index)} is now worth {CardList.ElementAt(index).Score}");
+            } 
         }
     }
 
@@ -131,306 +193,452 @@ namespace TwentyFiveDotNet
         public string Name { get; set; }
         public int Points { get; set; }
         public List<Card> Hand { get; set; } = new List<Card>();
-    }
 
-    public class cardRanks
-    {
-        private int[,] scores;
-
-        public cardRanks()
+        public void PlayCard(int index)
         {
-
-            scores = new int[Enum.GetNames(typeof(Suits)).Length, 4];
+            // Where the logic for playing a card should be
         }
 
-        class Program
+        public void SetPlayableCards(Card TrumpCard, Card LedCard)
         {
+            bool isThereLedSuit = false;
+            List<Card> LegalCards = new List<Card>();
 
-            static void Main(string[] args)
+            //remove illegal cards
+            if (LedCard.Suit.Equals(TrumpCard.Suit))
             {
-                Console.WriteLine("Welcome to the card game 25.");
-                Console.WriteLine("The game is for 3 - 10 players. 1 human player and between 2 - 9 CPU players.");
-                Console.WriteLine("How many total players would you like?");
-                int response = int.Parse(Console.ReadLine());
-
-                while (response < 3 || response > 10)
+                for (int i = 0; i < Hand.Count; i++)
                 {
-                    Console.WriteLine("Please choose a value between 3 and 10.");
-                    response = int.Parse(Console.ReadLine());
+                    if (Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit))
+                    {
+                        isThereLedSuit = true;
+                    }
                 }
 
-                int totalPlayers = response;
-                int totalHand = 5;
-
-                Console.WriteLine($"You chose {totalPlayers} players.");
-
-                List<Player> players = new List<Player>();
-
-                for (int i = 0; i < totalPlayers; i++)
+                if (isThereLedSuit)
                 {
-                    players.Add(new Player { Name = $"Player {i + 1}", Points = 0 });
-                    Console.WriteLine($"Player {players.ElementAt(i).Name} has joined the game.");
-                }
-
-                Console.WriteLine($"{totalPlayers} players have been created.");
-                Console.WriteLine();
-
-                Console.Write("Selecting dealer: ");
-                Random r = new Random();
-                int dealerPlayerNumber = r.Next(0, totalPlayers);
-                Player dealer = players.ElementAt(dealerPlayerNumber);
-                Console.WriteLine(dealer.Name);
-
-                bool somebodyWon = false;
-
-                while (!somebodyWon)
-                {
-                    Deck deck = new Deck();
-                    deck.Shuffle();
-                    Console.WriteLine("The deck has been shuffled.");
-
-                    int currentPlayerNumber = dealerPlayerNumber;
-                    Player currentPlayer = players.ElementAt(dealerPlayerNumber);
-
-                    for (int i = 0; i < totalPlayers; i++)
+                    for (int i = 0; i < Hand.Count; i++)
                     {
-                        currentPlayerNumber = WrapNumbers(++currentPlayerNumber, totalPlayers);
-                        currentPlayer = players.ElementAt(currentPlayerNumber);
-                        //currentPlayer = nextPlayer(currentPlayer, totalPlayers);
-                        currentPlayer.Hand.Add(deck.Draw());
-                        currentPlayer.Hand.Add(deck.Draw());
-                        Console.WriteLine($"{currentPlayer.Name} has received 2 cards and now has {currentPlayer.Hand.Count} cards.");
-                    }
-
-                    for (int i = 0; i < totalPlayers; i++)
-                    {
-                        currentPlayerNumber = WrapNumbers(++currentPlayerNumber, totalPlayers);
-                        currentPlayer = players.ElementAt(currentPlayerNumber);
-                        currentPlayer.Hand.Add(deck.Draw());
-                        currentPlayer.Hand.Add(deck.Draw());
-                        currentPlayer.Hand.Add(deck.Draw());
-                        Console.WriteLine($"{currentPlayer.Name} has received 3 cards and now has {currentPlayer.Hand.Count} cards.");
-                    }
-
-                    for (int i = 0; i < totalPlayers; i++)
-                    {
-                        currentPlayerNumber = WrapNumbers(++currentPlayerNumber, totalPlayers);
-                        currentPlayer = players.ElementAt(currentPlayerNumber);
-
-                        Console.Write($"{currentPlayer.Name} has:");
-
-                        for (int j = 0; j < currentPlayer.Hand.Count; j++)
+                        if (!(Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit)))
                         {
-                            Console.Write($" {currentPlayer.Hand.ElementAt(j)},");
+                            Hand.ElementAt(i).Playable = false;
                         }
-                        Console.WriteLine();
+                        else LegalCards.Add(Hand.ElementAt(i));
                     }
+                }
+                else LegalCards = Hand;
+            }
 
-                    Console.WriteLine();
-
-                    Card trumpCard = deck.Draw();
-                    Console.WriteLine($"The trump card is: {trumpCard}");
-                    Console.WriteLine($"The trump suit is: {trumpCard.Suit}.");
-
-                    for (int i = 0; i < deck.cards.Count; i++)
+            else
+            {
+                for (int i = 0; i < Hand.Count; i++)
+                {
+                    if (Hand.ElementAt(i).Suit.Equals(LedCard.Suit))
                     {
-                        deck.cards.ElementAt(i).AdjustForTrump(trumpCard.Suit);
+                        isThereLedSuit = true;
                     }
+                }
 
-                    currentPlayerNumber = WrapNumbers(++currentPlayerNumber, totalPlayers);
-                    currentPlayer = players.ElementAt(currentPlayerNumber);
-
-                    Console.WriteLine();
-
-                    for (int i = 0; i < totalHand; i++)
+                if (isThereLedSuit)
+                {
+                    for (int i = 0; i < Hand.Count; i++)
                     {
-                        Player WinningPlayer = currentPlayer;
-                        int WinningPlayerNumber = currentPlayerNumber;
-                        Card ChosenCard = currentPlayer.Hand.ElementAt(0);
-
-                        currentPlayer.Hand.RemoveAt(0);
-                        Console.WriteLine($"{currentPlayer.Name} plays {ChosenCard}.");
-
-                        Card ledCard = ChosenCard;
-                        Card BestCard = ChosenCard;
-                        Console.WriteLine($"{ledCard.Suit} is the suit led.");
-                        Console.WriteLine($"{currentPlayer.Name} now has {currentPlayer.Hand.Count} cards.");
-
-                        Console.WriteLine();
-
-                        for (int j = 1; j < totalPlayers; j++)
+                        if (!(Hand.ElementAt(i).Suit.Equals(LedCard.Suit) || Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit)))
                         {
-                            //doesCardMatchLead
-                            currentPlayerNumber = WrapNumbers(++currentPlayerNumber, totalPlayers);
-                            currentPlayer = players.ElementAt(currentPlayerNumber);
+                            Hand.ElementAt(i).Playable = false;
+                        }
+                        else LegalCards.Add(Hand.ElementAt(i));
+                    }
+                }
+                else LegalCards = Hand;
+            }
 
-                            //chosenCard = currentPlayer.Hand.ElementAt(0);
-                            Console.Write($"{currentPlayer.Name} has in their hand: ");
-                            Console.WriteLine(String.Join(", ", currentPlayer.Hand));
-                            SetPlayableCards(currentPlayer.Hand, trumpCard, ledCard);
+            Console.Write("The legal cards to play are: ");
+            Console.WriteLine(String.Join(", ", LegalCards));
+        }
 
-                            ChosenCard = GetBestCard(currentPlayer.Hand, trumpCard);
-                            Console.WriteLine($"{currentPlayer.Name} plays {ChosenCard}.");
+        public void ResetPlayableCards()
+        {
+            for (int i = 0; i < Hand.Count; i++)
+            {
+                Hand.ElementAt((int)i).Playable = true;
+            }
+        }
 
-                            if (ChosenCard.Score > BestCard.Score)
-                            {
-                                Console.WriteLine($"{currentPlayer.Name}'s {ChosenCard} beats {WinningPlayer.Name}'s {BestCard}.");
-                                BestCard = ChosenCard;
-                                WinningPlayer = currentPlayer;
-                                WinningPlayerNumber = currentPlayerNumber;
-                            }
-                            else Console.WriteLine($"{WinningPlayer.Name}'s {BestCard} remains as the winning card.");
+        public void PrintPlayableCards()
+        {
+            Console.Write("The playable cards are: ");
 
-                            currentPlayer.Hand.Remove(ChosenCard);
-                            Console.WriteLine($"{currentPlayer.Name} now has {currentPlayer.Hand.Count} cards.");
+            for (int i = 0; i < Hand.Count; i++)
+            {
+                if (Hand.ElementAt((int)i).Playable)
+                {
+                    Console.Write(Hand.ElementAt(i));
+                }
+            }
 
-                            ResetPlayableCards(currentPlayer.Hand);
+            Console.WriteLine();
+        }
+
+        public bool HasWon()
+        {
+            // Logic to determine if this player has won
+            return false;
+        }
+    }
+
+    public class GameManager
+    {
+        public List<Player> Players { get; private set; }
+        public Deck Deck { get; private set; }
+        public Deck DealtCards { get; private set; }
+        public GameState CurrentState { get; private set; }
+        public Player Dealer { get; private set; }
+        public Player CurrentPlayer { get; private set; }
+        public Player WinningPlayer { get; private set; }
+        public int TotalPlayers { get; private set; }
+        public int TotalHand { get; private set; }
+        public int DealerPlayerNumber { get; private set; }
+        public int CurrentPlayerNumber { get; private set; }
+        public int WinningPlayerNumber { get; private set; }
+        public Card TrumpCard { get; private set; }
+        public Card ChosenCard { get; private set; }
+        public Card LedCard { get; private set; }
+        public Card BestCard { get; private set; }
+        public Card WinningCard { get; private set; }
+
+        //load from file later
+        private readonly int TwoCards = 2;
+        private readonly int ThreeCards = 3;
+        private readonly int MaxScore = 25;
+
+        public GameManager()
+        {
+            // Initialize the properties in the constructor
+            CurrentState = GameState.NotStarted;
+        }
+
+        public void InitializeGame()
+        {
+            // You can set the properties inside methods within the class
+            Players = new List<Player>();
+
+            // Set up the game (shuffle deck, initialize players, etc.)
+
+            Console.WriteLine("Welcome to the card game 25.");
+            Console.WriteLine("The game is for 3 - 10 players. 1 human player and between 2 - 9 CPU players.");
+            Console.WriteLine("How many total players would you like?");
+
+            TotalHand = 5;
+
+            int response = int.Parse(Console.ReadLine());
+
+            while (response < 3 || response > 10)
+            {
+                Console.WriteLine("Please choose a value between 3 and 10.");
+                response = int.Parse(Console.ReadLine());
+            }
+
+            TotalPlayers = response;
+            
+            for (int i = 0; i < TotalPlayers; i++)
+            {
+                Players.Add(new Player { Name = $"Player {i + 1}", Points = 0 });
+                Console.WriteLine($"Player {Players.ElementAt(i).Name} has joined the game.");
+            }
+
+            Console.WriteLine($"{Players.Count} players have been created.");
+            Console.WriteLine();
+        }
+
+        public void AssignDealer(int playerNumber)
+        {
+            Console.Write("Selecting dealer: ");
+
+            DealerPlayerNumber = playerNumber;
+            Dealer = Players.ElementAt(DealerPlayerNumber);
+
+            Console.WriteLine(Dealer.Name);
+
+            Deck = new Deck();
+            Console.WriteLine($"A deck of {Deck.cards.Count} cards has been created.");
+            Deck.Shuffle();
+            Console.WriteLine("The deck has been shuffled.");
+        }
+        public void DealCards()
+        {
+            ChangeToPlayer(DealerPlayerNumber);
+
+            for (int i = 0; i < TotalPlayers; i++)
+            {
+                NextPlayer();
+                GivePlayerCards(TwoCards);
+                Console.WriteLine($"{CurrentPlayer.Name} has received {TwoCards} cards and now has {CurrentPlayer.Hand.Count} cards.");
+            }
+
+            for (int i = 0; i < TotalPlayers; i++)
+            {
+                NextPlayer();
+                GivePlayerCards(ThreeCards);
+                Console.WriteLine($"{CurrentPlayer.Name} has received {ThreeCards} cards and now has {CurrentPlayer.Hand.Count} cards.");
+            }
+
+            for (int i = 0; i < TotalPlayers; i++)
+            {
+                NextPlayer();
+                Console.Write($"{CurrentPlayer.Name} has:");
+
+                for (int j = 0; j < CurrentPlayer.Hand.Count; j++)
+                {
+                    Console.Write($" {CurrentPlayer.Hand.ElementAt(j)},");
+                }
+                Console.WriteLine();
+            }
+
+            Console.WriteLine();
+
+            TrumpCard = Deck.Draw();
+            Console.WriteLine($"The trump card is: {TrumpCard}");
+            Console.WriteLine($"The trump suit is: {TrumpCard.Suit}.");
+        }
+
+        public void GivePlayerCards(int cards)
+        {
+            for (int i = 0; i < cards; i++)
+            {
+                CurrentPlayer.Hand.Add(Deck.Draw());
+            }
+        }
+
+        public void NextPlayer()
+        {
+            CurrentPlayerNumber = WrapNumbers(++CurrentPlayerNumber, TotalPlayers);
+            CurrentPlayer = Players.ElementAt(CurrentPlayerNumber);
+        }
+        public void ChangeToPlayer(int playerNumber)
+        {
+            CurrentPlayerNumber = playerNumber;
+            CurrentPlayer = Players.ElementAt(playerNumber);
+        }
+
+        public void LeadTurn()
+        {
+            WinningPlayer = CurrentPlayer;
+            WinningPlayerNumber = CurrentPlayerNumber;
+            ChosenCard = CurrentPlayer.Hand.ElementAt(0);
+            CurrentPlayer.Hand.RemoveAt(0);
+            Console.WriteLine($"{CurrentPlayer.Name} plays {ChosenCard}.");
+            LedCard = ChosenCard;
+            BestCard = ChosenCard;
+            Console.WriteLine($"{LedCard.Suit} is the suit led.");
+            Console.WriteLine($"{CurrentPlayer.Name} now has {CurrentPlayer.Hand.Count} cards.");
+            Console.WriteLine();
+        }
+
+        public void PlayerTurn()
+        {
+            Console.Write($"{CurrentPlayer.Name} has in their hand: ");
+            Console.WriteLine(String.Join(", ", CurrentPlayer.Hand));
+            CurrentPlayer.SetPlayableCards(TrumpCard, LedCard);
+
+            ChosenCard = GetBestCard(CurrentPlayer.Hand);
+            Console.WriteLine($"{CurrentPlayer.Name} plays {ChosenCard}.");
+
+            if (ChosenCard.Score > BestCard.Score)
+            {
+                Console.WriteLine($"{CurrentPlayer.Name}'s {ChosenCard} beats {WinningPlayer.Name}'s {BestCard}.");
+                BestCard = ChosenCard;
+                WinningPlayer = CurrentPlayer;
+                WinningPlayerNumber = CurrentPlayerNumber;
+            }
+            else Console.WriteLine($"{WinningPlayer.Name}'s {BestCard} remains as the winning card.");
+
+            CurrentPlayer.Hand.Remove(ChosenCard);
+            Console.WriteLine($"{CurrentPlayer.Name} now has {CurrentPlayer.Hand.Count} cards.");
+
+            CurrentPlayer.ResetPlayableCards();
+
+            Console.WriteLine();
+        }
+
+        public void Scoring()
+        {
+            Console.WriteLine($"{WinningPlayer.Name} wins the trick with the {BestCard}");
+            WinningPlayer.Points += 5;
+            CurrentPlayer = WinningPlayer;
+            CurrentPlayerNumber = WinningPlayerNumber;
+
+            Console.WriteLine();
+
+            Console.WriteLine($"Current Scores:");
+
+            for (int j = 0; j < TotalPlayers; j++)
+            {
+                Console.WriteLine($"{Players.ElementAt(j).Name} has {Players.ElementAt(j).Points} points.");
+            }
+            Console.WriteLine();
+        }
+
+        public bool IsGameOver()
+        {
+            if (CurrentPlayer.Points >= MaxScore)
+            {
+                Console.WriteLine($"{WinningPlayer.Name} wins.");
+                return true;
+            }
+            else return false;
+        }
+
+        public void NewRound()
+        {
+            Console.Write("The dealer position rotates clockwise to: ");
+            Dealer = Players.ElementAt(WrapNumbers(DealerPlayerNumber, TotalPlayers));
+            Console.WriteLine(Dealer.Name);
+            Console.WriteLine();
+        }
+
+        public void ChangeGameState(GameState state)
+        {
+            CurrentState = state;
+        }
+
+        public int WrapNumbers(int current, int total)
+        {
+            if (current >= total)
+            {
+                return current = 0;
+            }
+            else return current;
+        }
+        static Card GetBestCard(List<Card> Set)
+        {
+            //pick best card
+            Card bestCard = Set.ElementAt(0);
+
+            if (Set.Count > 1)
+            {
+                for (int i = 1; i < Set.Count; i++)
+                {
+                    if (Set.ElementAt(i).Playable)
+                    {
+                        if (Set.ElementAt(i).Score > bestCard.Score) bestCard = Set.ElementAt(i);
+                    }
+                }
+            }
+            return bestCard;
+        }
+    }
+
+    class Program
+    {
+
+        static void Main(string[] args)
+        {
+            GameManager manager = new GameManager();
+            Random r = new Random();
+
+            while (manager.CurrentState != GameState.EndGame)
+            {
+
+                switch (manager.CurrentState)
+                {
+                    case GameState.NotStarted:
+
+
+                    case GameState.Initialize:
+
+                        manager.InitializeGame();
+                        manager.AssignDealer(r.Next(0, manager.TotalPlayers));
+                        manager.ChangeGameState(GameState.DealCards);
+
+                        break;
+
+                    case GameState.DealCards:
+
+                        manager.DealCards();
+                        manager.Deck.AdjustForTrump(manager.TrumpCard);
+                        manager.NextPlayer();
+                        manager.ChangeGameState(GameState.LeadTurn);
+
+                        break;
+                        
+                    case GameState.LeadTurn:
+
+                        manager.LeadTurn();
+                        manager.ChangeGameState(GameState.PlayerTurn);
+                        break;
+
+                    case GameState.PlayerTurn:
+                        // Handle the player's turn logic
+                        // Example: Check if the player exceeded the score limit
+
+                        for (int i = 1; i < manager.TotalPlayers; i++)
+                        {
+                            manager.NextPlayer();
+                            manager.PlayerTurn();
+                        }
+
+                        manager.Scoring();
+
+                        if (manager.IsGameOver())
+                        {
+                            Console.WriteLine("Game Over!");
+                            Console.WriteLine();
+                            manager.ChangeGameState(GameState.PlayAgain);
+                        }
+
+                        else if (manager.Players.ElementAt(0).Hand.Count == 0)
+                        {
+                            manager.ChangeGameState(GameState.NewRound);
+                        }
+                        else manager.ChangeGameState(GameState.LeadTurn);
+
+                        break;
+
+                    case GameState.NewRound:
+
+                        manager.AssignDealer(r.Next(0, manager.TotalPlayers));
+                        manager.ChangeGameState(GameState.DealCards);
+
+                        break;
+
+                    case GameState.PlayAgain:
+
+                        Console.WriteLine("Would you like to play again? (Y/N)");
+                        var response = Console.ReadLine();
+
+                        if (response == "y" || response == "Y")
+                        {
+                            manager.ChangeGameState(GameState.Initialize);
+                            Console.WriteLine("You chose to play a new game.");
                             Console.WriteLine();
                         }
-
-                        Console.WriteLine($"{WinningPlayer.Name} wins the trick with the {BestCard}");
-                        WinningPlayer.Points += 5;
-                        currentPlayer = WinningPlayer;
-                        currentPlayerNumber = WinningPlayerNumber;
-
-                        Console.WriteLine();
-
-                        Console.WriteLine($"Current Scores:");
-
-                        for (int j = 0; j < totalPlayers; j++)
+                        else if (response == "n" || response == "N")
                         {
-                            Console.WriteLine($"{players.ElementAt(j).Name} has {players.ElementAt(j).Points} points.");
-                        }
-                        Console.WriteLine();
-
-                        if (WinningPlayer.Points >= 25)
-                        {
-                            Console.WriteLine($"{WinningPlayer.Name} wins.");
-                            somebodyWon = true;
+                            Console.WriteLine("You chose to not play a new game.");
+                            Console.WriteLine();
+                            manager.ChangeGameState(GameState.EndGame);
                         }
                         else
                         {
-                            Console.Write("The dealer position rotates clockwise to: ");
-                            dealer = players.ElementAt(WrapNumbers(dealerPlayerNumber, totalPlayers));
-                            Console.WriteLine(dealer.Name);
+                            Console.WriteLine("Invalid response, try again.");
                             Console.WriteLine();
                         }
-                    }
-                }
 
-                /*foreach (var player in players)
-                {
-                    player.Hand.Add("Ace of Spades");
-                    Console.WriteLine($"{player.Name} has been dealt their cards.");
-                }*/
+                        break;
+
+                    case GameState.EndGame:
+                        // Display results and end the loop
+                        
+                        break;
+                }
             }
-            static int WrapNumbers(int current, int total)
+
+            /*foreach (var player in players)
             {
-                if (current >= total)
-                {
-                    return current = 0;
-                }
-                else return current;
-            }
-
-            static void SetPlayableCards(List<Card> Hand, Card TrumpCard, Card LedCard)
-            {
-                bool isThereLedSuit = false;
-                List<Card> LegalCards = new List<Card>();
-
-                //remove illegal cards
-                if (LedCard.Suit.Equals(TrumpCard.Suit))
-                {
-                    for (int i = 0; i < Hand.Count; i++)
-                    {
-                        if (Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit))
-                        {
-                            isThereLedSuit = true;
-                        }
-                    }
-
-                    if (isThereLedSuit)
-                    {
-                        for (int i = 0; i < Hand.Count; i++)
-                        {
-                            if (!(Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit)))
-                            {
-                                Hand.ElementAt(i).Playable = false;
-                            }
-                            else LegalCards.Add(Hand.ElementAt(i));
-                        }
-                    }
-                    else LegalCards = Hand;
-                }
-
-                else
-                {
-                    for (int i = 0; i < Hand.Count; i++)
-                    {
-                        if (Hand.ElementAt(i).Suit.Equals(LedCard.Suit))
-                        {
-                            isThereLedSuit = true;
-                        }
-                    }
-
-                    if (isThereLedSuit)
-                    {
-                        for (int i = 0; i < Hand.Count; i++)
-                        {
-                            if (!(Hand.ElementAt(i).Suit.Equals(LedCard.Suit) || Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit)))
-                            {
-                                Hand.ElementAt(i).Playable = false;
-                            }
-                            else LegalCards.Add(Hand.ElementAt(i));
-                        }
-                    }
-                    else LegalCards = Hand;
-                }
-
-                Console.Write("The legal cards to play are: ");
-                Console.WriteLine(String.Join(", ", LegalCards));
-            }
-
-            static void ResetPlayableCards(List<Card> Hand)
-            {
-                for (int i = 0; i < Hand.Count; i++)
-                {
-                    Hand.ElementAt((int)i).Playable = true;
-                }
-            }
-
-            static void PrintPlayableCards(List<Card> Hand)
-            {
-                Console.Write("The playable cards are: ");
-
-                for (int i = 0; i < Hand.Count; i++)
-                {
-                    if (Hand.ElementAt((int)i).Playable)
-                    {
-                        Console.Write(Hand.ElementAt(i));
-                    }
-                }
-
-                Console.WriteLine();
-            }
-
-            static Card GetBestCard(List<Card> Set, Card TrumpCard)
-            {
-                //pick best card
-                Card bestCard = Set.ElementAt(0);
-
-                if (Set.Count > 1)
-                {
-                    for (int i = 1; i < Set.Count; i++)
-                    {
-                        if (Set.ElementAt(i).Playable)
-                        {
-                            if (Set.ElementAt(i).Score > bestCard.Score) bestCard = Set.ElementAt(i);
-                        }
-                    }
-                }
-                return bestCard;
-            }
+                player.Hand.Add("Ace of Spades");
+                Console.WriteLine($"{player.Name} has been dealt their cards.");
+            }*/
         }
     }
 }
