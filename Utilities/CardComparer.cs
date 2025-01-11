@@ -9,20 +9,17 @@ namespace TwentyFiveDotNet.Utilities
 {
     public static class CardComparer
     {
-        public static Player DetermineWinner(List<Player> players, Card trumpCard)
+        public static Player DetermineWinner(Dictionary<Player, Card> PlayedCards, Card trumpCard)
         {
             Player winner = null;
             Card highestCard = null;
 
-            foreach (var player in players)
+            foreach (var entry in PlayedCards)
             {
-                foreach (var card in player.Hand)
+                if (highestCard == null || CompareCards(entry.Value, highestCard, trumpCard) > 0)
                 {
-                    if (highestCard == null || CompareCards(card, highestCard, trumpCard) > 0)
-                    {
-                        highestCard = card;
-                        winner = player;
-                    }
+                    highestCard = entry.Value;
+                    winner =entry.Key;
                 }
             }
 
@@ -40,7 +37,7 @@ namespace TwentyFiveDotNet.Utilities
         public static Card GetBestCard(List<Card> Set)
         {
             //pick best card
-            Card bestCard = Set.ElementAt(0);
+            Card bestCard = Set[0];
 
             if (Set.Count > 1)
             {

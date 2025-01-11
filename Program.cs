@@ -63,7 +63,7 @@ namespace TwentyFiveDotNet
                     case GameState.Initialize:
 
                         manager.InitializeGame();
-                        manager.AssignDealer(r.Next(0, manager.TotalPlayers));
+                        manager.AssignRandomDealer(r.Next(0, manager.TotalPlayers));
                         manager.ChangeGameState(GameState.DealCards);
 
                         break;
@@ -102,7 +102,7 @@ namespace TwentyFiveDotNet
                             manager.ChangeGameState(GameState.PlayAgain);
                         }
 
-                        else if (manager.Players.ElementAt(0).Hand.Count == 0)
+                        else if (manager.ArePlayersOutOfCards())
                         {
                             manager.ChangeGameState(GameState.NewRound);
                         }
@@ -112,7 +112,7 @@ namespace TwentyFiveDotNet
 
                     case GameState.NewRound:
 
-                        manager.AssignDealer(r.Next(0, manager.TotalPlayers));
+                        manager.NewRound();
                         manager.ChangeGameState(GameState.DealCards);
 
                         break;

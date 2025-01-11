@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Utilities;
 
@@ -9,14 +10,13 @@ namespace TwentyFiveDotNet.Game
     internal class GameManager
     {
         public List<Player> Players { get; private set; }
+        public Dictionary<Player, Card> PlayedCards { get; private set; }
         public Deck Deck { get; private set; }
         public Deck DealtCards { get; private set; }
         public GameState CurrentState { get; private set; }
         public Player Dealer { get; private set; }
         public Player CurrentPlayer { get; private set; }
         public Player WinningPlayer { get; private set; }
-        public int TotalPlayers { get; private set; }
-        public int TotalHand { get; private set; }
         public int DealerPlayerNumber { get; private set; }
         public int CurrentPlayerNumber { get; private set; }
         public int WinningPlayerNumber { get; private set; }
@@ -30,6 +30,10 @@ namespace TwentyFiveDotNet.Game
         private readonly int TwoCards = 2;
         private readonly int ThreeCards = 3;
         private readonly int MaxScore = 25;
+        public int TotalHand = 5;
+        public int TotalPlayers;
+        public int MaxPlayers = 10;
+        public int MinPlayers = 3;
 
         public GameManager()
         {
@@ -48,33 +52,29 @@ namespace TwentyFiveDotNet.Game
             Console.WriteLine("The game is for 3 - 10 players. 1 human player and between 2 - 9 CPU players.");
             Console.WriteLine("How many total players would you like?");
 
-            TotalHand = 5;
-
-            int response = int.Parse(Console.ReadLine());
-
-            while (response < 3 || response > 10)
+            int response;
+            while (!int.TryParse(Console.ReadLine(), out response) || response < MinPlayers || response > MaxPlayers)
             {
-                Console.WriteLine("Please choose a value between 3 and 10.");
-                response = int.Parse(Console.ReadLine());
+                Console.WriteLine("Please choose a number between 3 and 10 inclusive.");
             }
 
             TotalPlayers = response;
 
             for (int i = 0; i < TotalPlayers; i++)
             {
-                Players.Add(new Player { Name = $"Player {i + 1}", Points = 0 });
-                Console.WriteLine($"Player {Players.ElementAt(i).Name} has joined the game.");
+                Players.Add(new Player ($"Player {i + 1}"));
+                Console.WriteLine($"Player {Players[i].Name} has joined the game.");
             }
 
             Console.WriteLine($"{Players.Count} players have been created.");
             Console.WriteLine();
         }
 
-        public void AssignDealer(int playerNumber)
+        public void AssignRandomDealer(int randomNumber)
         {
             Console.Write("Selecting dealer: ");
 
-            DealerPlayerNumber = playerNumber;
+            DealerPlayerNumber = randomNumber;
             Dealer = Players.ElementAt(DealerPlayerNumber);
 
             Console.WriteLine(Dealer.Name);
@@ -84,6 +84,35 @@ namespace TwentyFiveDotNet.Game
             Deck.Shuffle();
             Console.WriteLine("The deck has been shuffled.");
         }
+
+        public Dictionary<Player, Card> GetPlayedCards()
+        {
+            var PlayedCards = new Dictionary<Player, Card>();
+
+            foreach (var Player in Players)
+            {
+                // Example: Calculate score based on cards the player has
+                PlayedCards[Player] = Player.TableAreaCard;
+            }
+            return PlayedCards;
+        }
+
+        public void PrintPlayedCards()
+        {
+            foreach (var entry in PlayedCards)
+            {
+                Console.WriteLine($"{entry.Key.Name} has a {entry.Value}");
+            }
+        }
+
+        public void RemoveCardsFromTableArea()
+        {
+            foreach (var Player in Players)
+            {
+                Player.RemovePlayerTableArea();
+            }
+        }
+
         public void DealCards()
         {
             ChangeToPlayer(DealerPlayerNumber);
@@ -109,16 +138,19 @@ namespace TwentyFiveDotNet.Game
 
                 for (int j = 0; j < CurrentPlayer.Hand.Count; j++)
                 {
-                    Console.Write($" {CurrentPlayer.Hand.ElementAt(j)},");
+                    Console.Write($" {CurrentPlayer.Hand[j]},");
                 }
                 Console.WriteLine();
             }
 
+            Console.WriteLine($"{Deck.cards.Count} cards remain in the deck.");
             Console.WriteLine();
 
             TrumpCard = Deck.Draw();
             Console.WriteLine($"The trump card is: {TrumpCard}");
             Console.WriteLine($"The trump suit is: {TrumpCard.Suit}.");
+            Console.WriteLine($"{Deck.cards.Count} cards remain in the deck.");
+            Console.WriteLine();
         }
 
         public void GivePlayerCards(int cards)
@@ -129,22 +161,30 @@ namespace TwentyFiveDotNet.Game
             }
         }
 
+        public int NextPlayerNumber(int PlayerNumber, int TotalPlayers)
+        {
+            return (PlayerNumber + 1) % TotalPlayers; // Move to the indexer to the next player
+        }
+
         public void NextPlayer()
         {
-            CurrentPlayerNumber = WrapNumbers(++CurrentPlayerNumber, TotalPlayers);
-            CurrentPlayer = Players.ElementAt(CurrentPlayerNumber);
+            CurrentPlayerNumber = NextPlayerNumber(CurrentPlayerNumber, TotalPlayers);
+            CurrentPlayer = Players[CurrentPlayerNumber];
+            //Console.WriteLine($"Changed player to: {CurrentPlayer.Name}");
         }
+
         public void ChangeToPlayer(int playerNumber)
         {
             CurrentPlayerNumber = playerNumber;
-            CurrentPlayer = Players.ElementAt(playerNumber);
+            CurrentPlayer = Players[playerNumber];
         }
 
         public void LeadTurn()
         {
+            Console.WriteLine($"{CurrentPlayer.Name} is now leading the trick.");
             WinningPlayer = CurrentPlayer;
             WinningPlayerNumber = CurrentPlayerNumber;
-            ChosenCard = CurrentPlayer.Hand.ElementAt(0);
+            ChosenCard = CurrentPlayer.Hand[0];
             CurrentPlayer.Hand.RemoveAt(0);
             Console.WriteLine($"{CurrentPlayer.Name} plays {ChosenCard}.");
             LedCard = ChosenCard;
@@ -208,26 +248,28 @@ namespace TwentyFiveDotNet.Game
             else return false;
         }
 
+        public bool ArePlayersOutOfCards()
+        {
+            if (Players[0].Hand.Count == 0) return true;
+            else return false;
+        }
+
         public void NewRound()
         {
             Console.Write("The dealer position rotates clockwise to: ");
-            Dealer = Players.ElementAt(WrapNumbers(DealerPlayerNumber, TotalPlayers));
+            DealerPlayerNumber = NextPlayerNumber(DealerPlayerNumber, TotalPlayers);
+            Dealer = Players[DealerPlayerNumber];
+
             Console.WriteLine(Dealer.Name);
             Console.WriteLine();
+
+            Deck = new Deck();
+            Deck.Shuffle();
         }
 
         public void ChangeGameState(GameState state)
         {
             CurrentState = state;
-        }
-
-        public int WrapNumbers(int current, int total)
-        {
-            if (current >= total)
-            {
-                return current = 0;
-            }
-            else return current;
         }
     }
 }
