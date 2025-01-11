@@ -191,9 +191,9 @@ namespace TwentyFiveDotNet.Game
 
             Console.WriteLine($"Current Scores:");
 
-            for (int j = 0; j < TotalPlayers; j++)
+            foreach (var player in Players)
             {
-                Console.WriteLine($"{Players.ElementAt(j).Name} has {Players.ElementAt(j).Points} points.");
+                Console.WriteLine($"{player.Name} has {player.Points} points.");
             }
             Console.WriteLine();
         }

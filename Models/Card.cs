@@ -12,6 +12,7 @@ namespace TwentyFiveDotNet.Models
         public Ranks Rank { get; set; }
         public int Score { get; set; }
         public bool Playable { get; set; }
+        public bool Renegable { get; set; }
 
         public void AdjustForTrump(Suits trumpSuit)
         {
@@ -19,12 +20,21 @@ namespace TwentyFiveDotNet.Models
             {
                 Score += 15;
                 if (Rank == Ranks.Ace) Score += 50;
-                else if (Rank == Ranks.Jack) Score += 200;
-                else if (Rank == Ranks.Five) Score += 300;
+                else if (Rank == Ranks.Jack)
+                {
+                    Score += 200;
+                    Renegable = true;
+                }
+                else if (Rank == Ranks.Five)
+                {
+                    Score += 300;
+                    Renegable = true;
+                }
             }
-            else if (Suit == Suits.Hearts && Rank == Ranks.Ace)
+            if (Suit == Suits.Hearts && Rank == Ranks.Ace)
             {
                 Score += 100;
+                Renegable = true;
             }
         }
 

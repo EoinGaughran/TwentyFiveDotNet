@@ -44,11 +44,11 @@ namespace TwentyFiveDotNet.Utilities
 
             if (Set.Count > 1)
             {
-                for (int i = 1; i < Set.Count; i++)
+                foreach (var card in Set)
                 {
-                    if (Set.ElementAt(i).Playable)
+                    if (card.Playable)
                     {
-                        if (Set.ElementAt(i).Score > bestCard.Score) bestCard = Set.ElementAt(i);
+                        if (card.Score > bestCard.Score) bestCard = card;
                     }
                 }
             }

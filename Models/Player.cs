@@ -25,9 +25,9 @@ namespace TwentyFiveDotNet.Models
             //remove illegal cards
             if (LedCard.Suit.Equals(TrumpCard.Suit))
             {
-                for (int i = 0; i < Hand.Count; i++)
+                foreach (var card in Hand)
                 {
-                    if (Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit))
+                    if (card.Suit.Equals(TrumpCard.Suit))
                     {
                         isThereLedSuit = true;
                     }
@@ -35,13 +35,18 @@ namespace TwentyFiveDotNet.Models
 
                 if (isThereLedSuit)
                 {
-                    for (int i = 0; i < Hand.Count; i++)
+                    foreach (var card in Hand)
                     {
-                        if (!(Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit)))
+                        if (card.Renegable && card.Score > LedCard.Score)
                         {
-                            Hand.ElementAt(i).Playable = false;
+                            LegalCards.Add(card);
+                            Console.WriteLine($"{card} can Renege.");
                         }
-                        else LegalCards.Add(Hand.ElementAt(i));
+                        else if (card.Suit.Equals(TrumpCard.Suit))
+                        {
+                            LegalCards.Add(card);
+                        }
+                        else card.Playable = false;
                     }
                 }
                 else LegalCards = Hand;
@@ -49,9 +54,9 @@ namespace TwentyFiveDotNet.Models
 
             else
             {
-                for (int i = 0; i < Hand.Count; i++)
+                foreach (var card in Hand)
                 {
-                    if (Hand.ElementAt(i).Suit.Equals(LedCard.Suit))
+                    if (card.Suit.Equals(LedCard.Suit))
                     {
                         isThereLedSuit = true;
                     }
@@ -59,13 +64,13 @@ namespace TwentyFiveDotNet.Models
 
                 if (isThereLedSuit)
                 {
-                    for (int i = 0; i < Hand.Count; i++)
+                    foreach (var card in Hand)
                     {
-                        if (!(Hand.ElementAt(i).Suit.Equals(LedCard.Suit) || Hand.ElementAt(i).Suit.Equals(TrumpCard.Suit)))
+                        if (!(card.Equals(LedCard.Suit) || card.Suit.Equals(TrumpCard.Suit)))
                         {
-                            Hand.ElementAt(i).Playable = false;
+                            card.Playable = false;
                         }
-                        else LegalCards.Add(Hand.ElementAt(i));
+                        else LegalCards.Add(card);
                     }
                 }
                 else LegalCards = Hand;
@@ -77,9 +82,9 @@ namespace TwentyFiveDotNet.Models
 
         public void ResetPlayableCards()
         {
-            for (int i = 0; i < Hand.Count; i++)
+            foreach (var card in Hand)
             {
-                Hand.ElementAt((int)i).Playable = true;
+                card.Playable = true;
             }
         }
 
@@ -87,11 +92,11 @@ namespace TwentyFiveDotNet.Models
         {
             Console.Write("The playable cards are: ");
 
-            for (int i = 0; i < Hand.Count; i++)
+            foreach (var card in Hand)
             {
-                if (Hand.ElementAt((int)i).Playable)
+                if (card.Playable)
                 {
-                    Console.Write(Hand.ElementAt(i));
+                    Console.Write(card);
                 }
             }
 

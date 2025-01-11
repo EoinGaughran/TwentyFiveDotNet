@@ -25,7 +25,8 @@ namespace TwentyFiveDotNet.Models
                         Suit = suit,
                         Rank = rank,
                         Score = GetBaseScore(suit, rank),
-                        Playable = true
+                        Playable = true,
+                        Renegable = false,
                     });
                 }
             }
@@ -83,42 +84,24 @@ namespace TwentyFiveDotNet.Models
 
         public void AdjustForTrump(Card TrumpCard)
         {
-            for (int i = 0; i < cards.Count; i++)
+            foreach (var card in cards)
             {
-                ScanTrumpList(cards, TrumpCard, i);
+                ScanTrumpList(card, TrumpCard);
             }
 
-            for (int i = 0; i < DealtCards.Count; i++)
+            foreach (var card in DealtCards)
             {
-                ScanTrumpList(DealtCards, TrumpCard, i);
+                ScanTrumpList(card, TrumpCard);
             }
 
             Console.WriteLine();
         }
 
-        private void ScanTrumpList(List<Card> CardList, Card TrumpCard, int index)
+        private void ScanTrumpList(Card card, Card TrumpCard)
         {
-            if (CardList.ElementAt(index).Suit == TrumpCard.Suit)
+            if (card.Suit == TrumpCard.Suit)
             {
-
-                if (CardList.ElementAt(index).Rank == Ranks.Ace)
-                {
-                    CardList.ElementAt(index).Score += 50;
-                }
-                else if (CardList.ElementAt(index).Rank == Ranks.Jack)
-                {
-                    CardList.ElementAt(index).Score += 200;
-                }
-                else if (CardList.ElementAt(index).Rank == Ranks.Five)
-                {
-                    CardList.ElementAt(index).Score += 300;
-                }
-                else
-                {
-                    CardList.ElementAt(index).Score += 15;
-                }
-
-                Console.WriteLine($"{CardList.ElementAt(index)} is now worth {CardList.ElementAt(index).Score}");
+                card.AdjustForTrump(TrumpCard.Suit);
             }
         }
     }
