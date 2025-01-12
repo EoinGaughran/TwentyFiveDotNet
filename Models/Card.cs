@@ -11,7 +11,8 @@ namespace TwentyFiveDotNet.Models
         public Suits Suit { get; set; }
         public Ranks Rank { get; set; }
         public int Score { get; set; }
-        public bool Playable { get; set; }
+        public bool Trump { get; set; }
+        public bool Legal { get; set; }
         public bool Renegable { get; set; }
 
         //load from file later
@@ -42,15 +43,25 @@ namespace TwentyFiveDotNet.Models
                     Renegable = true;
                 }
 
-                Console.WriteLine($"{Rank} of {Suit} is now worth {Score}");
+                Trump = true;
             }
 
             if (Suit == Suits.Hearts && Rank == Ranks.Ace)
             {
                 Score += AceHeartsScoreBuff;
+                Trump = true;
                 Renegable = true;
-                Console.WriteLine($"{Rank} of {Suit} is now worth {Score}");
             }
+        }
+
+        public void SetPlayable(bool legal)
+        {
+            Legal = legal;
+        }
+
+        public void SetTrump(bool trumpStatus)
+        {
+            Trump = trumpStatus;
         }
 
         public override string ToString()

@@ -3,26 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TwentyFiveDotNet.Utilities;
 
 namespace TwentyFiveDotNet.Models
 {
-    public class Player
+    public class Player(string name)
     {
-        public string Name { get; set; }
-        public int Points { get; set; }
-        public List<Card> Hand { get; set; }
-        public Card TableAreaCard { get; private set; }
+        public string Name { get; set; } = name;
+        public int Points { get; set; } = 0;
+        public List<Card> Hand { get; set; } = new List<Card>();
+        public Card TableAreaCard { get; private set; } = null;
+        public Card ChosenCard { get; private set; }
 
-        public Player (String name)
+        public void PlayFirstCard()
         {
-            Name = name;
-            Points = 0;
-            Hand = new List<Card>();
-            TableAreaCard = null;
+            ChosenCard = Hand[0];
+            Hand.Remove(ChosenCard);
         }
-        public void PlayCard(int index)
+        public void PlayBestCard()
         {
-            // Where the logic for playing a card should be
+            ChosenCard = CardComparer.GetBestCard(Hand);
+            Hand.Remove(ChosenCard);
         }
 
         public void SetCardToPlayerTableArea(Card card)
@@ -39,7 +40,7 @@ namespace TwentyFiveDotNet.Models
             bool isThereLedSuit = false;
             List<Card> LegalCards = new List<Card>(Hand);
 
-            foreach (var card in LegalCards) card.Playable = false;
+            foreach (var card in LegalCards) card.Legal = false;
 
             //remove illegal cards
             if (LedCard.Suit.Equals(TrumpCard.Suit))
@@ -50,14 +51,13 @@ namespace TwentyFiveDotNet.Models
                     {
                         if (!card.Renegable || (card.Renegable && (card.Score < LedCard.Score)))
                         {
-                            card.Playable = true;
+                            card.Legal = true;
                             isThereLedSuit = true;
                         }
 
                         if (card.Renegable && (card.Score > LedCard.Score))
                         {
-                            card.Playable = true;
-                            Console.WriteLine($"{card} can renege.");
+                            card.Legal = true;
                         }
                     }
                 }
@@ -69,53 +69,23 @@ namespace TwentyFiveDotNet.Models
                     if (card.Suit.Equals(LedCard.Suit))
                     {
                         isThereLedSuit = true;
-                        card.Playable = true;
+                        card.Legal = true;
                     }
-                    else if (card.Suit.Equals(TrumpCard.Suit)) card.Playable = true;
+                    else if (card.Suit.Equals(TrumpCard.Suit)) card.Legal = true;
                 }
 
                 if (isThereLedSuit) Hand = LegalCards;
             }
 
-            if (!isThereLedSuit) foreach (var card in LegalCards) card.Playable = true;
-
-            Console.Write("The legal cards are: ");
-            foreach (var card in Hand)
-            {
-                if (card.Playable)
-                {
-                    Console.Write($"{card}, ");
-                }
-                /*else if (!card.Playable)
-                {
-                    Console.Write($"{card} (not legal), ");
-                }*/
-            }
-
-            Console.WriteLine();
+            if (!isThereLedSuit) foreach (var card in LegalCards) card.Legal = true;
         }
 
         public void ResetPlayableCards()
         {
             foreach (var card in Hand)
             {
-                card.Playable = true;
+                card.Legal = true;
             }
-        }
-
-        public void PrintPlayableCards()
-        {
-            Console.Write("The playable cards are: ");
-
-            foreach (var card in Hand)
-            {
-                if (card.Playable)
-                {
-                    Console.Write(card);
-                }
-            }
-
-            Console.WriteLine();
         }
 
         public bool HasWon()

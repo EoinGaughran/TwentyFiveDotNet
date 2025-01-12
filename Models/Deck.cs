@@ -10,11 +10,13 @@ namespace TwentyFiveDotNet.Models
     {
         public List<Card> cards;
         public List<Card> DealtCards;
+        public List<Card> Trumps;
 
         public Deck()
         {
             cards = new List<Card>();
             DealtCards = new List<Card>();
+            Trumps = new List<Card>();
 
             foreach (Suits suit in Enum.GetValues(typeof(Suits)))
             {
@@ -25,7 +27,8 @@ namespace TwentyFiveDotNet.Models
                         Suit = suit,
                         Rank = rank,
                         Score = GetBaseScore(suit, rank),
-                        Playable = true,
+                        Trump = false,
+                        Legal = true,
                         Renegable = false,
                     });
                 }
@@ -93,8 +96,11 @@ namespace TwentyFiveDotNet.Models
             {
                 ScanTrumpList(card, TrumpCard);
             }
+        }
 
-            Console.WriteLine();
+        public void AddTrumpToList(Card Trump)
+        {
+            Trumps.Add(Trump);
         }
 
         private void ScanTrumpList(Card card, Card TrumpCard)

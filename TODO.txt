@@ -1,11 +1,12 @@
-Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards
-Separate Logic from Presentation
 Unit Testing
-play card method to player class
 change class sets to private
-support 'TableCardArea' for all play, should be an array
+convert 'chosen card' to 'TableCardArea' for all play, should be an array
 Played Card History
 Add table class
-divide methods in gamemanager
+Human player
 stealing
 reneging the ace of hearts when non heart suit is led
+
+done
+Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards
+Separate Logic from Presentation, Gamemanager: Divide methods, Move PlayCard methods to Player class, GameManager variables privatized

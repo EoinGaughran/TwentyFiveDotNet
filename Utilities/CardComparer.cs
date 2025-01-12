@@ -36,14 +36,13 @@ namespace TwentyFiveDotNet.Utilities
 
         public static Card GetBestCard(List<Card> Set)
         {
-            //pick best card
             Card bestCard = Set[0];
 
             if (Set.Count > 1)
             {
                 foreach (var card in Set)
                 {
-                    if (card.Playable)
+                    if (card.Legal)
                     {
                         if (card.Score > bestCard.Score) bestCard = card;
                     }

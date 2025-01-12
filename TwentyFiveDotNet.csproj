@@ -51,6 +51,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\CardComparer.cs" />
+    <Compile Include="Utilities\General.cs" />
     <Compile Include="Utilities\ScoreCalculator.cs" />
   </ItemGroup>
   <ItemGroup>
