@@ -23,6 +23,7 @@ namespace TwentyFiveDotNet.Game
         public Card TrumpCard { get; private set; }
         public Card LedCard { get; private set; }
         public Card WinningCard { get; private set; }
+        public bool Steal {  get; private set; }
 
         //load from file later
         private readonly int TwoCards = 2;
@@ -141,6 +142,12 @@ namespace TwentyFiveDotNet.Game
             CurrentPlayer = Players[playerNumber];
         }
 
+        public void ChangeToPlayer(Player player)
+        {
+            CurrentPlayerNumber = Players.IndexOf(player);
+            CurrentPlayer = player;
+        }
+
         public void SetWinner(Player player)
         {
             WinningCard = player.ChosenCard;
@@ -177,6 +184,16 @@ namespace TwentyFiveDotNet.Game
             CurrentPlayerNumber = WinningPlayerNumber;
         }
 
+        public void PlayerStoleTheTrump()
+        {
+            Steal = true;
+        }
+
+        public void TheTrumpIsNotStolen()
+        {
+            Steal = false;
+        }
+
         public bool IsGameOver()
         {
             if (WinningPlayer.Points >= MaxScore)
@@ -189,6 +206,15 @@ namespace TwentyFiveDotNet.Game
         public bool ArePlayersOutOfCards()
         {
             if (Players[0].Hand.Count == 0) return true;
+            else return false;
+        }
+
+        public bool HasPlayerStolen()
+        {
+            if (Steal)
+            {
+                return true;
+            }
             else return false;
         }
 

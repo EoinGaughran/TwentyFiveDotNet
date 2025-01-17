@@ -39,6 +39,7 @@ namespace TwentyFiveDotNet
         NotStarted,
         Initialize,
         DealCards,
+        Stealing,
         LeadTurn,
         PlayerTurn,
         Scoring,
@@ -111,11 +112,60 @@ namespace TwentyFiveDotNet
                         General.PrintTrumpScores(manager.Deck.cards, manager.Deck.DealtCards);
                         Console.WriteLine();
 
-                        manager.NextPlayer();
-                        manager.ChangeGameState(GameState.LeadTurn);
+                        Card worstCard;
+
+                        if (manager.TrumpCard.Rank == Ranks.Ace)
+                        {
+                            Console.WriteLine($"The Trump card is an Ace so the Dealer gets to steal it.");
+
+                            worstCard = CardComparer.GetWorstCard(manager.Dealer.Hand);
+                            manager.Dealer.Hand.Remove(worstCard);
+                            manager.Dealer.Hand.Add(manager.TrumpCard);
+                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {worstCard} and steals the {manager.TrumpCard}");
+                            Console.WriteLine();
+
+                            manager.ChangeGameState(GameState.LeadTurn);
+                        }
+                        else
+                        {
+                            manager.ChangeGameState(GameState.Stealing);
+                        }
 
                         break;
-                        
+
+                    case GameState.Stealing:
+
+                        manager.NextPlayer();
+
+                        if (manager.CurrentPlayer.CanPlayerSteal(manager.TrumpCard.Suit))
+                        {
+                            Console.WriteLine($"{manager.CurrentPlayer} has the Ace of Trumps and so gets to steal.");
+
+                            worstCard = CardComparer.GetWorstCard(manager.CurrentPlayer.Hand);
+                            manager.CurrentPlayer.Hand.Remove(worstCard);
+                            manager.CurrentPlayer.Hand.Add(manager.TrumpCard);
+                            
+                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {worstCard} and steals the {manager.TrumpCard}.");
+
+                            manager.ChangeToPlayer(manager.Dealer);
+                            manager.ChangeGameState(GameState.LeadTurn);
+                        }
+
+                        if (manager.CurrentPlayer == manager.Dealer)
+                        {
+                            if (!manager.HasPlayerStolen())
+                            {
+                                Console.WriteLine("Nobody had the Ace of Trumps.");
+                            }
+
+                            Console.WriteLine();
+
+                            manager.NextPlayer();
+                            manager.ChangeGameState(GameState.LeadTurn);
+                        }
+
+                        break;
+
                     case GameState.LeadTurn:
 
                         manager.SetLeader(manager.CurrentPlayer);

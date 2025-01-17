@@ -50,5 +50,22 @@ namespace TwentyFiveDotNet.Utilities
             }
             return bestCard;
         }
+
+        public static Card GetWorstCard(List<Card> Set)
+        {
+            Card worstCard = Set[0];
+
+            if (Set.Count > 1)
+            {
+                foreach (var card in Set)
+                {
+                    if (card.Legal)
+                    {
+                        if (card.Score < worstCard.Score) worstCard = card;
+                    }
+                }
+            }
+            return worstCard;
+        }
     }
 }

@@ -15,6 +15,10 @@ namespace TwentyFiveDotNet.Models
         public Card TableAreaCard { get; private set; } = null;
         public Card ChosenCard { get; private set; }
 
+        public override string ToString()
+        {
+            return Name;
+        }
         public void PlayFirstCard()
         {
             ChosenCard = Hand[0];
@@ -33,6 +37,17 @@ namespace TwentyFiveDotNet.Models
         public void RemovePlayerTableArea()
         {
             TableAreaCard = null;
+        }
+        public bool CanPlayerSteal(Suits TrumpSuit)
+        {
+            foreach(Card card in Hand)
+            {
+                if (card.Suit == TrumpSuit && card.Rank == Ranks.Ace)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void SetPlayableCards(Card TrumpCard, Card LedCard)
