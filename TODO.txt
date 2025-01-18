@@ -4,9 +4,13 @@ convert 'chosen card' to 'TableCardArea' for all play, should be an array
 Played Card History
 Add table class
 Human player
-stealing
+
 reneging the ace of hearts when non heart suit is led
+ascii art for the trump suit
+
+replace linq concats of dealth cards with a refernce list of the original 52 cards
 
 done
 Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards
 Separate Logic from Presentation, Gamemanager: Divide methods, Move PlayCard methods to Player class, GameManager variables privatized
+stealing

@@ -35,17 +35,18 @@ namespace TwentyFiveDotNet.Utilities
 
         public static void PrintTrumpScores(List<Card> deckCards, List<Card> dealtCards)
         {
-            foreach (var card in deckCards)
+            List<Card> TrumpList = new List<Card>();
+
+            foreach (var card in deckCards.Concat(dealtCards))
             {
-                if (card.Trump)
-                    Console.WriteLine($"{card} is worth: {card.Score}");
+                if (card.IsTrump)
+                    TrumpList.Add(card); 
             }
 
-            foreach (var card in dealtCards)
-            {
-                if (card.Trump)
-                    Console.WriteLine($"{card} is worth: {card.Score}");
-            }
+            TrumpList.Sort((x, y) => y.Score.CompareTo(x.Score)); // desc
+
+            foreach (var card in TrumpList)
+                Console.WriteLine($"{card} is worth: {card.Score}");
         }
 
         public static void PrintPlayersHands(List<Player> players)

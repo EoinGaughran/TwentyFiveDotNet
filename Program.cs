@@ -147,6 +147,8 @@ namespace TwentyFiveDotNet
                             
                             Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {worstCard} and steals the {manager.TrumpCard}.");
 
+                            manager.PlayerStoleTheTrump();
+
                             manager.ChangeToPlayer(manager.Dealer);
                             manager.ChangeGameState(GameState.LeadTurn);
                         }

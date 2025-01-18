@@ -53,46 +53,50 @@ namespace TwentyFiveDotNet.Models
         public void SetPlayableCards(Card TrumpCard, Card LedCard)
         {
             bool isThereLedSuit = false;
-            List<Card> LegalCards = new List<Card>(Hand);
 
-            foreach (var card in LegalCards) card.Legal = false;
-
-            //remove illegal cards
-            if (LedCard.Suit.Equals(TrumpCard.Suit))
+            foreach (var card in Hand)
             {
-                foreach (var card in LegalCards)
-                {
-                    if (card.Suit.Equals(TrumpCard.Suit))
-                    {
-                        if (!card.Renegable || (card.Renegable && (card.Score < LedCard.Score)))
-                        {
-                            card.Legal = true;
-                            isThereLedSuit = true;
-                        }
+                card.Legal = IsCardLegal(card, LedCard, ref isThereLedSuit);
+            }
 
-                        if (card.Renegable && (card.Score > LedCard.Score))
-                        {
-                            card.Legal = true;
-                        }
-                    }
+            if (!isThereLedSuit)
+            {
+                foreach (var card in Hand)
+                {
+                    card.Legal = true;
                 }
+            }
+        }
+
+        private bool IsCardLegal(Card card, Card LedCard, ref bool isThereLedSuit)
+        {
+            if (LedCard.IsTrump)
+            {
+                if (card.IsTrump)
+                {
+                    if (!card.Renegable || (card.Renegable && (card.Score < LedCard.Score)))
+                    {
+                        isThereLedSuit = true;
+                    }
+
+                    return true;
+                }
+
             }
             else
             {
-                foreach (var card in LegalCards)
+                if (card.Suit == LedCard.Suit)
                 {
-                    if (card.Suit.Equals(LedCard.Suit))
-                    {
-                        isThereLedSuit = true;
-                        card.Legal = true;
-                    }
-                    else if (card.Suit.Equals(TrumpCard.Suit)) card.Legal = true;
+                    isThereLedSuit = true;
+                    return true;
                 }
-
-                if (isThereLedSuit) Hand = LegalCards;
+                if (card.IsTrump)
+                {
+                    return true;
+                }
             }
 
-            if (!isThereLedSuit) foreach (var card in LegalCards) card.Legal = true;
+            return false;
         }
 
         public void ResetPlayableCards()

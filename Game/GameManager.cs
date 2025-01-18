@@ -115,6 +115,7 @@ namespace TwentyFiveDotNet.Game
         public void AssignTrumpSuit()
         {
             TrumpCard = Deck.Draw();
+            Steal = false;
         }
 
         public void GivePlayerCards(int cards)

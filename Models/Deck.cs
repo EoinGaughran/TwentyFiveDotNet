@@ -12,6 +12,9 @@ namespace TwentyFiveDotNet.Models
         public List<Card> DealtCards;
         public List<Card> Trumps;
 
+        //load from file later
+        private int AceHeartsScoreBuff = 100;
+
         public Deck()
         {
             cards = new List<Card>();
@@ -27,7 +30,7 @@ namespace TwentyFiveDotNet.Models
                         Suit = suit,
                         Rank = rank,
                         Score = GetBaseScore(suit, rank),
-                        Trump = false,
+                        IsTrump = false,
                         Legal = true,
                         Renegable = false,
                     });
@@ -51,7 +54,7 @@ namespace TwentyFiveDotNet.Models
                 else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Two) return 1;
                 else if ((suit == Suits.Diamonds) && rank == Ranks.Ace) return 0;
 
-                else if ((suit == Suits.Hearts) && rank == Ranks.Ace) return 100;
+                else if ((suit == Suits.Hearts) && rank == Ranks.Ace) return AceHeartsScoreBuff;
 
                 else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.King) return 12;
                 else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Queen) return 11;
@@ -87,28 +90,23 @@ namespace TwentyFiveDotNet.Models
 
         public void AdjustForTrump(Card TrumpCard)
         {
-            foreach (var card in cards)
+            foreach (var card in cards.Concat(DealtCards))
             {
-                ScanTrumpList(card, TrumpCard);
-            }
+                if (card.Suit == TrumpCard.Suit)
+                {
+                    card.AdjustForTrump(TrumpCard.Suit);
+                }
 
-            foreach (var card in DealtCards)
-            {
-                ScanTrumpList(card, TrumpCard);
+                if (card.Suit == Suits.Hearts && card.Rank == Ranks.Ace)
+                {
+                    card.AdjustAceOfHearts();
+                }
             }
         }
 
         public void AddTrumpToList(Card Trump)
         {
             Trumps.Add(Trump);
-        }
-
-        private void ScanTrumpList(Card card, Card TrumpCard)
-        {
-            if (card.Suit == TrumpCard.Suit)
-            {
-                card.AdjustForTrump(TrumpCard.Suit);
-            }
         }
     }
 }
