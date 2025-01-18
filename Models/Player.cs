@@ -7,28 +7,23 @@ using TwentyFiveDotNet.Utilities;
 
 namespace TwentyFiveDotNet.Models
 {
-    public class Player(string name)
+    public abstract class Player()
     {
-        public string Name { get; set; } = name;
-        public int Points { get; set; } = 0;
+        public string Name { get; set; }
+        public int Points { get; set; }
         public List<Card> Hand { get; set; } = new List<Card>();
-        public Card TableAreaCard { get; private set; } = null;
-        public Card ChosenCard { get; private set; }
+        public Card TableAreaCard { get; set; }
+        public Card ChosenCard { get; set; }
+        public Card WorstCard { get; set; }
 
         public override string ToString()
         {
             return Name;
         }
-        public void PlayFirstCard()
-        {
-            ChosenCard = Hand[0];
-            Hand.Remove(ChosenCard);
-        }
-        public void PlayBestCard()
-        {
-            ChosenCard = CardComparer.GetBestCard(Hand);
-            Hand.Remove(ChosenCard);
-        }
+
+        public abstract void PlayerTurn();
+        public abstract void LeadCard();
+        public abstract Card SelectWorstCard();
 
         public void SetCardToPlayerTableArea(Card card)
         {

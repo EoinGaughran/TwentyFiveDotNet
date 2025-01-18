@@ -65,17 +65,35 @@ namespace TwentyFiveDotNet
                     case GameState.Initialize:
 
                         Console.WriteLine("Welcome to the card game 25.");
-                        Console.WriteLine("The game is for 3 - 10 players. 1 human player and between 2 - 9 CPU players.");
+                        Console.WriteLine($"The game is for {manager.MinPlayers} - {manager.MaxPlayers} players.");
                         Console.WriteLine("How many total players would you like?");
 
-                        int response;
-                        while (!int.TryParse(Console.ReadLine(), out response) || response < manager.MinPlayers || response > manager.MaxPlayers)
+                        int rTotalPlayers;
+                        while (!int.TryParse(Console.ReadLine(), out rTotalPlayers) || rTotalPlayers < manager.MinPlayers || rTotalPlayers > manager.MaxPlayers)
                         {
-                            Console.WriteLine("Please choose a number between 3 and 10 inclusive.");
+                            Console.WriteLine($"Please choose a number between {manager.MinPlayers} - {manager.MaxPlayers} inclusive.");
+                        }
+
+                        Console.WriteLine($"How many Human players would you like? 0 - {rTotalPlayers}");
+
+                        int rTotalHumans;
+
+                        while (!int.TryParse(Console.ReadLine(), out rTotalHumans) || rTotalHumans < 0 || rTotalHumans > rTotalPlayers)
+                        {
+                            Console.WriteLine($"Please choose a number between 0 and {rTotalPlayers} inclusive.");
                         }
 
                         Console.WriteLine("Initializing Game.");
-                        manager.InitializeGame(response);
+                        manager.InitializeGame(rTotalPlayers, rTotalHumans);
+
+                        for ( int i = 0; i < rTotalHumans; i++)
+                        {
+                            Console.Write($"Player {i+1} enter you name: ");
+                            var readName = Console.ReadLine();
+                            manager.Players.Add(new PlayerHuman(readName));
+                        }
+
+                        manager.InitializeCPUs();
 
                         Console.WriteLine($"{manager.Players.Count} players have been created.");
                         General.PrintListOfPlayers(manager.Players);
@@ -112,16 +130,15 @@ namespace TwentyFiveDotNet
                         General.PrintTrumpScores(manager.Deck.cards, manager.Deck.DealtCards);
                         Console.WriteLine();
 
-                        Card worstCard;
-
                         if (manager.TrumpCard.Rank == Ranks.Ace)
                         {
-                            Console.WriteLine($"The Trump card is an Ace so the Dealer gets to steal it.");
+                            Console.WriteLine("The Trump card is an Ace so the Dealer gets to steal it.");
+                            Console.WriteLine("Dealer place down your worst card.");
 
-                            worstCard = CardComparer.GetWorstCard(manager.Dealer.Hand);
-                            manager.Dealer.Hand.Remove(worstCard);
+                            manager.Dealer.SelectWorstCard();
+                            manager.Dealer.Hand.Remove(manager.Dealer.WorstCard);
                             manager.Dealer.Hand.Add(manager.TrumpCard);
-                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {worstCard} and steals the {manager.TrumpCard}");
+                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {manager.CurrentPlayer.WorstCard} and steals the {manager.TrumpCard}");
                             Console.WriteLine();
 
                             manager.ChangeGameState(GameState.LeadTurn);
@@ -141,11 +158,11 @@ namespace TwentyFiveDotNet
                         {
                             Console.WriteLine($"{manager.CurrentPlayer} has the Ace of Trumps and so gets to steal.");
 
-                            worstCard = CardComparer.GetWorstCard(manager.CurrentPlayer.Hand);
-                            manager.CurrentPlayer.Hand.Remove(worstCard);
+                            manager.CurrentPlayer.SelectWorstCard();
+                            manager.CurrentPlayer.Hand.Remove(manager.CurrentPlayer.WorstCard);
                             manager.CurrentPlayer.Hand.Add(manager.TrumpCard);
                             
-                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {worstCard} and steals the {manager.TrumpCard}.");
+                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {manager.CurrentPlayer.WorstCard} and steals the {manager.TrumpCard}.");
 
                             manager.PlayerStoleTheTrump();
 
@@ -157,7 +174,7 @@ namespace TwentyFiveDotNet
                         {
                             if (!manager.HasPlayerStolen())
                             {
-                                Console.WriteLine("Nobody had the Ace of Trumps.");
+                                Console.WriteLine("Nobody has the Ace of Trumps.");
                             }
 
                             Console.WriteLine();
@@ -172,8 +189,10 @@ namespace TwentyFiveDotNet
 
                         manager.SetLeader(manager.CurrentPlayer);
                         Console.WriteLine($"{manager.Leader.Name} is now leading the trick.");
+                        Console.WriteLine($"{manager.TrumpCard.Suit} are trumps.");
 
-                        manager.CurrentPlayer.PlayFirstCard();
+                        manager.CurrentPlayer.ResetPlayableCards();
+                        manager.CurrentPlayer.LeadCard();
                         manager.SetLedCard(manager.CurrentPlayer.ChosenCard);
                         manager.SetWinner(manager.CurrentPlayer);
 
@@ -202,8 +221,9 @@ namespace TwentyFiveDotNet
                             Console.Write("The legal cards to play are: ");
                             General.PrintLegalCards(manager.CurrentPlayer.Hand);
                             Console.WriteLine();
+                            Console.WriteLine($"{manager.TrumpCard.Suit} are trumps, {manager.LedCard.Suit} were led.");
 
-                            manager.CurrentPlayer.PlayBestCard();
+                            manager.CurrentPlayer.PlayerTurn();
                             Console.WriteLine($"{manager.CurrentPlayer.Name} plays {manager.CurrentPlayer.ChosenCard}.");
 
                             manager.CurrentPlayer.ResetPlayableCards();
@@ -238,7 +258,7 @@ namespace TwentyFiveDotNet
                         else
                         {
                             manager.WinnerBecomesLeader();
-                            Console.WriteLine($"Winner of trick {manager.WinningPlayer.Name} gets to lead the next trick.");
+                            Console.WriteLine($"{manager.WinningPlayer.Name} leads the next trick.");
                             Console.WriteLine();
 
                             manager.ChangeGameState(GameState.LeadTurn);

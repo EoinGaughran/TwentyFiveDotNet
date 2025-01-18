@@ -31,6 +31,8 @@ namespace TwentyFiveDotNet.Game
         private readonly int MaxScore = 25;
         public int TotalHand = 5;
         public int TotalPlayers;
+        public int TotalHumans;
+        public int TotalCPUs;
         public int MaxPlayers = 10;
         public int MinPlayers = 3;
 
@@ -40,14 +42,24 @@ namespace TwentyFiveDotNet.Game
             CurrentState = GameState.NotStarted;
         }
 
-        public void InitializeGame(int totalPlayers)
+        public void InitializeGame(int totalPlayers, int totalHumans)
         {
             Players = new List<Player>();
             TotalPlayers = totalPlayers;
+            TotalHumans = totalHumans;
+            TotalCPUs = TotalPlayers - TotalHumans;
+        }
 
-            for (int i = 0; i < TotalPlayers; i++)
+        public void InitializeHumanPlayer(Player human)
+        {
+            Players.Add(human);
+        }
+
+        public void InitializeCPUs()
+        {
+            for (int i = TotalHumans; i < TotalPlayers ; i++)
             {
-                Players.Add(new Player ($"Player {i + 1}"));
+                Players.Add(new PlayerCPU ($"Player {i + 1}"));
             }
         }
         public void AssignDealer(int NewDealer)
@@ -168,9 +180,12 @@ namespace TwentyFiveDotNet.Game
 
         public void UpdateWinner()
         {
-            if (CurrentPlayer.ChosenCard.Score > WinningCard.Score)
+            if(CurrentPlayer.ChosenCard.Suit == LedCard.Suit || CurrentPlayer.ChosenCard.IsTrump)
             {
-                SetWinner(CurrentPlayer);
+                if (CurrentPlayer.ChosenCard.Score > WinningCard.Score)
+                {
+                    SetWinner(CurrentPlayer);
+                }
             }
         }
 

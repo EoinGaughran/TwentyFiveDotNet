@@ -46,7 +46,9 @@
   <ItemGroup>
     <Compile Include="Game\GameManager.cs" />
     <Compile Include="Models\Card.cs" />
+    <Compile Include="Models\PlayerCPU.cs" />
     <Compile Include="Models\Deck.cs" />
+    <Compile Include="Models\PlayerHuman.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
