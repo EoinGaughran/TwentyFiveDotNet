@@ -6,6 +6,7 @@ using System.Reflection;
 using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Utilities;
+using TwentyFiveDotNet.Config;
 
 namespace TwentyFiveDotNet
 {
@@ -53,6 +54,12 @@ namespace TwentyFiveDotNet
 
         static void Main(string[] args)
         {
+            if (args.Contains("--dev"))
+            {
+                GameConfig.DevMode = true;
+                CustomConsole.DevWriteLineNoDelay("Running in DEV mode.");
+            }
+
             GameManager manager = new GameManager();
 
             while (manager.CurrentState != GameState.EndGame)
@@ -64,83 +71,104 @@ namespace TwentyFiveDotNet
 
                     case GameState.Initialize:
 
-                        Console.WriteLine("Welcome to the card game 25.");
-                        Console.WriteLine($"The game is for {manager.MinPlayers} - {manager.MaxPlayers} players.");
-                        Console.WriteLine("How many total players would you like?");
+                        CustomConsole.WriteLine("Welcome to the card game 25.");
+                        CustomConsole.WriteLine($"The game is for {GameConfig.MinPlayers} - {GameConfig.MaxPlayers} players.");
+                        CustomConsole.WriteLine("How many total players would you like?");
 
                         int rTotalPlayers;
-                        while (!int.TryParse(Console.ReadLine(), out rTotalPlayers) || rTotalPlayers < manager.MinPlayers || rTotalPlayers > manager.MaxPlayers)
+
+                        while (!int.TryParse(Console.ReadLine(), out rTotalPlayers) || rTotalPlayers < GameConfig.MinPlayers || rTotalPlayers > GameConfig.MaxPlayers)
                         {
-                            Console.WriteLine($"Please choose a number between {manager.MinPlayers} - {manager.MaxPlayers} inclusive.");
+                            CustomConsole.WriteLine($"Please choose a number between {GameConfig.MinPlayers} - {GameConfig.MaxPlayers} inclusive.");
                         }
 
-                        Console.WriteLine($"How many Human players would you like? 0 - {rTotalPlayers}");
+                        CustomConsole.WriteLine($"How many Human players would you like? 0 - {rTotalPlayers}");
 
                         int rTotalHumans;
 
                         while (!int.TryParse(Console.ReadLine(), out rTotalHumans) || rTotalHumans < 0 || rTotalHumans > rTotalPlayers)
                         {
-                            Console.WriteLine($"Please choose a number between 0 and {rTotalPlayers} inclusive.");
+                            CustomConsole.WriteLine($"Please choose a number between 0 and {rTotalPlayers} inclusive.");
                         }
 
-                        Console.WriteLine("Initializing Game.");
+                        CustomConsole.DevWriteLineNoDelay("Initializing Game.");
+
                         manager.InitializeGame(rTotalPlayers, rTotalHumans);
+
+                        if(rTotalHumans > 1)
+                        {
+                            GameConfig.HidePlayerHands = true;
+                            CustomConsole.DevWriteLineNoDelay($"Amount of humans is greater than 1, enabling hidden player hands mode.");
+                        }
+                        else GameConfig.HidePlayerHands = false;
 
                         for ( int i = 0; i < rTotalHumans; i++)
                         {
-                            Console.Write($"Player {i+1} enter you name: ");
+                            CustomConsole.Write($"Player {i+1} enter your name: ");
                             var readName = Console.ReadLine();
                             manager.Players.Add(new PlayerHuman(readName));
                         }
 
                         manager.InitializeCPUs();
 
-                        Console.WriteLine($"{manager.Players.Count} players have been created.");
+                        CustomConsole.DevWriteLineNoDelay($"{manager.Players.Count} players have been created.");
                         General.PrintListOfPlayers(manager.Players);
-                        Console.WriteLine();
+                        CustomConsole.WriteLine();
 
-                        Console.Write("Selecting dealer: ");
+                        CustomConsole.Write("Selecting dealer: ");
                         manager.AssignRandomDealer();
-                        Console.WriteLine(manager.Dealer.Name);
+                        CustomConsole.WriteLine(manager.Dealer.Name);
 
-                        Console.WriteLine($"Creating new deck.");
+                        CustomConsole.DevWriteLineNoDelay($"Creating new deck.");
                         manager.NewDeck();
-                        Console.WriteLine($"A deck of {manager.Deck.cards.Count} cards has been created.");
+                        CustomConsole.DevWriteLineNoDelay($"A deck of {manager.Deck.cards.Count} cards has been created.");
+
                         manager.Deck.Shuffle();
-                        Console.WriteLine("The deck has been shuffled.");
+                        CustomConsole.WriteLine("The deck has been shuffled.");
 
                         manager.ChangeGameState(GameState.DealCards);
                         break;
 
                     case GameState.DealCards:
 
-                        Console.WriteLine("Dealing Cards.");
+                        CustomConsole.WriteLine("Dealing Cards.");
                         manager.DealCards();
+
                         General.PrintPlayersHands(manager.Players);
-                        Console.WriteLine($"{manager.Deck.cards.Count} cards remain in the deck.");
-                        Console.WriteLine();
+
+                        CustomConsole.DevWriteLineNoDelay($"{manager.Deck.cards.Count} cards remain in the deck.");
+                        CustomConsole.WriteLine();
 
                         manager.AssignTrumpSuit();
-                        Console.WriteLine($"The trump card is: {manager.TrumpCard}");
-                        Console.WriteLine($"The trump suit is: {manager.TrumpCard.Suit}.");
-                        Console.WriteLine($"{manager.Deck.cards.Count} cards remain in the deck.");
-                        Console.WriteLine();
+                        CustomConsole.WriteLine($"The trump card is: {manager.TrumpCard}");
+                        CustomConsole.WriteLine($"The trump suit is: {manager.TrumpCard.GetSuitSymbolUnicoded()}.");
+
+                        CustomConsole.DevWriteLineNoDelay($"{manager.Deck.cards.Count} cards remain in the deck.");
+
+                        CustomConsole.WriteLine();
                         
                         manager.Deck.AdjustForTrump(manager.TrumpCard);
                         General.PrintTrumpScores(manager.Deck.cards, manager.Deck.DealtCards);
-                        Console.WriteLine();
 
                         if (manager.TrumpCard.Rank == Ranks.Ace)
                         {
-                            Console.WriteLine("The Trump card is an Ace so the Dealer gets to steal it.");
-                            Console.WriteLine("Dealer place down your worst card.");
+                            CustomConsole.WriteLine("The Trump card is an Ace so the Dealer gets to steal it.");
+                            CustomConsole.WriteLine($"Dealer {manager.Dealer.Name} place down your worst card.");
 
-                            manager.Dealer.SelectWorstCard();
-                            manager.Dealer.Hand.Remove(manager.Dealer.WorstCard);
-                            manager.Dealer.Hand.Add(manager.TrumpCard);
-                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {manager.CurrentPlayer.WorstCard} and steals the {manager.TrumpCard}");
-                            Console.WriteLine();
+                            if (!GameConfig.DevMode && GameConfig.HidePlayerHands) manager.CurrentPlayer.IsPlayerReady();
 
+                            manager.CurrentPlayer.SelectWorstCard();
+
+                            manager.CurrentPlayer.Hand.Remove(manager.CurrentPlayer.WorstCard);
+                            CustomConsole.WriteLine($"{manager.CurrentPlayer} placed down their worst card");
+                            CustomConsole.DevWriteLineNoDelay($"Worst card: {manager.CurrentPlayer.WorstCard}");
+
+                            manager.CurrentPlayer.Hand.Add(manager.TrumpCard);
+                            CustomConsole.WriteLine($"{manager.CurrentPlayer} stole the trump card {manager.TrumpCard}.");
+
+                            manager.PlayerStoleTheTrump();
+
+                            manager.NextPlayer();
                             manager.ChangeGameState(GameState.LeadTurn);
                         }
                         else
@@ -156,13 +184,18 @@ namespace TwentyFiveDotNet
 
                         if (manager.CurrentPlayer.CanPlayerSteal(manager.TrumpCard.Suit))
                         {
-                            Console.WriteLine($"{manager.CurrentPlayer} has the Ace of Trumps and so gets to steal.");
+                            CustomConsole.WriteLine($"{manager.CurrentPlayer} has the Ace of Trumps and so gets to steal.");
+
+                            if (!GameConfig.DevMode && GameConfig.HidePlayerHands) manager.CurrentPlayer.IsPlayerReady();
 
                             manager.CurrentPlayer.SelectWorstCard();
+
                             manager.CurrentPlayer.Hand.Remove(manager.CurrentPlayer.WorstCard);
+                            CustomConsole.WriteLine($"{manager.CurrentPlayer} placed down their worst card");
+                            CustomConsole.DevWriteLineNoDelay($"Worst card: {manager.CurrentPlayer.WorstCard}");
+
                             manager.CurrentPlayer.Hand.Add(manager.TrumpCard);
-                            
-                            Console.WriteLine($"{manager.CurrentPlayer} places down his worst card {manager.CurrentPlayer.WorstCard} and steals the {manager.TrumpCard}.");
+                            CustomConsole.WriteLine($"{manager.CurrentPlayer} stole the trump card {manager.TrumpCard}.");
 
                             manager.PlayerStoleTheTrump();
 
@@ -174,10 +207,10 @@ namespace TwentyFiveDotNet
                         {
                             if (!manager.HasPlayerStolen())
                             {
-                                Console.WriteLine("Nobody has the Ace of Trumps.");
+                                CustomConsole.WriteLine("Nobody has the Ace of Trumps so nobody steals.");
                             }
 
-                            Console.WriteLine();
+                            CustomConsole.WriteLine();
 
                             manager.NextPlayer();
                             manager.ChangeGameState(GameState.LeadTurn);
@@ -187,19 +220,30 @@ namespace TwentyFiveDotNet
 
                     case GameState.LeadTurn:
 
+                        CustomConsole.WriteLine($"Press any key when you are ready to start the round.");
+                        CustomConsole.WaitForKeyPress();
+                        CustomConsole.WriteLine();
+
+                        manager.ResetCardsPlayed();
                         manager.SetLeader(manager.CurrentPlayer);
-                        Console.WriteLine($"{manager.Leader.Name} is now leading the trick.");
-                        Console.WriteLine($"{manager.TrumpCard.Suit} are trumps.");
+                        CustomConsole.WriteLine($"{manager.Leader.Name} is now leading the trick.");
+                        CustomConsole.WriteLine($"{manager.TrumpCard.GetSuitSymbolUnicoded()} are trumps.");
 
                         manager.CurrentPlayer.ResetPlayableCards();
+
+                        if (!GameConfig.DevMode && GameConfig.HidePlayerHands) manager.CurrentPlayer.IsPlayerReady();
+
                         manager.CurrentPlayer.LeadCard();
                         manager.SetLedCard(manager.CurrentPlayer.ChosenCard);
                         manager.SetWinner(manager.CurrentPlayer);
+                        manager.UpdatePlayedCards();
 
-                        Console.WriteLine($"{manager.CurrentPlayer.Name} plays {manager.CurrentPlayer.ChosenCard}.");
-                        Console.WriteLine($"{manager.LedCard.Suit} is the suit led.");
-                        Console.WriteLine($"{manager.CurrentPlayer.Name} now has {manager.CurrentPlayer.Hand.Count} cards.");
-                        Console.WriteLine();
+                        if(!GameConfig.DevMode && GameConfig.HidePlayerHands) CustomConsole.Clear();
+                        General.PrintPlayedCards(manager.PlayedCards);
+                        CustomConsole.WriteLine($"{manager.TrumpCard.GetSuitSymbolUnicoded()} are trumps, {manager.LedCard.GetSuitSymbolUnicoded()} were led.");
+                        
+                        CustomConsole.DevWriteLineNoDelay($"{manager.CurrentPlayer.Name} now has {manager.CurrentPlayer.Hand.Count} cards.");
+                        CustomConsole.WriteLine();
 
                         manager.ChangeGameState(GameState.PlayerTurn);
                         break;
@@ -214,24 +258,42 @@ namespace TwentyFiveDotNet
                         }
                         else
                         {
-                            Console.Write($"{manager.CurrentPlayer.Name} has in their hand: ");
-                            Console.WriteLine(String.Join(", ", manager.CurrentPlayer.Hand));
-
                             manager.CurrentPlayer.SetPlayableCards(manager.TrumpCard, manager.LedCard);
-                            Console.Write("The legal cards to play are: ");
-                            General.PrintLegalCards(manager.CurrentPlayer.Hand);
-                            Console.WriteLine();
-                            Console.WriteLine($"{manager.TrumpCard.Suit} are trumps, {manager.LedCard.Suit} were led.");
+
+
+                            CustomConsole.DevWriteNoDelay($"{CustomConsole.DevPrefix} {manager.CurrentPlayer.Name} has in their hand: ");
+                            CustomConsole.DevWriteLineNoDelayNoPrefix(String.Join(", ", manager.CurrentPlayer.Hand));
+
+                            CustomConsole.DevWriteNoDelay($"{CustomConsole.DevPrefix} The legal cards to play are: ");
+                            if(GameConfig.DevMode) General.PrintLegalCards(manager.CurrentPlayer.Hand);
+                            CustomConsole.DevWriteLine();
+
+                            if(!GameConfig.DevMode && GameConfig.HidePlayerHands) manager.CurrentPlayer.IsPlayerReady();
 
                             manager.CurrentPlayer.PlayerTurn();
-                            Console.WriteLine($"{manager.CurrentPlayer.Name} plays {manager.CurrentPlayer.ChosenCard}.");
+                            manager.UpdatePlayedCards();
 
                             manager.CurrentPlayer.ResetPlayableCards();
 
                             manager.UpdateWinner();
-                            Console.WriteLine($"{manager.CurrentPlayer.Name} now has {manager.CurrentPlayer.Hand.Count} cards.");
-                            Console.WriteLine($"{manager.WinningPlayer.Name} is currently winning with the {manager.WinningCard}.");
-                            Console.WriteLine();
+                            
+                            if (!GameConfig.DevMode && GameConfig.HidePlayerHands)
+                            {
+                                CustomConsole.Clear();
+                                General.PrintPlayedCards(manager.PlayedCards);
+                                CustomConsole.WriteLine();
+                                CustomConsole.WriteLineNoDelay($"{manager.TrumpCard.GetSuitSymbolUnicoded()} are trumps, {manager.LedCard.GetSuitSymbolUnicoded()} were led.");
+                            }
+                            else
+                            {
+                                CustomConsole.WriteLine($"{manager.CurrentPlayer.Name} played {manager.CurrentPlayer.ChosenCard}.");
+                            }
+
+                            CustomConsole.DevWriteLineNoDelay($"{manager.CurrentPlayer.Name} now has {manager.CurrentPlayer.Hand.Count} cards.");
+                            CustomConsole.DevWriteLine();
+
+                            CustomConsole.WriteLine($"{manager.WinningPlayer.Name} is currently winning with the {manager.WinningCard}.");
+                            CustomConsole.WriteLine();
                         }
 
                         break;
@@ -239,15 +301,15 @@ namespace TwentyFiveDotNet
                     case GameState.Scoring:
 
                         manager.Scoring();
-                        Console.WriteLine($"{manager.WinningPlayer.Name} wins the trick with the {manager.WinningCard} and receives 5 points.");
-                        Console.WriteLine();
+                        CustomConsole.WriteLine($"{manager.WinningPlayer.Name} wins the trick with the {manager.WinningCard} and receives 5 points.");
+                        CustomConsole.WriteLine();
                         General.PrintPlayersScores(manager.Players);
 
                         if (manager.IsGameOver())
                         {
-                            Console.WriteLine("Game Over!");
-                            Console.WriteLine($"{manager.WinningPlayer.Name} wins.");
-                            Console.WriteLine();
+                            CustomConsole.WriteLine("Game Over!");
+                            CustomConsole.WriteLine($"{manager.WinningPlayer.Name} wins.");
+                            CustomConsole.WriteLine();
                             manager.ChangeGameState(GameState.PlayAgain);
                         }
 
@@ -258,8 +320,8 @@ namespace TwentyFiveDotNet
                         else
                         {
                             manager.WinnerBecomesLeader();
-                            Console.WriteLine($"{manager.WinningPlayer.Name} leads the next trick.");
-                            Console.WriteLine();
+                            CustomConsole.WriteLine($"{manager.WinningPlayer.Name} leads the next trick.");
+                            CustomConsole.WriteLine();
 
                             manager.ChangeGameState(GameState.LeadTurn);
 
@@ -272,32 +334,38 @@ namespace TwentyFiveDotNet
                         manager.RotateDealer();
                         manager.NewDeck();
 
-                        Console.WriteLine($"The dealer position has rotated clockwise to: {manager.Dealer.Name}");
+                        CustomConsole.DevWriteLineNoDelay($"New Deck has been created, it has {manager.Deck.cards.Count} cards.");
+
+                        manager.Deck.Shuffle();
+                        CustomConsole.WriteLine($"Deck has been shuffled.");
+
+                        CustomConsole.WriteLine($"The dealer position has rotated clockwise to: {manager.Dealer.Name}");
 
                         manager.ChangeGameState(GameState.DealCards);
                         break;
 
                     case GameState.PlayAgain:
 
-                        Console.WriteLine("Would you like to play again? (Y/N)");
+                        CustomConsole.WriteLine("Would you like to play again? (Y/N)");
                         var charResponse = Console.ReadLine();
 
                         if (charResponse == "y" || charResponse == "Y")
                         {
                             manager.ChangeGameState(GameState.Initialize);
-                            Console.WriteLine("You chose to play a new game.");
-                            Console.WriteLine();
+                            CustomConsole.Clear();
+                            CustomConsole.WriteLine("You chose to play a new game.");
+                            CustomConsole.WriteLine();
                         }
                         else if (charResponse == "n" || charResponse == "N")
                         {
-                            Console.WriteLine("You chose to not play a new game.");
-                            Console.WriteLine();
+                            CustomConsole.WriteLine("You chose to not play a new game.");
+                            CustomConsole.WriteLine();
                             manager.ChangeGameState(GameState.EndGame);
                         }
                         else
                         {
-                            Console.WriteLine("Invalid response, try again.");
-                            Console.WriteLine();
+                            CustomConsole.WriteLine("Invalid response, try again.");
+                            CustomConsole.WriteLine();
                         }
 
                         break;
@@ -308,12 +376,6 @@ namespace TwentyFiveDotNet
                         break;
                 }
             }
-
-            /*foreach (var player in players)
-            {
-                player.Hand.Add("Ace of Spades");
-                Console.WriteLine($"{player.Name} has been dealt their cards.");
-            }*/
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +8,13 @@ using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.Utilities
 {
-    internal class General
+    public class General
     {
         public static void PrintPlayerDictionary(Dictionary<Player, Card> PlayedCards)
         {
             foreach (var entry in PlayedCards)
             {
-                Console.WriteLine($"{entry.Key.Name} has a {entry.Value}");
+                CustomConsole.WriteLine($"{entry.Key.Name} has a {entry.Value}");
             }
         }
 
@@ -21,7 +22,7 @@ namespace TwentyFiveDotNet.Utilities
         {
             foreach (var player in players)
             {
-                Console.WriteLine($"{player.Name} has joined the game.");
+                CustomConsole.WriteLine($"{player.Name} has joined the game.");
             }
         }
 
@@ -29,7 +30,7 @@ namespace TwentyFiveDotNet.Utilities
         {
             foreach (var card in cards)
             {
-                Console.WriteLine($"{card} is worth: {card.Score}");
+                CustomConsole.WriteLine($"{card} is worth: {card.Score}");
             }
         }
 
@@ -46,32 +47,36 @@ namespace TwentyFiveDotNet.Utilities
             TrumpList.Sort((x, y) => y.Score.CompareTo(x.Score)); // desc
 
             foreach (var card in TrumpList)
-                Console.WriteLine($"{card} is worth: {card.Score}");
+                CustomConsole.DevWriteLineNoDelay($"{card} is worth: {card.Score}");
+
+            CustomConsole.DevWriteLine();
         }
 
         public static void PrintPlayersHands(List<Player> players)
         {
             foreach (var player in players)
             {
-                Console.Write($"{player.Name} has:");
+                CustomConsole.DevTagPrint();
+
+                CustomConsole.DevWriteNoDelay($"{player.Name} has:");
 
                 foreach (var card in player.Hand)
                 {
-                    Console.Write($" {card},");
+                    CustomConsole.DevWriteNoDelay($" {card},");
                 }
-                Console.WriteLine();
+                CustomConsole.DevWriteLine();
             }
         }
 
         public static void PrintPlayersScores(List<Player> players)
         {
-            Console.WriteLine($"Current Scores:");
+            CustomConsole.WriteLine($"Current Scores:");
 
             foreach (var player in players)
             {
-                Console.WriteLine($"{player.Name} has {player.Points} points.");
+                CustomConsole.WriteLine($"{player.Name} has {player.Points} points.", 200);
             }
-            Console.WriteLine();
+            CustomConsole.WriteLine();
         }
 
         public static void PrintLegalCards(List<Card> hand)
@@ -80,8 +85,16 @@ namespace TwentyFiveDotNet.Utilities
             {
                 if (card.Legal)
                 {
-                    Console.Write($"{card}, ");
+                    CustomConsole.Write($"{card}, ");
                 }
+            }
+        }
+
+        public static void PrintPlayedCards(Dictionary<Player, Card> PlayedCards)
+        {
+            foreach (KeyValuePair<Player, Card> card in PlayedCards)
+            {
+                CustomConsole.WriteLineNoDelay($"{card.Key} played {card.Value}");
             }
         }
     }

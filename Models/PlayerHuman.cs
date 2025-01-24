@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TwentyFiveDotNet.Utilities;
+using TwentyFiveDotNet.Config;
 
 namespace TwentyFiveDotNet.Models
 {
@@ -20,6 +21,9 @@ namespace TwentyFiveDotNet.Models
         }
         public override void PlayerTurn()
         {
+            CustomConsole.Write("Your legal cards to play are: ");
+            General.PrintLegalCards(Hand);
+            CustomConsole.WriteLine();
             ChosenCard = SelectCard();
             Hand.Remove(ChosenCard);
         }
@@ -30,7 +34,7 @@ namespace TwentyFiveDotNet.Models
 
             CardConsolePrompt();
 
-            while (!int.TryParse(Console.ReadLine(), out j) || j < 1 || j > Hand.Count + 1)
+            while (!int.TryParse(Console.ReadLine(), out j) || j < 1 || j > Hand.Count )
             {
                 CardConsolePrompt();
             }
@@ -40,7 +44,7 @@ namespace TwentyFiveDotNet.Models
 
         private void CardConsolePrompt()
         {
-            Console.Write($"Enter a number to pick a card: ");
+            CustomConsole.Write($"Enter a number to pick a card: ");
 
             int i = 0;
             foreach (var card in Hand)
@@ -48,13 +52,19 @@ namespace TwentyFiveDotNet.Models
                 Console.Write($"{++i} ({card}), ");
             }
 
-            Console.WriteLine();
+            CustomConsole.WriteLine();
         }
 
         public override Card SelectWorstCard()
         {
             WorstCard = SelectCard();
+            if (!GameConfig.DevMode) CustomConsole.Clear();
             return WorstCard;
+        }
+        public override void IsPlayerReady()
+        {
+            CustomConsole.WriteLine($"{this.Name}, when you are ready, press any key to start your turn. Other players look away.");
+            CustomConsole.WaitForKeyPress();
         }
     }
 }

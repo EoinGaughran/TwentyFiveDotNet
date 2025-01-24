@@ -27,7 +27,13 @@ namespace TwentyFiveDotNet.Models
 
         public override Card SelectWorstCard()
         {
-            return CardComparer.GetWorstCard(Hand);
+            WorstCard = CardComparer.GetWorstCard(Hand);
+            return WorstCard;
+        }
+
+        public override void IsPlayerReady()
+        {
+            //do nothing
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.Utilities;
 
 namespace TwentyFiveDotNet.Models
@@ -24,6 +25,7 @@ namespace TwentyFiveDotNet.Models
         public abstract void PlayerTurn();
         public abstract void LeadCard();
         public abstract Card SelectWorstCard();
+        public abstract void IsPlayerReady();
 
         public void SetCardToPlayerTableArea(Card card)
         {
@@ -100,6 +102,11 @@ namespace TwentyFiveDotNet.Models
             {
                 card.Legal = true;
             }
+        } 
+        public void Steal()
+        {
+            if (!GameConfig.DevMode && GameConfig.HidePlayerHands) IsPlayerReady();
+            Hand.Remove(SelectWorstCard());
         }
 
         public bool HasWon()

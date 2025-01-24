@@ -1,16 +1,27 @@
-Unit Testing
-change class sets to private
-convert 'chosen card' to 'TableCardArea' for all play, should be an array
-Played Card History
-Add table class
-Human player
+Minor
+- last round, one card left, auto play everyones hands
+- Unit Testing
+- Make class variable sets private where possible
+- convert 'chosen card' to 'TableCardArea' for all play, should be an array
+- RulesEngine
+- Replace linq concats of dealth cards with a refernce list of the original 52 cards
+- Remove console prints from Player card methods
 
-reneging the ace of hearts when non heart suit is led
-ascii art for the trump suit
+Major
+- Add table class
+- Event-Driven Design
+- Custom Exceptions
+- Extend Deck/Score Rules
+- Data-driven design: JSON or XML for card definitions
+- Configuration file: Define the rules of your card game in a seperate XML or Json file
+- Played Card History
 
-replace linq concats of dealth cards with a refernce list of the original 52 cards
+Optional
+- Ascii art for the trump suit
 
-done
-Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards
-Separate Logic from Presentation, Gamemanager: Divide methods, Move PlayCard methods to Player class, GameManager variables privatized
-stealing
+Done
+- Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards
+- Separate Logic from Presentation, Gamemanager: Divide methods, Move PlayCard methods to Player class, GameManager variables privatized
+- stealing
+- reneging the ace of hearts when non heart suit is led
+- Human player HiddenHand mode, CustomConsole, Dev mode, GameConfig, CardsPlayed Dictionary

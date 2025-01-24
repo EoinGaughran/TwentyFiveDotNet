@@ -105,5 +105,17 @@ namespace TwentyFiveDotNet.Models
 
             return $"{Rank}{symbol}";
         }
+
+        public string GetSuitSymbolUnicoded()
+        {
+            string symbol = "symbol null";
+
+            if (Suit == Suits.Hearts) symbol = "♥";
+            if (Suit == Suits.Clubs) symbol = "♣";
+            if (Suit == Suits.Diamonds) symbol = "♦";
+            if (Suit == Suits.Spades) symbol = "♠";
+
+            return $"{symbol}";
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Utilities;
 
@@ -24,17 +25,15 @@ namespace TwentyFiveDotNet.Game
         public Card LedCard { get; private set; }
         public Card WinningCard { get; private set; }
         public bool Steal {  get; private set; }
+        public static int TotalPlayers { get; set; }
+        public static int TotalHumans { get; set; }
+        public static int TotalCPUs { get; set; }
 
         //load from file later
         private readonly int TwoCards = 2;
         private readonly int ThreeCards = 3;
         private readonly int MaxScore = 25;
-        public int TotalHand = 5;
-        public int TotalPlayers;
-        public int TotalHumans;
-        public int TotalCPUs;
-        public int MaxPlayers = 10;
-        public int MinPlayers = 3;
+        
 
         public GameManager()
         {
@@ -59,7 +58,7 @@ namespace TwentyFiveDotNet.Game
         {
             for (int i = TotalHumans; i < TotalPlayers ; i++)
             {
-                Players.Add(new PlayerCPU ($"Player {i + 1}"));
+                Players.Add(new PlayerCPU ($"CPU Player {i + 1}"));
             }
         }
         public void AssignDealer(int NewDealer)
@@ -77,14 +76,18 @@ namespace TwentyFiveDotNet.Game
 
         public void RotateDealer()
         {
-            DealerPlayerNumber = NextPlayerNumber(DealerPlayerNumber,TotalPlayers);
+            DealerPlayerNumber = NextPlayerNumber(DealerPlayerNumber);
             Dealer = Players[DealerPlayerNumber];
         }
 
         public void NewDeck()
         {
             Deck = new Deck();
-            Deck.Shuffle();
+        }
+
+        public void ResetCardsPlayed()
+        {
+            PlayedCards = new Dictionary<Player, Card>();
         }
 
         public Dictionary<Player, Card> GetPlayedCards()
@@ -97,6 +100,11 @@ namespace TwentyFiveDotNet.Game
                 PlayedCards[Player] = Player.TableAreaCard;
             }
             return PlayedCards;
+        }
+
+        public void UpdatePlayedCards()
+        {
+            PlayedCards.Add(CurrentPlayer, CurrentPlayer.ChosenCard);
         }
 
         public void RemoveCardsFromTableArea()
@@ -138,14 +146,14 @@ namespace TwentyFiveDotNet.Game
             }
         }
 
-        public int NextPlayerNumber(int PlayerNumber, int TotalPlayers)
+        public int NextPlayerNumber(int PlayerNumber)
         {
             return (PlayerNumber + 1) % TotalPlayers; // Move to the indexer to the next player
         }
 
         public void NextPlayer()
         {
-            CurrentPlayerNumber = NextPlayerNumber(CurrentPlayerNumber, TotalPlayers);
+            CurrentPlayerNumber = NextPlayerNumber(CurrentPlayerNumber);
             CurrentPlayer = Players[CurrentPlayerNumber];
         }
 
