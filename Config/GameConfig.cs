@@ -1,28 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace TwentyFiveDotNet.Config
 {
-    public static class GameConfig
+    public class GameConfig
     {
-        public static bool DevMode { get; set; } = false;
-        public static string GameTitle { get; set; } = "Twenty Five (25)";
-        public static int MaxHand { get; set; } = 5;
-        public static int MaxPlayers { get; private set; } = 10;
-        public static int MinPlayers { get; private set; } = 3;
-        public static bool HidePlayerHands { get; set; } = false;
-        public static int _delayInMilliseconds { get; private set; } = 500;
+        private static GameConfig _instance;
 
-        // Optional: Load configuration from a file or arguments
-        public static void LoadFromArgs(string[] args)
+        public static GameConfig Instance => _instance ??= new GameConfig();
+
+        public static void Load(GameConfig config)
         {
-            if (args.Contains("--dev"))
-            {
-                DevMode = true;
-            }
+            _instance = config;
         }
+
+        public bool DevMode { get; set; }
+        public string GameTitle { get; set; }
+        public int MaxHand { get; set; }
+        public int MaxPlayers { get; set; }
+        public int MinPlayers { get; set; }
+        public int MaxPoints { get; set; }
+        public int PointsPerTrick { get; set; }
+        public bool HidePlayerHands { get; set; }
+        public int DelayInMilliseconds { get; set; }
+
+        private GameConfig() { }
+    }
+
+    public class ConfigLoader
+    {
+        public static GameConfig LoadGameConfig(string filePath)
+        {
+            string json = File.ReadAllText(filePath);
+            return JsonConvert.DeserializeObject<GameConfig>(json);
+        }
+    }
+
+    public class WinningRules
+    {
+        public bool WinOnExactScore { get; set; }
+        public bool AllowTie { get; set; }
     }
 }

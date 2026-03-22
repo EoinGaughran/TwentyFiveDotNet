@@ -45,7 +45,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\GameConfig.cs" />
+    <Compile Include="ConsoleUI\ConsoleInteraction.cs" />
     <Compile Include="Game\GameManager.cs" />
+    <Compile Include="Game\RulesEngine.cs" />
+    <Compile Include="Interfaces\IPlayerInteraction.cs" />
     <Compile Include="Models\Card.cs" />
     <Compile Include="Models\PlayerCPU.cs" />
     <Compile Include="Models\Deck.cs" />
@@ -54,12 +57,21 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\CardComparer.cs" />
-    <Compile Include="Utilities\CustomConsole.cs" />
-    <Compile Include="Utilities\General.cs" />
+    <Compile Include="ConsoleUI\ConsoleSettings.cs" />
+    <Compile Include="ConsoleUI\CustomConsole.cs" />
     <Compile Include="Utilities\ScoreCalculator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Config\GameConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Libraries\Newtonsoft.Json-13.0.3\Src\Newtonsoft.Json\Newtonsoft.Json.csproj">
+      <Project>{d4b75611-1e31-4779-8025-8d188a9ebb1e}</Project>
+      <Name>Newtonsoft.Json</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

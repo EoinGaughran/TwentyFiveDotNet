@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using TwentyFiveDotNet.Config;
+using TwentyFiveDotNet.Interfaces;
 using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Utilities;
 
@@ -10,135 +12,91 @@ namespace TwentyFiveDotNet.Game
 {
     internal class GameManager
     {
-        public List<Player> Players { get; private set; }
-        public Dictionary<Player, Card> PlayedCards { get; private set; }
-        public Deck Deck { get; private set; }
-        public GameState CurrentState { get; private set; }
-        public Player Dealer { get; private set; }
-        public Player Leader { get; private set; }
-        public Player CurrentPlayer { get; private set; }
-        public Player WinningPlayer { get; private set; }
-        public int DealerPlayerNumber { get; private set; }
-        public int CurrentPlayerNumber { get; private set; }
-        public int WinningPlayerNumber { get; private set; }
-        public Card TrumpCard { get; private set; }
-        public Card LedCard { get; private set; }
-        public Card WinningCard { get; private set; }
-        public bool Steal {  get; private set; }
-        public static int TotalPlayers { get; set; }
-        public static int TotalHumans { get; set; }
-        public static int TotalCPUs { get; set; }
+        private readonly GameConfig _config;
+        private readonly RulesEngine _rules;
+
+        private List<Player> _players { get; set; }
+        private Dictionary<Player, Card> PlayedCards { get; set; }
+        private Deck Deck { get; set; }
+        private GameState CurrentState { get; set; }
+        private Player Dealer { get; set; }
+        private Player Leader { get; set; }
+        private Player CurrentPlayer { get; set; }
+        private Player WinningPlayer { get; set; }
+        private int DealerPlayerNumber { get; set; }
+        private int CurrentPlayerNumber { get; set; }
+        private int WinningPlayerNumber { get; set; }
+        private Card TrumpCard { get; set; }
+        private Card LedCard { get; set; }
+        private Card WinningCard { get; set; }
+        private bool Steal {  get; set; }
 
         //load from file later
         private readonly int TwoCards = 2;
         private readonly int ThreeCards = 3;
-        private readonly int MaxScore = 25;
         
-
-        public GameManager()
+        public GameManager(GameConfig config, RulesEngine rules, List<Player> players)
         {
+            _config = config;
+            _rules = rules;
+            _players = players;
+
             // Initialize the properties in the constructor
             CurrentState = GameState.NotStarted;
         }
 
-        public void InitializeGame(int totalPlayers, int totalHumans)
+        private void AssignRandomDealer()
         {
-            Players = new List<Player>();
-            TotalPlayers = totalPlayers;
-            TotalHumans = totalHumans;
-            TotalCPUs = TotalPlayers - TotalHumans;
+            Random r = new Random();
+            DealerPlayerNumber = r.Next(0, _players.Count);
+            Dealer = _players[DealerPlayerNumber];
         }
 
-        public void InitializeHumanPlayer(Player human)
-        {
-            Players.Add(human);
-        }
-
-        public void InitializeCPUs()
-        {
-            for (int i = TotalHumans; i < TotalPlayers ; i++)
-            {
-                Players.Add(new PlayerCPU ($"CPU Player {i + 1}"));
-            }
-        }
-        public void AssignDealer(int NewDealer)
-        {
-            DealerPlayerNumber = NewDealer;
-            Dealer = Players[DealerPlayerNumber];
-        }
-
-        public void AssignRandomDealer()
-        {
-            Random r = new Random();           
-            DealerPlayerNumber = r.Next(0, TotalPlayers);
-            Dealer = Players[DealerPlayerNumber];     
-        }
-
-        public void RotateDealer()
+        private void RotateDealer()
         {
             DealerPlayerNumber = NextPlayerNumber(DealerPlayerNumber);
-            Dealer = Players[DealerPlayerNumber];
+            Dealer = _players[DealerPlayerNumber];
         }
 
-        public void NewDeck()
+        private void NewDeck()
         {
             Deck = new Deck();
         }
 
-        public void ResetCardsPlayed()
+        private void ResetCardsPlayed()
         {
             PlayedCards = new Dictionary<Player, Card>();
         }
 
-        public Dictionary<Player, Card> GetPlayedCards()
-        {
-            var PlayedCards = new Dictionary<Player, Card>();
-
-            foreach (var Player in Players)
-            {
-                // Example: Calculate score based on cards the player has
-                PlayedCards[Player] = Player.TableAreaCard;
-            }
-            return PlayedCards;
-        }
-
-        public void UpdatePlayedCards()
+        private void UpdatePlayedCards()
         {
             PlayedCards.Add(CurrentPlayer, CurrentPlayer.ChosenCard);
         }
 
-        public void RemoveCardsFromTableArea()
-        {
-            foreach (var Player in Players)
-            {
-                Player.RemovePlayerTableArea();
-            }
-        }
-
-        public void DealCards()
+        private void DealCards()
         {
             ChangeToPlayer(DealerPlayerNumber);
 
-            for (int i = 0; i < TotalPlayers; i++)
+            for (int i = 0; i < _players.Count; i++)
             {
                 NextPlayer();
                 GivePlayerCards(TwoCards);
             }
 
-            for (int i = 0; i < TotalPlayers; i++)
+            for (int i = 0; i < _players.Count; i++)
             {
                 NextPlayer();
                 GivePlayerCards(ThreeCards);
-            }      
+            }
         }
 
-        public void AssignTrumpSuit()
+        private void AssignTrumpSuit()
         {
             TrumpCard = Deck.Draw();
             Steal = false;
         }
 
-        public void GivePlayerCards(int cards)
+        private void GivePlayerCards(int cards)
         {
             for (int i = 0; i < cards; i++)
             {
@@ -146,94 +104,71 @@ namespace TwentyFiveDotNet.Game
             }
         }
 
-        public int NextPlayerNumber(int PlayerNumber)
+        private int NextPlayerNumber(int PlayerNumber)
         {
-            return (PlayerNumber + 1) % TotalPlayers; // Move to the indexer to the next player
+            return (PlayerNumber + 1) % _players.Count; // Move to the indexer to the next player
         }
 
-        public void NextPlayer()
+        private void NextPlayer()
         {
             CurrentPlayerNumber = NextPlayerNumber(CurrentPlayerNumber);
-            CurrentPlayer = Players[CurrentPlayerNumber];
+            CurrentPlayer = _players[CurrentPlayerNumber];
         }
 
-        public void ChangeToPlayer(int playerNumber)
+        private void ChangeToPlayer(int playerNumber)
         {
             CurrentPlayerNumber = playerNumber;
-            CurrentPlayer = Players[playerNumber];
+            CurrentPlayer = _players[playerNumber];
         }
 
-        public void ChangeToPlayer(Player player)
+        private void ChangeToPlayer(Player player)
         {
-            CurrentPlayerNumber = Players.IndexOf(player);
+            CurrentPlayerNumber = _players.IndexOf(player);
             CurrentPlayer = player;
         }
-
-        public void SetWinner(Player player)
-        {
-            WinningCard = player.ChosenCard;
-            WinningPlayer = player;
-            WinningPlayerNumber = Players.IndexOf(player);
-        }
-
-        public void SetLeader(Player player)
+        private void SetLeader(Player player)
         {
             Leader = player;
         }
 
-        public void SetLedCard(Card card)
+        private void SetLedCard(Card card)
         {
             LedCard = card;
         }
-
-        public void UpdateWinner()
+        private void SetWinner()
         {
-            if(CurrentPlayer.ChosenCard.Suit == LedCard.Suit || CurrentPlayer.ChosenCard.IsTrump)
-            {
-                if (CurrentPlayer.ChosenCard.Score > WinningCard.Score)
-                {
-                    SetWinner(CurrentPlayer);
-                }
-            }
+            WinningCard = CurrentPlayer.ChosenCard;
+            WinningPlayer = CurrentPlayer;
+            WinningPlayerNumber = _players.IndexOf(CurrentPlayer);
         }
 
-        public void Scoring()
-        {
-            WinningPlayer.Points += 5;
-        }
-
-        public void WinnerBecomesLeader()
+        private void WinnerBecomesLeader()
         {
             CurrentPlayer = WinningPlayer;
             CurrentPlayerNumber = WinningPlayerNumber;
         }
 
-        public void PlayerStoleTheTrump()
+        private void PlayerStoleTheTrump()
         {
             Steal = true;
         }
 
-        public void TheTrumpIsNotStolen()
+        private bool IsGameOver()
         {
-            Steal = false;
-        }
-
-        public bool IsGameOver()
-        {
-            if (WinningPlayer.Points >= MaxScore)
+            if (WinningPlayer.Points >= _config.MaxPoints)
             {
                 return true;
             }
             else return false;
         }
 
-        public bool ArePlayersOutOfCards()
+        private bool ArePlayersOutOfCards()
         {
-            if (Players[0].Hand.Count == 0) return true;
+            if (_players[0].Hand.Count == 0) return true;
             else return false;
         }
 
-        public bool HasPlayerStolen()
+        private bool HasPlayerStolen()
         {
             if (Steal)
             {
@@ -242,9 +177,289 @@ namespace TwentyFiveDotNet.Game
             else return false;
         }
 
-        public void ChangeGameState(GameState state)
+        private void ChangeGameState(GameState state)
         {
             CurrentState = state;
+        }
+
+        public void StartGame()
+        {
+            while (CurrentState != GameState.EndGame)
+            {
+                ConsoleSettings consoleSettings = new ConsoleSettings();
+                consoleSettings.DevMode = _config.DevMode;
+                consoleSettings.Delay = _config.DelayInMilliseconds;
+
+                switch (CurrentState)
+                {
+                    case GameState.NotStarted:
+
+                    case GameState.Initialize:
+
+                        CustomConsole.DevWriteLineNoDelay($"{_players.Count} players have been created.", consoleSettings);
+                        CustomConsole.PrintListOfPlayers(_players, consoleSettings);
+                        CustomConsole.WriteLine();
+
+                        CustomConsole.Write("Selecting dealer: ", consoleSettings);
+                        AssignRandomDealer();
+                        CustomConsole.WriteLine(Dealer.Name, consoleSettings);
+
+                        CustomConsole.DevWriteLineNoDelay($"Creating new deck.", consoleSettings);
+                        NewDeck();
+                        CustomConsole.DevWriteLineNoDelay($"A deck of {Deck.cards.Count} cards has been created.", consoleSettings);
+
+                        Deck.Shuffle();
+                        CustomConsole.WriteLine("The deck has been shuffled.", consoleSettings);
+
+                        ChangeGameState(GameState.DealCards);
+                        break;
+
+                    case GameState.DealCards:
+
+                        CustomConsole.WriteLine("Dealing Cards.", consoleSettings);
+                        DealCards();
+
+                        CustomConsole.PrintPlayersHands(_players, consoleSettings);
+
+                        CustomConsole.DevWriteLineNoDelay($"{Deck.cards.Count} cards remain in the deck.", consoleSettings);
+                        CustomConsole.WriteLine();
+
+                        AssignTrumpSuit();
+                        CustomConsole.WriteLine($"The trump card is: {TrumpCard}", consoleSettings);
+                        CustomConsole.WriteLine($"The trump suit is: {TrumpCard.GetSuitSymbolUnicoded()}.", consoleSettings);
+
+                        CustomConsole.DevWriteLineNoDelay($"{Deck.cards.Count} cards remain in the deck.", consoleSettings);
+
+                        CustomConsole.WriteLine();
+
+                        Deck.AdjustForTrump(TrumpCard);
+                        CustomConsole.PrintTrumpScores(Deck.cards, Deck.DealtCards, consoleSettings);
+
+                        if (TrumpCard.Rank == Ranks.Ace)
+                        {
+                            CustomConsole.WriteLine("The Trump card is an Ace so the Dealer gets to steal it.", consoleSettings);
+                            CustomConsole.WriteLine($"Dealer {Dealer.Name} place down your worst card.", consoleSettings); ;
+
+                            //if (!_config.DevMode && _config.HidePlayerHands) CurrentPlayer.IsPlayerReady();
+
+                            //CurrentPlayer.GetWorstCard(_rules.GetWorstCard);
+
+                            CustomConsole.WriteLine($"{CurrentPlayer} placed down their worst card", consoleSettings);
+                            CustomConsole.DevWriteLineNoDelay($"Worst card: {_rules.GetWorstCard(CurrentPlayer.Hand)}", consoleSettings);
+                            CurrentPlayer.Hand.Remove(_rules.GetWorstCard(CurrentPlayer.Hand));
+
+                            CurrentPlayer.Hand.Add(TrumpCard);
+                            CustomConsole.WriteLine($"{CurrentPlayer} stole the trump card {TrumpCard}.", consoleSettings);
+
+                            PlayerStoleTheTrump();
+
+                            NextPlayer();
+                            ChangeGameState(GameState.LeadTurn);
+                        }
+                        else
+                        {
+                            ChangeGameState(GameState.Stealing);
+                        }
+
+                        break;
+
+                    case GameState.Stealing:
+
+                        NextPlayer();
+
+                        if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard.Suit))
+                        {
+                            CustomConsole.WriteLine($"{CurrentPlayer} has the Ace of Trumps and so gets to steal.", consoleSettings);
+
+                            //if (!_config.DevMode && _config.HidePlayerHands) CurrentPlayer.IsPlayerReady();
+
+                            //CurrentPlayer.SelectWorstCard();
+
+                            CustomConsole.WriteLine($"{CurrentPlayer} placed down their worst card", consoleSettings);
+                            CustomConsole.DevWriteLineNoDelay($"Worst card: {_rules.GetWorstCard(CurrentPlayer.Hand)}", consoleSettings);
+                            CurrentPlayer.Hand.Remove(_rules.GetWorstCard(CurrentPlayer.Hand));
+
+                            CurrentPlayer.Hand.Add(TrumpCard);
+                            CustomConsole.WriteLine($"{CurrentPlayer} stole the trump card {TrumpCard}.", consoleSettings);
+
+                            PlayerStoleTheTrump();
+
+                            ChangeToPlayer(Dealer);
+                            ChangeGameState(GameState.LeadTurn);
+                        }
+
+                        if (CurrentPlayer == Dealer)
+                        {
+                            if (!HasPlayerStolen())
+                            {
+                                CustomConsole.WriteLine("Nobody has the Ace of Trumps so nobody steals.", consoleSettings);
+                            }
+
+                            CustomConsole.WriteLine();
+
+                            NextPlayer();
+                            ChangeGameState(GameState.LeadTurn);
+                        }
+
+                        break;
+
+                    case GameState.LeadTurn:
+
+                        CustomConsole.WriteLine($"Press any key when you are ready to start the round.", consoleSettings);
+                        CustomConsole.WaitForKeyPress();
+                        CustomConsole.WriteLine();
+
+                        ResetCardsPlayed();
+                        SetLeader(CurrentPlayer);
+                        CustomConsole.WriteLine($"{Leader.Name} is now leading the trick.", consoleSettings);
+                        CustomConsole.WriteLine($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps.", consoleSettings);
+
+                        _rules.ResetPlayableCards(CurrentPlayer.Hand);
+
+                        //if (!_config.DevMode && _config.HidePlayerHands) CurrentPlayer.IsPlayerReady();
+
+                        CurrentPlayer.PlayerTurn();
+                        SetLedCard(CurrentPlayer.ChosenCard);
+                        SetWinner();
+                        UpdatePlayedCards();
+
+                        if (!_config.DevMode && _config.HidePlayerHands) CustomConsole.Clear();
+                        CustomConsole.PrintPlayedCards(PlayedCards);
+                        CustomConsole.WriteLine($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps, {LedCard.GetSuitSymbolUnicoded()} were led.", consoleSettings);
+
+                        CustomConsole.DevWriteLineNoDelay($"{CurrentPlayer.Name} now has {CurrentPlayer.Hand.Count} cards.", consoleSettings);
+                        CustomConsole.WriteLine();
+
+                        ChangeGameState(GameState.PlayerTurn);
+                        break;
+
+                    case GameState.PlayerTurn:
+
+                        NextPlayer();
+
+                        if (CurrentPlayer == Leader)
+                        {
+                            ChangeGameState(GameState.Scoring);
+                        }
+                        else
+                        {
+                            _rules.SetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
+
+                            CustomConsole.DevWriteNoDelay($"{CustomConsole.DevPrefix} {CurrentPlayer.Name} has in their hand: ", consoleSettings);
+                            CustomConsole.DevWriteLineNoDelayNoPrefix(String.Join(", ", CurrentPlayer.Hand), consoleSettings);
+
+                            CustomConsole.DevWriteNoDelay($"{CustomConsole.DevPrefix} The legal cards to play are: ", consoleSettings); ;
+                            if (_config.DevMode) CustomConsole.PrintLegalCards(CurrentPlayer.Hand, consoleSettings);
+                            CustomConsole.DevWriteLine(consoleSettings);
+
+                            //if (!_config.DevMode && _config.HidePlayerHands) CurrentPlayer.IsPlayerReady();
+
+                            CurrentPlayer.PlayerTurn();
+                            UpdatePlayedCards();
+
+                            _rules.ResetPlayableCards(CurrentPlayer.Hand);
+
+                            if(_rules.IsCardBetter(CurrentPlayer.ChosenCard, WinningCard, LedCard)) SetWinner();
+
+                            if (!_config.DevMode && _config.HidePlayerHands)
+                            {
+                                CustomConsole.Clear();
+                                CustomConsole.PrintPlayedCards(PlayedCards);
+                                CustomConsole.WriteLine();
+                                CustomConsole.WriteLineNoDelay($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps, {LedCard.GetSuitSymbolUnicoded()} were led.");
+                            }
+                            else
+                            {
+                                CustomConsole.WriteLine($"{CurrentPlayer.Name} played {CurrentPlayer.ChosenCard}.", consoleSettings);
+                            }
+
+                            CustomConsole.DevWriteLineNoDelay($"{CurrentPlayer.Name} now has {CurrentPlayer.Hand.Count} cards.", consoleSettings);
+                            CustomConsole.DevWriteLine(consoleSettings);
+
+                            CustomConsole.WriteLine($"{WinningPlayer.Name} is currently winning with the {WinningCard}.", consoleSettings);
+                            CustomConsole.WriteLine();
+                        }
+
+                        break;
+
+                    case GameState.Scoring:
+
+                        _rules.Scoring(WinningPlayer);
+                        CustomConsole.WriteLine($"{WinningPlayer.Name} wins the trick with the {WinningCard} and receives 5 points.", consoleSettings);
+                        CustomConsole.WriteLine();
+                        CustomConsole.PrintPlayersScores(_players, consoleSettings);
+
+                        if (IsGameOver())
+                        {
+                            CustomConsole.WriteLine("Game Over!", consoleSettings);
+                            CustomConsole.WriteLine($"{WinningPlayer.Name} wins.", consoleSettings);
+                            CustomConsole.WriteLine();
+                            ChangeGameState(GameState.PlayAgain);
+                        }
+
+                        else if (ArePlayersOutOfCards())
+                        {
+                            ChangeGameState(GameState.NewRound);
+                        }
+                        else
+                        {
+                            WinnerBecomesLeader();
+                            CustomConsole.WriteLine($"{WinningPlayer.Name} leads the next trick.", consoleSettings);
+                            CustomConsole.WriteLine();
+
+                            ChangeGameState(GameState.LeadTurn);
+
+                        }
+
+                        break;
+
+                    case GameState.NewRound:
+
+                        RotateDealer();
+                        NewDeck();
+
+                        CustomConsole.DevWriteLineNoDelay($"New Deck has been created, it has {Deck.cards.Count} cards.", consoleSettings);
+
+                        Deck.Shuffle();
+                        CustomConsole.WriteLine($"Deck has been shuffled.", consoleSettings);
+
+                        CustomConsole.WriteLine($"The dealer position has rotated clockwise to: {Dealer.Name}", consoleSettings);
+
+                        ChangeGameState(GameState.DealCards);
+                        break;
+
+                    case GameState.PlayAgain:
+
+                        CustomConsole.WriteLine("Would you like to play again? (Y/N)", consoleSettings);
+                        var charResponse = Console.ReadLine();
+
+                        if (charResponse == "y" || charResponse == "Y")
+                        {
+                            ChangeGameState(GameState.Initialize);
+                            CustomConsole.Clear();
+                            CustomConsole.WriteLine("You chose to play a new game.", consoleSettings);
+                            CustomConsole.WriteLine();
+                        }
+                        else if (charResponse == "n" || charResponse == "N")
+                        {
+                            CustomConsole.WriteLine("You chose to not play a new game.", consoleSettings);
+                            CustomConsole.WriteLine();
+                            ChangeGameState(GameState.EndGame);
+                        }
+                        else
+                        {
+                            CustomConsole.WriteLine("Invalid response, try again.", consoleSettings);
+                            CustomConsole.WriteLine();
+                        }
+
+                        break;
+
+                    case GameState.EndGame:
+                        // Display results and end the loop
+
+                        break;
+                }
+            }
         }
     }
 }

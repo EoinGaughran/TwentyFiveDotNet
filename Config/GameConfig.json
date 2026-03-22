@@ -1,0 +1,11 @@
+{
+    "DevMode": true,
+    "GameTitle": "Twenty Five (25)",
+    "MaxHand": 5,
+    "MaxPlayers": 10,
+    "MinPlayers": 3,
+    "MaxPoints": 25,
+    "PointsPerTrick": 5,
+    "HidePlayerHands": false,
+    "DelayInMilliseconds": 500
+}
