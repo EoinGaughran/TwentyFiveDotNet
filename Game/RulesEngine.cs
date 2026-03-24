@@ -102,6 +102,13 @@ namespace TwentyFiveDotNet.Game
             return false;
         }
 
+        public bool IsTrumpCardStealable(Card TrumpCard)
+        {
+            if (TrumpCard.Rank == Ranks.Ace) return true;
+
+            return false;
+        }
+
         public void ResetPlayableCards(List<Card> Hand)
         {
             foreach (var card in Hand)
@@ -113,6 +120,15 @@ namespace TwentyFiveDotNet.Game
         {
             //if (!Config.DevMode && Config.HidePlayerHands) IsPlayerReady();
             Hand.Remove(GetWorstCard(Hand));
+        }
+
+        public bool IsGameOver(Player WinningPlayer)
+        {
+            if (WinningPlayer.Points >= _config.MaxPoints)
+            {
+                return true;
+            }
+            else return false;
         }
 
         public bool HasWon()

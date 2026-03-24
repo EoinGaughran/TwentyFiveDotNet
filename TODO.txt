@@ -7,6 +7,7 @@ Minor
 - Replace linq concats of dealth cards with a refernce list of the original 52 cards
 - Remove console prints from Player card methods
 - Remove unused library includes
+- Replace GameManager's 'while (CurrentState != GameState.EndGame)' with 'public void Tick()'
 
 Major
 - Add table class
@@ -19,6 +20,7 @@ Major
 - Separation of states: GameState, PlayerState
 - Replace GameConfig singleton with Dependency Injection
 - Make Hand its own object class
+- Create a User object for functions outside of game loop e.g. start new game, exit
 
 Optional
 - Ascii art for the trump suit

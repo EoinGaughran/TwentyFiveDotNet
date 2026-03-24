@@ -15,10 +15,15 @@ namespace TwentyFiveDotNet.Models
             Name = name;
         }
 
-        public override void PlayerTurn()
+        public override Card StealTrump()
         {
-            ChosenCard = CardComparer.GetBestCard(Hand);
-            Hand.Remove(ChosenCard);
+            return CardComparer.GetWorstCard(Hand);
         }
+
+        public override Card ChooseCard()
+        {
+            return CardComparer.GetBestCard(Hand);
+        }
+
     }
 }

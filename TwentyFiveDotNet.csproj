@@ -45,9 +45,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\GameConfig.cs" />
+    <Compile Include="ConsoleUI\ConsoleGameInteraction.cs" />
     <Compile Include="ConsoleUI\ConsoleInteraction.cs" />
     <Compile Include="Game\GameManager.cs" />
     <Compile Include="Game\RulesEngine.cs" />
+    <Compile Include="Interfaces\IGameInteraction.cs" />
     <Compile Include="Interfaces\IPlayerInteraction.cs" />
     <Compile Include="Models\Card.cs" />
     <Compile Include="Models\PlayerCPU.cs" />

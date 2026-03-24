@@ -10,6 +10,7 @@ using TwentyFiveDotNet.Config;
 using System.IO;
 using TwentyFiveDotNet.Interfaces;
 using TwentyFiveDotNet.ConsoleUI;
+using System.Runtime;
 
 namespace TwentyFiveDotNet
 {
@@ -66,6 +67,7 @@ namespace TwentyFiveDotNet
             consoleSettings.Delay = config.DelayInMilliseconds;
 
             IPlayerInteraction iPlayerInteraction = new ConsoleInteraction(consoleSettings);
+            IGameInteraction iGameInteraction = new ConsoleGameInteraction(consoleSettings);
 
             // Debug values
             if (config != null)
@@ -112,7 +114,7 @@ namespace TwentyFiveDotNet
                 CustomConsole.WriteLine($"Please choose a number between 0 and {rTotalPlayers} inclusive.", consoleSettings);
             }
 
-            CustomConsole.DevWriteLineNoDelay("Initializing Game.", consoleSettings);
+            //CustomConsole.DevWriteLineNoDelay("Initializing Game.", consoleSettings);
 
             if (rTotalHumans > 1)
             {
@@ -136,7 +138,14 @@ namespace TwentyFiveDotNet
             }
 
             RulesEngine rules = new RulesEngine(config);
-            GameManager manager = new GameManager(config, rules, Players);
+            GameManager manager = new GameManager(config, rules, Players, iGameInteraction);
+            var gameUI = new ConsoleGameInteraction(consoleSettings);
+
+            manager.OnDealingStarted += gameUI.HandleDealingStarted;
+            manager.OnCardsDealtToPlayer += gameUI.HandleCardsDealt;
+            manager.OnTrumpCardRevealed += gameUI.HandleTrumpCard;
+            manager.ScoreChanged += gameUI.UpdateScores;
+            manager.OnMessage += gameUI.ShowMessage;
 
             manager.StartGame();
         }

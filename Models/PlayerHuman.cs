@@ -20,15 +20,16 @@ namespace TwentyFiveDotNet.Models
             _interaction = interaction;
         }
 
-        public override void PlayerTurn()
+        public override Card ChooseCard()
         {
-            _interaction.ShowMessage("Your legal cards to play are:");
             _interaction.ShowCards(Hand);
-
             int choice = _interaction.RequestCardChoice(Hand.Count);
+            return Hand[choice];          
+        }
 
-            ChosenCard = Hand[choice];
-            Hand.Remove(ChosenCard);
+        public override Card StealTrump()
+        {
+            return ChooseCard();
         }
     }
 }

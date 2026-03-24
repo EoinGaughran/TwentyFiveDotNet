@@ -22,13 +22,13 @@ namespace TwentyFiveDotNet.Models
         public int Points { get; set; }
         public List<Card> Hand { get; set; } = new();
         public Card TableAreaCard { get; set; }
-        public Card ChosenCard { get; set; }
 
         public override string ToString()
         {
             return Name;
         }
-
-        public abstract void PlayerTurn();
+        
+        public abstract Card ChooseCard();
+        public abstract Card StealTrump();
     }
 }
