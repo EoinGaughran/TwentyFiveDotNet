@@ -11,12 +11,8 @@ namespace TwentyFiveDotNet.Models
 
     public abstract class Player
     {
-        protected GameConfig Config { get; }
-
-        protected Player(GameConfig config)
-        {
-            Config = config;
-        }
+        protected Player()
+        {}
 
         public string Name { get; set; }
         public int Points { get; set; }
@@ -28,7 +24,8 @@ namespace TwentyFiveDotNet.Models
             return Name;
         }
         
-        public abstract Card ChooseCard();
-        public abstract Card StealTrump();
+        public abstract Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard);
+        public abstract Card LeadCard(List<Card> legalCards);
+        public abstract Card StealTrump(Card TrumpCard, Card LedCard);
     }
 }

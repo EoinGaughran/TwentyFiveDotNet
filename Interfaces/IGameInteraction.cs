@@ -12,9 +12,9 @@ namespace TwentyFiveDotNet.Interfaces
         void ShowMessage(string message);
         void ShowPlayers(List<Player> players);
         void ShowPlayedCards(Dictionary<Player, Card> cards);
-
         void WaitForInput();
         string GetInput();
         bool PlayAgainQuestion(string message);
+        void ShowTrumpCards(Dictionary<Card,int> cards);
     }
 }

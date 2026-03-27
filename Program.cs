@@ -16,27 +16,27 @@ namespace TwentyFiveDotNet
 {
     public enum Suits
     {
-        Hearts = 0,
-        Diamonds = 1,
-        Clubs = 2,
-        Spades = 3,
+        Hearts,
+        Diamonds,
+        Clubs,
+        Spades,
     }
 
     public enum Ranks
     {
-        Two = 0,
-        Three = 1,
-        Four = 2,
-        Five = 3,
-        Six = 4,
-        Seven = 5,
-        Eight = 6,
-        Nine = 7,
-        Ten = 8,
-        Jack = 9,
-        Queen = 10,
-        King = 11,
-        Ace = 12
+        Two,
+        Three,
+        Four,
+        Five,
+        Six,
+        Seven,
+        Eight,
+        Nine,
+        Ten,
+        Jack,
+        Queen,
+        King,
+        Ace
     }
 
     public enum GameState
@@ -60,7 +60,7 @@ namespace TwentyFiveDotNet
         {
             string filePath = "Config/GameConfig.json";
             GameConfig config = ConfigLoader.LoadGameConfig(filePath);
-            GameConfig.Load(config);
+
 
             ConsoleSettings consoleSettings = new ConsoleSettings();
             consoleSettings.DevMode = config.DevMode;
@@ -129,15 +129,16 @@ namespace TwentyFiveDotNet
             {
                 CustomConsole.Write($"Player {i + 1} enter your name: ", consoleSettings);
                 var readName = Console.ReadLine();
-                Players.Add(new PlayerHuman(config, readName, iPlayerInteraction));
-            }
-
-            for (int i = rTotalHumans; i < rTotalPlayers; i++)
-            {
-                Players.Add(new PlayerCPU(config, $"CPU Player {i + 1}"));
+                Players.Add(new PlayerHuman(readName, iPlayerInteraction));
             }
 
             RulesEngine rules = new RulesEngine(config);
+
+            for (int i = rTotalHumans; i < rTotalPlayers; i++)
+            {
+                Players.Add(new PlayerCPU($"CPU Player {i + 1}", rules));
+            }
+
             GameManager manager = new GameManager(config, rules, Players, iGameInteraction);
             var gameUI = new ConsoleGameInteraction(consoleSettings);
 

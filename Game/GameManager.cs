@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.Interfaces;
 using TwentyFiveDotNet.Models;
@@ -35,7 +36,7 @@ namespace TwentyFiveDotNet.Game
 
         public event Action OnDealingStarted;
         public event Action<Player, IEnumerable<Card>> OnCardsDealtToPlayer;
-        public event Action<Card> OnTrumpCardRevealed;
+        public event Action<Card, IEnumerable<Card>, IEnumerable<Card>> OnTrumpCardRevealed;
         public event Action<string> OnMessage;
         public event Action<List<Player>> ScoreChanged;
 
@@ -278,7 +279,16 @@ namespace TwentyFiveDotNet.Game
 
             AssignTrumpSuit();
 
-            OnTrumpCardRevealed?.Invoke(TrumpCard);
+            OnTrumpCardRevealed?.Invoke(TrumpCard, Deck.cards, Deck.DealtCards);
+
+            var allCards = Deck.cards.Concat(Deck.DealtCards);
+            var trumpCards = _rules.GetTrumpCardsSorted(allCards, TrumpCard);
+
+            var display = trumpCards.ToDictionary(
+                card => card,
+                card => _rules.GetCardScore(card, TrumpCard));
+
+            _ui.ShowTrumpCards(display);
 
             ChangeGameState(GameState.Stealing);
         }
@@ -290,7 +300,7 @@ namespace TwentyFiveDotNet.Game
             if (_rules.IsTrumpCardStealable(TrumpCard))
             {
                 OnMessage?.Invoke("The Trump card is the Ace of Hearts. The Dealer can steal it.");
-                Dealer.Hand.Remove(Dealer.StealTrump());
+                Dealer.Hand.Remove(Dealer.StealTrump(TrumpCard, LedCard));
                 Dealer.Hand.Add(TrumpCard);
 
                 ChangeGameState(GameState.LeadTurn);
@@ -303,7 +313,7 @@ namespace TwentyFiveDotNet.Game
                 {
                     OnMessage?.Invoke($"{CurrentPlayer} has the Ace of Trumps and so gets to steal.");
 
-                    CurrentPlayer.Hand.Remove(CurrentPlayer.StealTrump());
+                    CurrentPlayer.Hand.Remove(CurrentPlayer.StealTrump(TrumpCard, LedCard));
                     OnMessage?.Invoke($"{CurrentPlayer} placed down their worst card");
 
                     CurrentPlayer.Hand.Add(TrumpCard);
@@ -334,9 +344,7 @@ namespace TwentyFiveDotNet.Game
             OnMessage?.Invoke($"{Leader.Name} is leading the trick.");
             OnMessage?.Invoke(($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps."));
 
-            _rules.ResetPlayableCards(CurrentPlayer.Hand);
-
-            var chosenCard = CurrentPlayer.ChooseCard();
+            var chosenCard = CurrentPlayer.LeadCard(CurrentPlayer.Hand); // fix pointless passing of hand
             SetLedCard(chosenCard);
             OnMessage?.Invoke($"{CurrentPlayer} played {chosenCard}");
 
@@ -365,15 +373,14 @@ namespace TwentyFiveDotNet.Game
             }
             else
             {
-                _rules.SetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
+                var playableCards = _rules.GetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
 
-                var chosenCard = CurrentPlayer.ChooseCard();
+                var chosenCard = CurrentPlayer.ChooseCard(playableCards, TrumpCard, LedCard);
                 OnMessage?.Invoke($"{CurrentPlayer.Name} played {chosenCard}.");
 
                 UpdatePlayedCards(CurrentPlayer, chosenCard);
-                _rules.ResetPlayableCards(CurrentPlayer.Hand);
 
-                if (_rules.IsCardBetter(chosenCard, WinningCard, LedCard))
+                if (_rules.IsCardBetter(chosenCard, WinningCard, LedCard, TrumpCard))
                     SetWinner(chosenCard, CurrentPlayer);
 
                 CurrentPlayer.Hand.Remove(chosenCard);

@@ -13,23 +13,26 @@ namespace TwentyFiveDotNet.Models
     {
         private readonly IPlayerInteraction _interaction;
 
-        public PlayerHuman(GameConfig config, string name, IPlayerInteraction interaction)
-            : base(config)
+        public PlayerHuman(string name, IPlayerInteraction interaction)
         {
             Name = name;
             _interaction = interaction;
         }
-
-        public override Card ChooseCard()
+        public override Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
         {
-            _interaction.ShowCards(Hand);
+            _interaction.ShowCards(Hand, legalCards);
             int choice = _interaction.RequestCardChoice(Hand.Count);
             return Hand[choice];          
         }
-
-        public override Card StealTrump()
+        public override Card StealTrump(Card TrumpCard, Card LedCard)
         {
-            return ChooseCard();
+            return ChooseCard(Hand, TrumpCard, LedCard);
+        }
+        public override Card LeadCard(List<Card> legalCards)
+        {
+            _interaction.ShowCards(Hand, legalCards); // remove this legal cards depenency for lead turn
+            int choice = _interaction.RequestCardChoice(Hand.Count);
+            return Hand[choice];
         }
     }
 }

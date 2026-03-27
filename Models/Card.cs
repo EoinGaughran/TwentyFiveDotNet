@@ -10,57 +10,6 @@ namespace TwentyFiveDotNet.Models
     {
         public Suits Suit { get; set; }
         public Ranks Rank { get; set; }
-        public int Score { get; set; }
-        public bool IsTrump { get; set; }
-        public bool Legal { get; set; }
-        public bool Renegable { get; set; }
-
-        //load from file later
-        private int StandardScoreBuff = 15;
-        private int AceScoreBuff = 50;
-        private int JackScoreBuff = 200;
-        private int FiveScoreBuff = 300;
-
-        public void AdjustForTrump(Suits trumpSuit)
-        {
-            if (Suit == trumpSuit)
-            {
-                Score += StandardScoreBuff;
-
-                if (Rank == Ranks.Ace)
-                {
-                    Score += AceScoreBuff;
-                }
-                else if (Rank == Ranks.Jack)
-                {
-                    Score += JackScoreBuff;
-                    Renegable = true;
-                }
-                else if (Rank == Ranks.Five)
-                {
-                    Score += FiveScoreBuff;
-                    Renegable = true;
-                }
-
-                IsTrump = true;
-            }
-        }
-
-        public void AdjustAceOfHearts()
-        {
-            IsTrump = true;
-            Renegable = true;
-        }
-
-        public void SetPlayable(bool legal)
-        {
-            Legal = legal;
-        }
-
-        public void SetTrump(bool trumpStatus)
-        {
-            IsTrump = trumpStatus;
-        }
 
         public string ToStringWords()
         {

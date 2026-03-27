@@ -1,0 +1,12 @@
+A led trump card is renegable if your card is the Ace of Hearts, Ace of Trumps, Jack of Trumps or 5 of trumps and the led trumps is of a lower value than your card.
+
+led card is trump
+if player has no trumps, all cards are playable
+if player has 1 or more trump(s) that can renege the led trump, all cards are playable
+if player has 1 or more trump(s) that cannot renege the led trump, only trumps are playable
+if player has 1 or more trump(s) that cannot renege the led trump & 1 or more trump(s) that can renege the led trump, only trumps are playable
+
+led card is not a trump
+if player has a card with the suit matching the led card, only that suit and trumps are playable
+if player has non trumps that do not match the led card suit, all cards are playable
+if player has trumps and cards that do not match the led card suit, all cards are playable

@@ -8,6 +8,7 @@ Minor
 - Remove console prints from Player card methods
 - Remove unused library includes
 - Replace GameManager's 'while (CurrentState != GameState.EndGame)' with 'public void Tick()'
+- Refuse illegal cards played
 
 Major
 - Add table class
@@ -21,6 +22,7 @@ Major
 - Replace GameConfig singleton with Dependency Injection
 - Make Hand its own object class
 - Create a User object for functions outside of game loop e.g. start new game, exit
+- Remove mutable variables from Card.cs, compute card values and scores when needed with rulesengine.cs
 
 Optional
 - Ascii art for the trump suit

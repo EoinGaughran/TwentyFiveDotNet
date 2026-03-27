@@ -10,7 +10,7 @@ namespace TwentyFiveDotNet.Interfaces
     public interface IPlayerInteraction
     {
         void ShowMessage(string message);
-        void ShowCards(IEnumerable<Card> cards);
+        void ShowCards(IEnumerable<Card> cards, IEnumerable<Card> legalCards);
         int RequestCardChoice(int max);
         void WaitForPlayer(string playerName);
     }

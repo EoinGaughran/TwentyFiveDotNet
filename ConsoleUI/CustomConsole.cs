@@ -116,30 +116,6 @@ namespace TwentyFiveDotNet.Utilities
             }
         }
 
-        public static void PrintTrumpScores(List<Card> deckCards, List<Card> dealtCards, ConsoleSettings settings)
-        {
-            List<Card> TrumpList = [];
-
-            foreach (var card in deckCards)
-            {
-                if (card.IsTrump)
-                    TrumpList.Add(card);
-            }
-
-            foreach (var card in dealtCards)
-            {
-                if (card.IsTrump)
-                    TrumpList.Add(card);
-            }
-
-            TrumpList.Sort((x, y) => y.Score.CompareTo(x.Score)); // desc
-
-            foreach (var card in TrumpList)
-                DevWriteLineNoDelay($"{card} is worth: {card.Score}", settings);
-
-            DevWriteLine(settings);
-        }
-
         public static void PrintPlayersHands(List<Player> players, ConsoleSettings settings)
         {
             foreach (var player in players)
@@ -167,14 +143,11 @@ namespace TwentyFiveDotNet.Utilities
             WriteLine();
         }
 
-        public static void PrintLegalCards(List<Card> hand, ConsoleSettings settings)
+        public static void PrintCards(List<Card> hand, ConsoleSettings settings)
         {
             foreach (var card in hand)
-            {
-                if (card.Legal)
-                {
-                    Write($"{card}, ", settings);
-                }
+            {   
+                 Write($"{card}, ", settings);
             }
         }
 

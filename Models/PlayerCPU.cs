@@ -4,26 +4,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TwentyFiveDotNet.Config;
+using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Utilities;
 
 namespace TwentyFiveDotNet.Models
 {
     public class PlayerCPU : Player
     {
-        public PlayerCPU(GameConfig config, string name) : base(config)
+        private readonly RulesEngine _rules;
+        public PlayerCPU(string name, RulesEngine rules)
         {
             Name = name;
+            _rules = rules;
         }
 
-        public override Card StealTrump()
+        public override Card StealTrump(Card TrumpCard, Card LedCard)
         {
-            return CardComparer.GetWorstCard(Hand);
+            return _rules.GetWorstCard(Hand, TrumpCard, LedCard);
         }
 
-        public override Card ChooseCard()
+        public override Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
         {
-            return CardComparer.GetBestCard(Hand);
+            return _rules.GetBestCard(Hand, TrumpCard, LedCard);
         }
 
+        public override Card LeadCard(List<Card> legalCards)
+        {
+            return Hand[0]; // Create new best card function
+        }
     }
 }

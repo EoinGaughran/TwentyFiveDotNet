@@ -29,48 +29,8 @@ namespace TwentyFiveDotNet.Models
                     {
                         Suit = suit,
                         Rank = rank,
-                        Score = GetBaseScore(suit, rank),
-                        IsTrump = false,
-                        Legal = true,
-                        Renegable = false,
                     });
                 }
-            }
-
-            int GetBaseScore(Suits suit, Ranks rank)
-            {
-                // Implement the base scoring logic here
-                if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.King) return 12;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Queen) return 11;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Jack) return 10;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Ten) return 9;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Nine) return 8;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Eight) return 7;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Seven) return 6;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Six) return 5;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Five) return 4;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Four) return 3;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Three) return 2;
-                else if ((suit == Suits.Hearts || suit == Suits.Diamonds) && rank == Ranks.Two) return 1;
-                else if ((suit == Suits.Diamonds) && rank == Ranks.Ace) return 0;
-
-                else if ((suit == Suits.Hearts) && rank == Ranks.Ace) return AceHeartsScoreBuff;
-
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.King) return 12;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Queen) return 11;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Jack) return 10;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Ten) return 0;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Nine) return 1;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Eight) return 2;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Seven) return 3;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Six) return 4;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Five) return 5;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Four) return 6;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Three) return 7;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Two) return 8;
-                else if ((suit == Suits.Clubs || suit == Suits.Spades) && rank == Ranks.Ace) return 9;
-
-                return 0;
             }
         }
 
@@ -86,27 +46,6 @@ namespace TwentyFiveDotNet.Models
             cards.RemoveAt(0);
             DealtCards.Add(card);
             return card;
-        }
-
-        public void AdjustForTrump(Card TrumpCard)
-        {
-            foreach (var card in cards.Concat(DealtCards))
-            {
-                if (card.Suit == TrumpCard.Suit)
-                {
-                    card.AdjustForTrump(TrumpCard.Suit);
-                }
-
-                if (card.Suit == Suits.Hearts && card.Rank == Ranks.Ace)
-                {
-                    card.AdjustAceOfHearts();
-                }
-            }
-        }
-
-        public void AddTrumpToList(Card Trump)
-        {
-            Trumps.Add(Trump);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Runtime;
 using System.Text;
@@ -52,9 +53,17 @@ namespace TwentyFiveDotNet.ConsoleUI
             CustomConsole.WriteLine($"{player.Name}'s hand:", _settings);
             CustomConsole.WriteLine(string.Join(", ", cards), _settings);
         }
-        public void HandleTrumpCard(Card card)
+        public void HandleTrumpCard(Card TrumpCard, IEnumerable<Card> deckCards, IEnumerable<Card> dealtCards)
         {
-
+            CustomConsole.WriteLine($"Dealer drew the trump card: {TrumpCard}", _settings);
+            CustomConsole.WriteLine($"{TrumpCard.GetSuitSymbolUnicoded()} suit is trumps.", _settings);
+        }
+        public void ShowTrumpCards(Dictionary<Card,int> cards)
+        {
+            foreach (var kvp in cards)
+            {
+                Console.WriteLine($"{kvp.Key} is worth: {kvp.Value}");
+            }
         }
         public void UpdateScores(List<Player> players)
         {

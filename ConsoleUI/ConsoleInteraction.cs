@@ -23,10 +23,19 @@ namespace TwentyFiveDotNet.ConsoleUI
             CustomConsole.WriteLine(message, _settings);
         }
 
-        public void ShowCards(IEnumerable<Card> cards)
+        public void ShowCards(IEnumerable<Card> cards, IEnumerable<Card> legalCards)
         {
+            Console.Write($"Players hand: ");
             int i = 1;
             foreach (var card in cards)
+            {
+                Console.Write($"{i++}: {card}, ");
+            }
+            Console.WriteLine();
+
+            Console.Write($"Legal Cards to play: ");
+            i = 1;
+            foreach (var card in legalCards)
             {
                 Console.Write($"{i++}: {card}, ");
             }

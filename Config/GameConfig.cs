@@ -10,14 +10,6 @@ namespace TwentyFiveDotNet.Config
 {
     public class GameConfig
     {
-        private static GameConfig _instance;
-
-        public static GameConfig Instance => _instance ??= new GameConfig();
-
-        public static void Load(GameConfig config)
-        {
-            _instance = config;
-        }
 
         public bool DevMode { get; set; }
         public string GameTitle { get; set; }
@@ -28,6 +20,7 @@ namespace TwentyFiveDotNet.Config
         public int PointsPerTrick { get; set; }
         public bool HidePlayerHands { get; set; }
         public int DelayInMilliseconds { get; set; }
+        public CardRulesConfig CardRules { get; set; }
 
         private GameConfig() { }
     }

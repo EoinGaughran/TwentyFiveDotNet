@@ -19,21 +19,16 @@ namespace TwentyFiveDotNet.Game
             _config = config;
         }
 
-        public bool IsCardBetter(Card ChosenCard, Card WinningCard, Card LedCard)
+        public bool IsCardBetter(Card ChosenCard, Card WinningCard, Card LedCard, Card TrumpCard)
         {
-            if (ChosenCard.Suit == LedCard.Suit || ChosenCard.IsTrump)
+            if (ChosenCard.Suit == LedCard.Suit || ChosenCard.Suit == TrumpCard.Suit)
             {
-                if (ChosenCard.Score > WinningCard.Score)
+                if (GetCardScore(ChosenCard, TrumpCard) > GetCardScore(WinningCard, TrumpCard))
                 {
                     return true;
                 }
             }
             return false;
-        }
-
-        public Card GetWorstCard(List<Card> Hand)
-        {
-            return CardComparer.GetWorstCard(Hand);
         }
 
         public void Scoring(Player WinningPlayer)
@@ -41,53 +36,91 @@ namespace TwentyFiveDotNet.Game
             WinningPlayer.Points += _config.PointsPerTrick;
         }
 
-        public void SetPlayableCards(List<Card> Hand, Card TrumpCard, Card LedCard)
+        public List<Card> GetPlayableCards(List<Card> hand, Card trumpCard, Card ledCard)
         {
-            bool isThereLedSuit = false;
+            bool ledIsTrump = ledCard.Suit == trumpCard.Suit;
 
-            foreach (var card in Hand)
+            var trumps = hand.Where(c => c.Suit == trumpCard.Suit).ToList();
+
+            // =========================
+            // CASE 1: LED IS TRUMP
+            // =========================
+            if (ledIsTrump)
             {
-                card.Legal = IsCardLegal(card, LedCard, ref isThereLedSuit);
+                if (!trumps.Any())
+                    return hand;
+
+                bool hasNonRenegeTrump = trumps.Any(c => !CanRenege(c, ledCard, trumpCard));
+
+                if (hasNonRenegeTrump)
+                    return trumps;
+
+                return hand;
             }
 
-            if (!isThereLedSuit)
+            // =========================
+            // CASE 2: LED IS NOT TRUMP
+            // =========================
+            var matchingSuit = hand.Where(c => c.Suit == ledCard.Suit).ToList();
+
+            if (matchingSuit.Any())
             {
-                foreach (var card in Hand)
-                {
-                    card.Legal = true;
-                }
+                return hand
+                    .Where(c => c.Suit == ledCard.Suit || c.Suit == trumpCard.Suit)
+                    .ToList();
             }
+
+            return hand;
         }
 
-        private bool IsCardLegal(Card card, Card LedCard, ref bool isThereLedSuit)
+        private bool CanRenege(Card card, Card ledCard, Card trumpCard)
         {
-            if (LedCard.IsTrump)
-            {
-                if (card.IsTrump)
-                {
-                    if (!card.Renegable || (card.Renegable && (card.Score < LedCard.Score)))
-                    {
-                        isThereLedSuit = true;
-                    }
+            if (card.Suit != trumpCard.Suit)
+                return false;
 
-                    return true;
-                }
+            bool isSpecial =
+                (card.Suit == Suits.Hearts && card.Rank == Ranks.Ace) ||
+                (card.Suit == trumpCard.Suit &&
+                    (card.Rank == Ranks.Ace ||
+                     card.Rank == Ranks.Jack ||
+                     card.Rank == Ranks.Five));
 
-            }
-            else
+            if (!isSpecial)
+                return false;
+
+            return GetCardScore(card, trumpCard) > GetCardScore(ledCard, trumpCard);
+        }
+        public int GetCardScore(Card card, Card trumpCard)
+        {
+            int score = GetBaseScore(card);
+
+            if (card.Suit == trumpCard.Suit)
             {
-                if (card.Suit == LedCard.Suit)
-                {
-                    isThereLedSuit = true;
-                    return true;
-                }
-                if (card.IsTrump)
-                {
-                    return true;
-                }
+                score += GetTrumpBonus(card);
             }
 
-            return false;
+            // Special case
+            if (card.Suit == Suits.Hearts && card.Rank == Ranks.Ace)
+            {
+                score += 5; // move to config later
+            }
+
+            return score;
+        }
+
+        public int GetBaseScore(Card card)
+        {
+            return _config.CardRules.BaseScores.TryGetValue(card.Rank, out var score)
+                ? score
+                : 0;
+        }
+
+        public int GetTrumpBonus(Card card)
+        {
+            if (_config.CardRules.TrumpBonus.TryGetValue(card.Rank, out var bonus))
+                return bonus;
+
+            return _config.CardRules.DefaultTrumpBonus;
         }
 
         public bool CanPlayerSteal(List<Card> Hand, Suits TrumpSuit)
@@ -109,17 +142,76 @@ namespace TwentyFiveDotNet.Game
             return false;
         }
 
-        public void ResetPlayableCards(List<Card> Hand)
+        public List<Card> GetTrumpCardsSorted(IEnumerable<Card> cards, Card trumpCard)
         {
-            foreach (var card in Hand)
-            {
-                card.Legal = true;
-            }
+            return cards
+                .Where(c => c.Suit == trumpCard.Suit)
+                .OrderByDescending(c => GetCardScore(c, trumpCard))
+                .ToList();
         }
-        public void Steal(List<Card> Hand)
+
+        public Player DetermineWinner(Dictionary<Player, Card> PlayedCards, Card trumpCard)
+        {
+            Player winner = null;
+            Card highestCard = null;
+
+            foreach (var entry in PlayedCards)
+            {
+                if (highestCard == null || CompareCards(entry.Value, highestCard, trumpCard) > 0)
+                {
+                    highestCard = entry.Value;
+                    winner = entry.Key;
+                }
+            }
+
+            return winner;
+        }
+
+        private int CompareCards(Card card1, Card card2, Card trumpCard)
+        {
+            if (card1.Suit == trumpCard.Suit && card2.Suit != trumpCard.Suit) return 1;
+            if (card2.Suit == trumpCard.Suit && card1.Suit != trumpCard.Suit) return -1;
+
+            return GetCardScore(card1, trumpCard).CompareTo(GetCardScore(card1, trumpCard));
+        }
+
+        public Card GetBestCard(List<Card> Set, Card TrumpCard, Card LedCard)
+        {
+            Card bestCard = Set[0];
+
+            if (Set.Count > 1)
+            {
+                var legalCards = GetPlayableCards(Set, TrumpCard, LedCard);
+
+                foreach (var card in legalCards)
+                {
+                    if (GetCardScore(card, TrumpCard) > GetCardScore(bestCard, TrumpCard)) bestCard = card;
+
+                }
+            }
+            return bestCard;
+        }
+
+        public Card GetWorstCard(List<Card> Set, Card TrumpCard, Card LedCard)
+        {
+            Card worstCard = Set[0];
+
+            if (Set.Count > 1)
+            {
+                var legalCards = GetPlayableCards(Set, TrumpCard, LedCard);
+
+                foreach (var card in legalCards)
+                {
+                    if (GetCardScore(card, TrumpCard) < GetCardScore(worstCard, TrumpCard)) worstCard = card;
+                }
+            }
+            return worstCard;
+        }
+
+        public void Steal(List<Card> Hand, Card TrumpCard, Card LedCard)
         {
             //if (!Config.DevMode && Config.HidePlayerHands) IsPlayerReady();
-            Hand.Remove(GetWorstCard(Hand));
+            Hand.Remove(GetWorstCard(Hand, TrumpCard, LedCard));
         }
 
         public bool IsGameOver(Player WinningPlayer)

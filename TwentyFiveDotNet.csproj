@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config\CardRulesConfig.cs" />
     <Compile Include="Config\GameConfig.cs" />
     <Compile Include="ConsoleUI\ConsoleGameInteraction.cs" />
     <Compile Include="ConsoleUI\ConsoleInteraction.cs" />
@@ -58,10 +59,8 @@
     <Compile Include="Models\Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities\CardComparer.cs" />
     <Compile Include="ConsoleUI\ConsoleSettings.cs" />
     <Compile Include="ConsoleUI\CustomConsole.cs" />
-    <Compile Include="Utilities\ScoreCalculator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -74,6 +73,9 @@
       <Project>{d4b75611-1e31-4779-8025-8d188a9ebb1e}</Project>
       <Name>Newtonsoft.Json</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Utilities\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
