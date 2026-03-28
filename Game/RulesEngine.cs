@@ -147,7 +147,7 @@ namespace TwentyFiveDotNet.Game
         {
             foreach (Card card in Hand)
             {
-                if (IsTrump(card, trumpCard) && card.Rank == Ranks.Ace)
+                if (card.Suit == trumpCard.Suit && card.Rank == Ranks.Ace)
                 {
                     return true;
                 }

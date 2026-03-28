@@ -28,7 +28,7 @@ namespace TwentyFiveDotNet.Models
             return _rules.GetBestCard(Hand, TrumpCard, LedCard);
         }
 
-        public override Card LeadCard(List<Card> legalCards)
+        public override Card LeadCard()
         {
             return Hand[0]; // Create new best card function
         }

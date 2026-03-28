@@ -15,6 +15,7 @@ namespace TwentyFiveDotNet.ConsoleUI
     {
         private readonly ConsoleSettings _settings;
         public static readonly String UIPrefix = "[Game UI] ";
+        public static readonly String DEVPrefix = "[DEV UI] ";
 
         public ConsoleGameInteraction(ConsoleSettings settings)
         {
@@ -49,15 +50,15 @@ namespace TwentyFiveDotNet.ConsoleUI
             CustomConsole.WriteLine(UIPrefix + "Dealing cards...", _settings);
         }
 
-        public void HandleCardsDealt(Player player, IEnumerable<Card> cards)
+        public void HandleCardsDealt(Player player)
         {
-            CustomConsole.Write(UIPrefix + $"{player.Name}'s hand:", _settings);
-            CustomConsole.WriteLine(string.Join(", ", cards), _settings);
+            CustomConsole.Write(DEVPrefix + $"{player.Name}'s hand: ", _settings);
+            CustomConsole.WriteLine(string.Join(", ", player.Hand), _settings);
         }
         public void HandleTrumpCard(Card TrumpCard, IEnumerable<Card> deckCards, IEnumerable<Card> dealtCards)
         {
-            CustomConsole.Write(UIPrefix + $"Dealer drew the trump card: {TrumpCard}", _settings);
-            CustomConsole.WriteLine($"{TrumpCard.GetSuitSymbolUnicoded()} suit is trumps.", _settings);
+            CustomConsole.WriteLine(UIPrefix + $"Dealer drew the trump card: {TrumpCard}", _settings);
+            CustomConsole.WriteLine(UIPrefix + $"{TrumpCard.GetSuitSymbolUnicoded()} suit is trumps.", _settings);
         }
         public void ShowTrumpCards(Dictionary<Card,int> cards)
         {

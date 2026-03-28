@@ -129,7 +129,7 @@ namespace TwentyFiveDotNet
 
             for (int i = 0; i < rTotalHumans; i++)
             {
-                CustomConsole.Write($"Player {i + 1} enter your name: ", consoleSettings);
+                CustomConsole.Write(UIPrefix + $"Player {i + 1} enter your name: ", consoleSettings);
                 var readName = Console.ReadLine();
                 Players.Add(new PlayerHuman(readName, iPlayerInteraction));
             }

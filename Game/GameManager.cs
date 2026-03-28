@@ -35,7 +35,7 @@ namespace TwentyFiveDotNet.Game
         private readonly int ThreeCards = 3;
 
         public event Action OnDealingStarted;
-        public event Action<Player, IEnumerable<Card>> OnCardsDealtToPlayer;
+        public event Action<Player> OnCardsDealtToPlayer;
         public event Action<Card, IEnumerable<Card>, IEnumerable<Card>> OnTrumpCardRevealed;
         public event Action<string> OnMessage;
         public event Action<List<Player>> ScoreChanged;
@@ -275,12 +275,11 @@ namespace TwentyFiveDotNet.Game
 
         private void Initialize()
         {
-
-            OnMessage?.Invoke("Selecting dealer: ");
             AssignRandomDealer();
-            OnMessage?.Invoke(Dealer.Name);
+            OnMessage?.Invoke($"Selected dealer: {Dealer.Name}");
 
             NewDeck();
+            OnMessage?.Invoke("The deck has been created.");
 
             Deck.Shuffle();
             OnMessage?.Invoke("The deck has been shuffled.");
@@ -296,7 +295,7 @@ namespace TwentyFiveDotNet.Game
 
             foreach (var player in _players)
             {
-                OnCardsDealtToPlayer?.Invoke(player, player.Hand);
+                OnCardsDealtToPlayer?.Invoke(player);
             }
 
             AssignTrumpSuit();
@@ -322,8 +321,12 @@ namespace TwentyFiveDotNet.Game
             if (_rules.IsTrumpCardStealable(TrumpCard))
             {
                 OnMessage?.Invoke("The Trump card is the Ace of Hearts. The Dealer can steal it.");
-                Dealer.Hand.Remove(Dealer.StealTrump(TrumpCard, LedCard));
+                var droppedCard = Dealer.StealTrump(TrumpCard, LedCard);
+                OnMessage?.Invoke($"Dealer Dropped a card and took the Trump Card: {TrumpCard}");
+
+                Dealer.Hand.Remove(droppedCard);
                 Dealer.Hand.Add(TrumpCard);
+                PlayerStoleTheTrump(true);
 
                 ChangeGameState(GameState.LeadTurn);
             }
@@ -366,7 +369,7 @@ namespace TwentyFiveDotNet.Game
             OnMessage?.Invoke($"{Leader.Name} is leading the trick.");
             OnMessage?.Invoke(($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps."));
 
-            var chosenCard = CurrentPlayer.LeadCard(CurrentPlayer.Hand); // fix pointless passing of hand
+            var chosenCard = CurrentPlayer.LeadCard();
             SetLedCard(chosenCard);
             OnMessage?.Invoke($"{CurrentPlayer} played {chosenCard}");
 
@@ -396,6 +399,7 @@ namespace TwentyFiveDotNet.Game
                 var playableCards = _rules.GetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
 
                 var chosenCard = CurrentPlayer.ChooseCard(playableCards, TrumpCard, LedCard);
+
                 OnMessage?.Invoke($"{CurrentPlayer.Name} played {chosenCard}.");
 
                 UpdatePlayedCards(CurrentPlayer, chosenCard);

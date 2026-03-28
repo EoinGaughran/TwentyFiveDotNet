@@ -22,16 +22,16 @@ namespace TwentyFiveDotNet.Models
         {
             _interaction.ShowCards(Hand);
             _interaction.ShowLegalCards(Hand, legalCards);
-            int choice = _interaction.RequestCardChoice(Hand.Count);
-            return Hand[choice];          
+            int choice = _interaction.RequestCardChoice(legalCards.Count);
+            return legalCards[choice];          
         }
         public override Card StealTrump(Card TrumpCard, Card LedCard)
         {
             return ChooseCard(Hand, TrumpCard, LedCard);
         }
-        public override Card LeadCard(List<Card> legalCards)
+        public override Card LeadCard()
         {
-            _interaction.ShowCards(Hand);
+            _interaction.ShowLegalCards(Hand, Hand);
             int choice = _interaction.RequestCardChoice(Hand.Count);
             return Hand[choice];
         }

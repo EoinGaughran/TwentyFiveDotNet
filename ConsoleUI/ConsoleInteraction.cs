@@ -31,9 +31,15 @@ namespace TwentyFiveDotNet.ConsoleUI
             int i = 1;
             foreach (var card in cards)
             {
-                Console.Write($"{i++}: {card}, ");
+                Console.Write($"{card}");
+                if (i < cards.Count())
+                    Console.Write(", ");
+
+                else Console.Write(".");
+                i++;
             }
             Console.WriteLine();
+            
         }
 
         public void ShowLegalCards(IEnumerable<Card> cards, IEnumerable<Card> legalCards)
@@ -44,7 +50,12 @@ namespace TwentyFiveDotNet.ConsoleUI
             int i = 1;
             foreach (var card in legalCards)
             {
-                Console.Write($"{i++}: {card}, ");
+                Console.Write($"{i}: {card}");
+                if (i < legalCards.Count())
+                    Console.Write(", ");
+
+                else Console.Write(".");
+                i++;
             }
             Console.WriteLine();
         }
