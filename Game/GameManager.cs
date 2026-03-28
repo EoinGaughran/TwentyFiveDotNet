@@ -309,7 +309,7 @@ namespace TwentyFiveDotNet.Game
             {
                 NextPlayer();
 
-                if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard.Suit))
+                if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
                 {
                     OnMessage?.Invoke($"{CurrentPlayer} has the Ace of Trumps and so gets to steal.");
 
@@ -355,8 +355,6 @@ namespace TwentyFiveDotNet.Game
 
             UpdatePlayedCards(CurrentPlayer, chosenCard);
 
-            if (!_config.DevMode && _config.HidePlayerHands) CustomConsole.Clear();
-            CustomConsole.PrintPlayedCards(PlayedCards);
             OnMessage?.Invoke($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps, {LedCard.GetSuitSymbolUnicoded()} were led.");
 
             ChangeGameState(GameState.PlayerTurn);

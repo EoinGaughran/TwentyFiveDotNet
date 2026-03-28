@@ -23,9 +23,13 @@ Major
 - Make Hand its own object class
 - Create a User object for functions outside of game loop e.g. start new game, exit
 - Remove mutable variables from Card.cs, compute card values and scores when needed with rulesengine.cs
+- Define the order of card scores in json rather than int increases
 
 Optional
 - Ascii art for the trump suit
+
+Known Errors
+- New game doesnt removed previous game hand
 
 Done
 - Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards

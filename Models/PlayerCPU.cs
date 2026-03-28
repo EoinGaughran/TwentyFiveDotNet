@@ -20,7 +20,7 @@ namespace TwentyFiveDotNet.Models
 
         public override Card StealTrump(Card TrumpCard, Card LedCard)
         {
-            return _rules.GetWorstCard(Hand, TrumpCard, LedCard);
+            return _rules.GetWorstCard(Hand, TrumpCard);
         }
 
         public override Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
