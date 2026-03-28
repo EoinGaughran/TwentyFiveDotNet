@@ -28,9 +28,6 @@ Major
 Optional
 - Ascii art for the trump suit
 
-Known Errors
-- New game doesnt removed previous game hand
-
 Done
 - Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards
 - Separate Logic from Presentation, Gamemanager: Divide methods, Move PlayCard methods to Player class, GameManager variables privatized

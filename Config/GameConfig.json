@@ -43,7 +43,7 @@
             "Queen": 13,
             "King": 14
         },
-        "DefaultTrumpBonus": 10,
+        "DefaultTrumpBonus": 15,
         "AceOfHeartsBonus": 35,
         "TrumpBonus": {
             "Ace": 25,

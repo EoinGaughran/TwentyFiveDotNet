@@ -50,11 +50,13 @@ namespace TwentyFiveDotNet
         Scoring,
         NewRound,
         PlayAgain,
+        NewGame,
         EndGame
     }
 
     class Program
     {
+        public static readonly String UIPrefix = "[Program] ";
 
         static void Main(string[] args)
         {
@@ -72,9 +74,9 @@ namespace TwentyFiveDotNet
             // Debug values
             if (config != null)
             {
-                Console.WriteLine($"DevMode: {config.DevMode}, Instance: {config.DevMode}");
-                Console.WriteLine($"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}");
-                Console.WriteLine($"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}");
+                Console.WriteLine(UIPrefix + $"DevMode: {config.DevMode}, Instance: {config.DevMode}");
+                Console.WriteLine(UIPrefix + $"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}");
+                Console.WriteLine(UIPrefix + $"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}");
             }
             else
             {
@@ -94,24 +96,24 @@ namespace TwentyFiveDotNet
             Console.WriteLine("Loaded JSON:");
             Console.WriteLine(json);*/
 
-            CustomConsole.WriteLine("Welcome to the card game 25.", consoleSettings);
-            CustomConsole.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.", consoleSettings);
-            CustomConsole.WriteLine("How many total players would you like?", consoleSettings);
+            CustomConsole.WriteLine(UIPrefix + "Welcome to the card game 25.", consoleSettings);
+            CustomConsole.WriteLine(UIPrefix + $"The game is for {config.MinPlayers} - {config.MaxPlayers} players.", consoleSettings);
+            CustomConsole.Write(UIPrefix + "How many total players would you like?: ", consoleSettings);
 
             int rTotalPlayers;
 
             while (!int.TryParse(Console.ReadLine(), out rTotalPlayers) || rTotalPlayers < config.MinPlayers || rTotalPlayers > config.MaxPlayers)
             {
-                CustomConsole.WriteLine($"Please choose a number between {config.MinPlayers} - {config.MaxPlayers} inclusive.", consoleSettings);
+                CustomConsole.WriteLine(UIPrefix + $"Please choose a number between {config.MinPlayers} - {config.MaxPlayers} inclusive.", consoleSettings);
             }
 
-            CustomConsole.WriteLine($"How many Human players would you like? 0 - {rTotalPlayers}", consoleSettings);
+            CustomConsole.Write(UIPrefix + $"How many Human players would you like? 0 - {rTotalPlayers}: ", consoleSettings);
 
             int rTotalHumans;
 
             while (!int.TryParse(Console.ReadLine(), out rTotalHumans) || rTotalHumans < 0 || rTotalHumans > rTotalPlayers)
             {
-                CustomConsole.WriteLine($"Please choose a number between 0 and {rTotalPlayers} inclusive.", consoleSettings);
+                CustomConsole.WriteLine(UIPrefix + $"Please choose a number between 0 and {rTotalPlayers} inclusive.", consoleSettings);
             }
 
             //CustomConsole.DevWriteLineNoDelay("Initializing Game.", consoleSettings);
@@ -119,7 +121,7 @@ namespace TwentyFiveDotNet
             if (rTotalHumans > 1)
             {
                 config.HidePlayerHands = true;
-                CustomConsole.DevWriteLineNoDelay($"Amount of humans is greater than 1, enabling hidden player hands mode.", consoleSettings);
+                CustomConsole.DevWriteLineNoDelay(UIPrefix + $"Amount of humans is greater than 1, enabling hidden player hands mode.", consoleSettings);
             }
             else config.HidePlayerHands = false;
 

@@ -116,29 +116,29 @@ namespace TwentyFiveDotNet.Utilities
             }
         }
 
-        public static void PrintPlayersHands(List<Player> players, ConsoleSettings settings)
+        public static void PrintPlayersHands(List<Player> players, ConsoleSettings settings, String prefix)
         {
             foreach (var player in players)
             {
                 DevTagPrint(settings);
 
-                DevWriteNoDelay($"{player.Name} has:", settings);
+                DevWriteNoDelay(prefix + $"{player.Name} has:", settings);
 
                 foreach (var card in player.Hand)
                 {
-                    DevWriteNoDelay($" {card},", settings);
+                    DevWriteNoDelay(prefix + $" {card},", settings);
                 }
                 DevWriteLine(settings);
             }
         }
 
-        public static void PrintPlayersScores(List<Player> players, ConsoleSettings settings)
+        public static void PrintPlayersScores(List<Player> players, ConsoleSettings settings, String prefix)
         {
-            WriteLine($"Current Scores:", settings);
+            WriteLine(prefix + $"Current Scores:", settings);
 
             foreach (var player in players)
             {
-                WriteLine($"{player.Name} has {player.Points} points.", 200, settings);
+                WriteLine(prefix + $"{player.Name} has {player.Points} points.", 200, settings);
             }
             WriteLine();
         }

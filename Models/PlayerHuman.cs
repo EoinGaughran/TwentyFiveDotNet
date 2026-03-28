@@ -20,7 +20,8 @@ namespace TwentyFiveDotNet.Models
         }
         public override Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
         {
-            _interaction.ShowCards(Hand, legalCards);
+            _interaction.ShowCards(Hand);
+            _interaction.ShowLegalCards(Hand, legalCards);
             int choice = _interaction.RequestCardChoice(Hand.Count);
             return Hand[choice];          
         }
@@ -30,7 +31,7 @@ namespace TwentyFiveDotNet.Models
         }
         public override Card LeadCard(List<Card> legalCards)
         {
-            _interaction.ShowCards(Hand, legalCards); // remove this legal cards depenency for lead turn
+            _interaction.ShowCards(Hand);
             int choice = _interaction.RequestCardChoice(Hand.Count);
             return Hand[choice];
         }

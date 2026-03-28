@@ -183,6 +183,23 @@ namespace TwentyFiveDotNet.Game
             OnMessage?.Invoke("Game State changed to: " + state);
         }
 
+        private void ClearPlayersHands()
+        {
+            foreach (var player in _players)
+                player.Hand.Clear();
+        }
+
+        private void ClearPlayedCards()
+        {
+            PlayedCards.Clear();
+        }
+
+        private void ClearPlayerPoints()
+        {
+            foreach (var player in _players)
+                player.Points = 0;
+        }
+
         public void StartGame()
         {
             ConsoleSettings consoleSettings = new ConsoleSettings();
@@ -243,8 +260,13 @@ namespace TwentyFiveDotNet.Game
 
                         break;
 
+                    case GameState.NewGame:
+
+                        NewGame();
+
+                        break;
+
                     case GameState.EndGame:
-                        // Display results and end the loop
 
                         break;
                 }
@@ -433,8 +455,17 @@ namespace TwentyFiveDotNet.Game
         {
             bool playAgain = _ui.PlayAgainQuestion("Play again?");
 
-            if (playAgain) ChangeGameState(GameState.Initialize);
+            if (playAgain) ChangeGameState(GameState.NewGame);
             else ChangeGameState(GameState.EndGame);
+        }
+
+        private void NewGame()
+        {
+            ClearPlayersHands();
+            ClearPlayedCards();
+            ClearPlayerPoints();
+
+            ChangeGameState(GameState.NewRound);
         }
     }
 }
