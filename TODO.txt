@@ -3,12 +3,11 @@ Minor
 - Unit Testing
 - Make class variable sets private where possible
 - convert 'chosen card' to 'TableCardArea' for all play, should be an array
-- RulesEngine
 - Replace linq concats of dealth cards with a refernce list of the original 52 cards
 - Remove console prints from Player card methods
 - Remove unused library includes
 - Replace GameManager's 'while (CurrentState != GameState.EndGame)' with 'public void Tick()'
-- Refuse illegal cards played
+- Add explicit transition methods for game states
 
 Major
 - Add table class
@@ -19,7 +18,6 @@ Major
 - Configuration file: Define the rules of your card game in a seperate XML or Json file
 - Played Card History
 - Separation of states: GameState, PlayerState
-- Replace GameConfig singleton with Dependency Injection
 - Make Hand its own object class
 - Create a User object for functions outside of game loop e.g. start new game, exit
 - Remove mutable variables from Card.cs, compute card values and scores when needed with rulesengine.cs
@@ -30,6 +28,7 @@ Optional
 
 Bugs
 - Ace of Hearts is not renegable if hearts are led but hearts are not trumps and the player has no hearts except for the Ace of hearts
+- New Game question doesnt account for an invalid answer
 
 Done
 - Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards
@@ -38,3 +37,6 @@ Done
 - reneging the ace of hearts when non heart suit is led
 - Human player HiddenHand mode, CustomConsole, Dev mode, GameConfig, CardsPlayed Dictionary
 - JSON GameConfig Singleton, Newtonsoft.Json, RulesEngine
+- Refuse illegal cards played
+- Replace GameConfig singleton with Dependency Injection
+- RulesEngine

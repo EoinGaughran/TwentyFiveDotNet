@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using TwentyFiveDotNet.Models;
 
-namespace TwentyFiveDotNet.Utilities
+namespace TwentyFiveDotNet.ConsoleUI
 {
     public static class CustomConsole
     {

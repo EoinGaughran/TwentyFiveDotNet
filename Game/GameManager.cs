@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using TwentyFiveDotNet.Config;
-using TwentyFiveDotNet.Interfaces;
 using TwentyFiveDotNet.Models;
-using TwentyFiveDotNet.Utilities;
+using TwentyFiveDotNet.ConsoleUI;
 
 namespace TwentyFiveDotNet.Game
 {
@@ -20,13 +19,13 @@ namespace TwentyFiveDotNet.Game
         private Deck Deck { get; set; }
         private Deck DealtDeck { get; set; }
         private GameState CurrentState { get; set; }
-        private Player Dealer { get; set; }
+        private int DealerPlayerIndex { get; set; }
+        private Player Dealer => _players[DealerPlayerIndex];
         private Player Leader { get; set; }
-        private Player CurrentPlayer { get; set; }
-        private Player WinningPlayer { get; set; }
-        private int DealerPlayerNumber { get; set; }
-        private int CurrentPlayerNumber { get; set; }
-        private int WinningPlayerNumber { get; set; }
+        private int CurrentPlayerIndex;
+        private Player CurrentPlayer => _players[CurrentPlayerIndex];
+        private int WinningPlayerIndex { get; set; }
+        private Player WinningPlayer => _players[WinningPlayerIndex];
         private Card TrumpCard { get; set; }
         private Card LedCard { get; set; }
         private Card WinningCard { get; set; }
@@ -59,14 +58,12 @@ namespace TwentyFiveDotNet.Game
 
         private void AssignRandomDealer()
         {
-            DealerPlayerNumber = _rng.Next(0, _players.Count);
-            Dealer = _players[DealerPlayerNumber];
+            DealerPlayerIndex = _rng.Next(0, _players.Count);
         }
 
         private void RotateDealer()
         {
-            DealerPlayerNumber = NextPlayerNumber(DealerPlayerNumber);
-            Dealer = _players[DealerPlayerNumber];
+            DealerPlayerIndex = NextPlayerNumber(DealerPlayerIndex);
         }
 
         private void NewDeck()
@@ -88,7 +85,7 @@ namespace TwentyFiveDotNet.Game
 
         private void DealCards()
         {
-            ChangeToPlayer(DealerPlayerNumber);
+            ChangeToPlayer(DealerPlayerIndex);
 
             for (int i = 0; i < _players.Count; i++)
             {
@@ -125,20 +122,17 @@ namespace TwentyFiveDotNet.Game
 
         private void NextPlayer()
         {
-            CurrentPlayerNumber = NextPlayerNumber(CurrentPlayerNumber);
-            CurrentPlayer = _players[CurrentPlayerNumber];
+            CurrentPlayerIndex = NextPlayerNumber(CurrentPlayerIndex);
         }
 
         private void ChangeToPlayer(int playerNumber)
         {
-            CurrentPlayerNumber = playerNumber;
-            CurrentPlayer = _players[playerNumber];
+            CurrentPlayerIndex = playerNumber;
         }
 
         private void ChangeToPlayer(Player player)
         {
-            CurrentPlayerNumber = _players.IndexOf(player);
-            CurrentPlayer = player;
+            CurrentPlayerIndex = _players.IndexOf(player);
         }
         private void SetLeader(Player player)
         {
@@ -152,14 +146,12 @@ namespace TwentyFiveDotNet.Game
         private void SetWinner(Card card, Player player)
         {
             WinningCard = card;
-            WinningPlayer = player;
-            WinningPlayerNumber = _players.IndexOf(player);
+            WinningPlayerIndex = _players.IndexOf(player);
         }
 
         private void WinnerBecomesLeader()
         {
-            CurrentPlayer = WinningPlayer;
-            CurrentPlayerNumber = WinningPlayerNumber;
+            CurrentPlayerIndex = WinningPlayerIndex;
         }
 
         private void PlayerStoleTheTrump(bool state)
@@ -454,6 +446,11 @@ namespace TwentyFiveDotNet.Game
             ClearPlayerPoints();
 
             ChangeGameState(GameState.NewRound);
+        }
+
+        public void EndGame()
+        {
+            ChangeGameState(GameState.EndGame);
         }
     }
 }

@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
-using System.Reflection;
 using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Models;
-using TwentyFiveDotNet.Utilities;
 using TwentyFiveDotNet.Config;
-using System.IO;
 using TwentyFiveDotNet.Interfaces;
 using TwentyFiveDotNet.ConsoleUI;
-using System.Runtime;
 
 namespace TwentyFiveDotNet
 {
@@ -154,6 +149,7 @@ namespace TwentyFiveDotNet
             {
                 if (gameUI.PlayAgainQuestion("Play again?"))
                     manager.NewGame();
+                else manager.EndGame();
             };
 
             manager.StartGame();

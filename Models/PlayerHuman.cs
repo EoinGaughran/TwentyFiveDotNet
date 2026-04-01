@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TwentyFiveDotNet.Utilities;
-using TwentyFiveDotNet.Config;
+﻿using System.Collections.Generic;
 using TwentyFiveDotNet.Interfaces;
 
 namespace TwentyFiveDotNet.Models
