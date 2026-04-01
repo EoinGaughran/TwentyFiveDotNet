@@ -12,9 +12,10 @@ namespace TwentyFiveDotNet.Game
     {
         private readonly GameConfig _config;
         private readonly RulesEngine _rules;
-        private readonly IGameInteraction _ui;
 
-        private List<Player> _players { get; set; }
+        private static readonly Random _rng = new Random();
+
+        private List<Player> _players;
         private Dictionary<Player, Card> PlayedCards { get; set; }
         private Deck Deck { get; set; }
         private GameState CurrentState { get; set; }
@@ -36,20 +37,20 @@ namespace TwentyFiveDotNet.Game
 
         public event Action OnDealingStarted;
         public event Action<Player> OnCardsDealtToPlayer;
-        public event Action<Card, IEnumerable<Card>, IEnumerable<Card>> OnTrumpCardRevealed;
+        public event Action<Card, Dictionary<Card,int>> OnTrumpCardRevealed;
         public event Action<string> OnMessage;
         public event Action<List<Player>> ScoreChanged;
+        public event Action<IEnumerable<Card>> ShowTrumpCards;
+        public event Action OnGameEnded;
 
         public GameManager(
             GameConfig config,
             RulesEngine rules,
-            List<Player> players,
-            IGameInteraction ui)
+            List<Player> players)
         {
             _config = config;
             _rules = rules;
             _players = players;
-            _ui = ui;
 
             // Initialize the properties in the constructor
             ChangeGameState(GameState.Initialize);
@@ -57,8 +58,7 @@ namespace TwentyFiveDotNet.Game
 
         private void AssignRandomDealer()
         {
-            Random r = new Random();
-            DealerPlayerNumber = r.Next(0, _players.Count);
+            DealerPlayerNumber = _rng.Next(0, _players.Count);
             Dealer = _players[DealerPlayerNumber];
         }
 
@@ -162,20 +162,9 @@ namespace TwentyFiveDotNet.Game
             Steal = state;
         }
 
-        private bool ArePlayersOutOfCards()
-        {
-            if (_players[0].Hand.Count == 0) return true;
-            else return false;
-        }
+        private bool ArePlayersOutOfCards() => _players.All(p => p.Hand.Count == 0);
 
-        private bool HasPlayerStolen()
-        {
-            if (Steal)
-            {
-                return true;
-            }
-            else return false;
-        }
+        private bool HasPlayerStolen() => Steal;
 
         private void ChangeGameState(GameState state)
         {
@@ -256,7 +245,7 @@ namespace TwentyFiveDotNet.Game
 
                     case GameState.PlayAgain:
 
-                        CheckForNewGame();
+                        OnGameEnded?.Invoke();
 
                         break;
 
@@ -299,9 +288,7 @@ namespace TwentyFiveDotNet.Game
             }
 
             AssignTrumpSuit();
-
-            OnTrumpCardRevealed?.Invoke(TrumpCard, Deck.cards, Deck.DealtCards);
-
+            
             var allCards = Deck.cards.Concat(Deck.DealtCards);
             var trumpCards = _rules.GetTrumpCardsSorted(allCards, TrumpCard);
 
@@ -309,7 +296,7 @@ namespace TwentyFiveDotNet.Game
                 card => card,
                 card => _rules.GetCardScore(card, TrumpCard));
 
-            _ui.ShowTrumpCards(display);
+            OnTrumpCardRevealed?.Invoke(TrumpCard, display);
 
             ChangeGameState(GameState.Stealing);
         }
@@ -455,15 +442,7 @@ namespace TwentyFiveDotNet.Game
             ChangeGameState(GameState.DealCards);
         }
 
-        private void CheckForNewGame()
-        {
-            bool playAgain = _ui.PlayAgainQuestion("Play again?");
-
-            if (playAgain) ChangeGameState(GameState.NewGame);
-            else ChangeGameState(GameState.EndGame);
-        }
-
-        private void NewGame()
+        public void NewGame()
         {
             ClearPlayersHands();
             ClearPlayedCards();

@@ -141,7 +141,7 @@ namespace TwentyFiveDotNet
                 Players.Add(new PlayerCPU($"CPU Player {i + 1}", rules));
             }
 
-            GameManager manager = new GameManager(config, rules, Players, iGameInteraction);
+            GameManager manager = new GameManager(config, rules, Players);
             var gameUI = new ConsoleGameInteraction(consoleSettings);
 
             manager.OnDealingStarted += gameUI.HandleDealingStarted;
@@ -149,6 +149,12 @@ namespace TwentyFiveDotNet
             manager.OnTrumpCardRevealed += gameUI.HandleTrumpCard;
             manager.ScoreChanged += gameUI.UpdateScores;
             manager.OnMessage += gameUI.ShowMessage;
+
+            manager.OnGameEnded += () =>
+            {
+                if (gameUI.PlayAgainQuestion("Play again?"))
+                    manager.NewGame();
+            };
 
             manager.StartGame();
         }

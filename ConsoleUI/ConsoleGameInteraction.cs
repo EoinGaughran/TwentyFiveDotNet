@@ -55,18 +55,17 @@ namespace TwentyFiveDotNet.ConsoleUI
             CustomConsole.Write(DEVPrefix + $"{player.Name}'s hand: ", _settings);
             CustomConsole.WriteLine(string.Join(", ", player.Hand), _settings);
         }
-        public void HandleTrumpCard(Card TrumpCard, IEnumerable<Card> deckCards, IEnumerable<Card> dealtCards)
+        public void HandleTrumpCard(Card TrumpCard, Dictionary<Card,int> Trumps)
         {
             CustomConsole.WriteLine(UIPrefix + $"Dealer drew the trump card: {TrumpCard}", _settings);
             CustomConsole.WriteLine(UIPrefix + $"{TrumpCard.GetSuitSymbolUnicoded()} suit is trumps.", _settings);
-        }
-        public void ShowTrumpCards(Dictionary<Card,int> cards)
-        {
-            foreach (var kvp in cards)
+
+            foreach (var kvp in Trumps)
             {
                 Console.WriteLine(UIPrefix + $"{kvp.Key} is worth: {kvp.Value}");
             }
         }
+
         public void UpdateScores(List<Player> players)
         {
             CustomConsole.PrintPlayersScores(players, _settings, UIPrefix);

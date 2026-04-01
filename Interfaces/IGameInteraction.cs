@@ -15,6 +15,5 @@ namespace TwentyFiveDotNet.Interfaces
         void WaitForInput();
         string GetInput();
         bool PlayAgainQuestion(string message);
-        void ShowTrumpCards(Dictionary<Card,int> cards);
     }
 }
