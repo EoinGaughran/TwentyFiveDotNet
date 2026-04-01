@@ -8,19 +8,18 @@ namespace TwentyFiveDotNet.Models
 {
     public class Deck
     {
-        public List<Card> cards;
-        public List<Card> DealtCards;
-        public List<Card> Trumps;
+        private static readonly Random rng = new Random();
 
-        //load from file later
-        private int AceHeartsScoreBuff = 100;
+        private readonly List<Card> cards;
+        public IReadOnlyList<Card> Cards => cards;
 
         public Deck()
         {
             cards = new List<Card>();
-            DealtCards = new List<Card>();
-            Trumps = new List<Card>();
+        }
 
+        public void Add52CardsToDeck()
+        {
             foreach (Suits suit in Enum.GetValues(typeof(Suits)))
             {
                 foreach (Ranks rank in Enum.GetValues(typeof(Ranks)))
@@ -36,16 +35,26 @@ namespace TwentyFiveDotNet.Models
 
         public void Shuffle()
         {
-            Random rng = new Random();
-            cards = cards.OrderBy(x => rng.Next()).ToList();
+            for (int i = cards.Count - 1; i > 0; i--)
+            {
+                int j = rng.Next(i + 1);
+                (cards[i], cards[j]) = (cards[j], cards[i]);
+            }
         }
 
         public Card Draw()
         {
-            Card card = cards[0];
+            if (cards.Count == 0)
+                throw new InvalidOperationException("Deck is empty");
+
+            var card = cards[0];
             cards.RemoveAt(0);
-            DealtCards.Add(card);
             return card;
+        }
+
+        public void AddCardToDeck(Card card)
+        {
+            cards.Add(card);
         }
     }
 }

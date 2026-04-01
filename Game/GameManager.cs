@@ -18,6 +18,7 @@ namespace TwentyFiveDotNet.Game
         private List<Player> _players;
         private Dictionary<Player, Card> PlayedCards { get; set; }
         private Deck Deck { get; set; }
+        private Deck DealtDeck { get; set; }
         private GameState CurrentState { get; set; }
         private Player Dealer { get; set; }
         private Player Leader { get; set; }
@@ -71,6 +72,8 @@ namespace TwentyFiveDotNet.Game
         private void NewDeck()
         {
             Deck = new Deck();
+            Deck.Add52CardsToDeck();
+            DealtDeck = new Deck();
         }
 
         private void ResetCardsPlayed()
@@ -105,11 +108,13 @@ namespace TwentyFiveDotNet.Game
             TrumpCard = Deck.Draw();
         }
 
-        private void GivePlayerCards(int cards)
+        private void GivePlayerCards(int maxCards)
         {
-            for (int i = 0; i < cards; i++)
+            for (int i = 0; i < maxCards; i++)
             {
-                CurrentPlayer.Hand.Add(Deck.Draw());
+                var card = Deck.Draw();
+                DealtDeck.AddCardToDeck(card);
+                CurrentPlayer.Hand.Add(card);
             }
         }
 
@@ -289,7 +294,7 @@ namespace TwentyFiveDotNet.Game
 
             AssignTrumpSuit();
             
-            var allCards = Deck.cards.Concat(Deck.DealtCards);
+            var allCards = Deck.Cards.Concat(DealtDeck.Cards);
             var trumpCards = _rules.GetTrumpCardsSorted(allCards, TrumpCard);
 
             var display = trumpCards.ToDictionary(
