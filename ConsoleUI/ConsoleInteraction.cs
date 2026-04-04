@@ -18,7 +18,7 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         public void ShowMessage(string message)
         {
-            CustomConsole.WriteLine(UIPrefix+message, _settings);
+            CustomConsole.WriteLine(message, UIPrefix, _settings);
         }
 
         public void ShowCards(IEnumerable<Card> cards)
@@ -41,9 +41,7 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         public void ShowLegalCards(IEnumerable<Card> cards, IEnumerable<Card> legalCards)
         {
-            CustomConsole.Write(UIPrefix, _settings);
-
-            Console.Write($"Legal Cards to play: ");
+            CustomConsole.Write($"Legal Cards to play: ", UIPrefix, _settings);
             int i = 1;
             foreach (var card in legalCards)
             {
@@ -65,7 +63,7 @@ namespace TwentyFiveDotNet.ConsoleUI
 
             while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > max)
             {
-                Console.WriteLine("Invalid choice, try again.");
+                CustomConsole.WriteLine("Invalid choice, try again.", UIPrefix, _settings);
             }
 
             return choice - 1;
@@ -73,8 +71,13 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         public void WaitForPlayer(string playerName)
         {
-            CustomConsole.WriteLine($"UIPrefix+{playerName}, press any key when ready.", _settings);
+            CustomConsole.WriteLine($"{playerName}, press any key when ready.", UIPrefix, _settings);
             Console.ReadKey(true);
+        }
+
+        public void FlipTrumpCard(Card card, string playerName)
+        {
+            WaitForPlayer(playerName);
         }
     }
 }

@@ -10,5 +10,6 @@ namespace TwentyFiveDotNet.Interfaces
         void ShowLegalCards(IEnumerable<Card> cards, IEnumerable<Card> legalCards);
         int RequestCardChoice(int max);
         void WaitForPlayer(string playerName);
+        void FlipTrumpCard(Card card, string playerName);
     }
 }

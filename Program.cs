@@ -64,7 +64,6 @@ namespace TwentyFiveDotNet
             consoleSettings.Delay = config.DelayInMilliseconds;
 
             IPlayerInteraction iPlayerInteraction = new ConsoleInteraction(consoleSettings);
-            IGameInteraction iGameInteraction = new ConsoleGameInteraction(consoleSettings);
 
             // Debug values
             if (config != null)
@@ -91,15 +90,15 @@ namespace TwentyFiveDotNet
             Console.WriteLine("Loaded JSON:");
             Console.WriteLine(json);*/
 
-            CustomConsole.WriteLine(UIPrefix + "Welcome to the card game 25.", consoleSettings);
-            CustomConsole.WriteLine(UIPrefix + $"The game is for {config.MinPlayers} - {config.MaxPlayers} players.", consoleSettings);
-            CustomConsole.Write(UIPrefix + "How many total players would you like?: ", consoleSettings);
+            CustomConsole.WriteLine("Welcome to the card game 25.", UIPrefix, consoleSettings);
+            CustomConsole.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.", UIPrefix, consoleSettings);
+            CustomConsole.Write("How many total players would you like?: ", UIPrefix, consoleSettings);
 
             int rTotalPlayers;
 
             while (!int.TryParse(Console.ReadLine(), out rTotalPlayers) || rTotalPlayers < config.MinPlayers || rTotalPlayers > config.MaxPlayers)
             {
-                CustomConsole.WriteLine(UIPrefix + $"Please choose a number between {config.MinPlayers} - {config.MaxPlayers} inclusive.", consoleSettings);
+                CustomConsole.WriteLine($"Please choose a number between {config.MinPlayers} - {config.MaxPlayers} inclusive.", UIPrefix, consoleSettings);
             }
 
             CustomConsole.Write(UIPrefix + $"How many Human players would you like? 0 - {rTotalPlayers}: ", consoleSettings);
@@ -108,7 +107,7 @@ namespace TwentyFiveDotNet
 
             while (!int.TryParse(Console.ReadLine(), out rTotalHumans) || rTotalHumans < 0 || rTotalHumans > rTotalPlayers)
             {
-                CustomConsole.WriteLine(UIPrefix + $"Please choose a number between 0 and {rTotalPlayers} inclusive.", consoleSettings);
+                CustomConsole.WriteLine($"Please choose a number between 0 and {rTotalPlayers} inclusive.", UIPrefix, consoleSettings);
             }
 
             //CustomConsole.DevWriteLineNoDelay("Initializing Game.", consoleSettings);
@@ -137,13 +136,7 @@ namespace TwentyFiveDotNet
             }
 
             GameManager manager = new GameManager(config, rules, Players);
-            var gameUI = new ConsoleGameInteraction(consoleSettings);
-
-            manager.OnDealingStarted += gameUI.HandleDealingStarted;
-            manager.OnCardsDealtToPlayer += gameUI.HandleCardsDealt;
-            manager.OnTrumpCardRevealed += gameUI.HandleTrumpCard;
-            manager.ScoreChanged += gameUI.UpdateScores;
-            manager.OnMessage += gameUI.ShowMessage;
+            var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
 
             manager.OnGameEnded += () =>
             {

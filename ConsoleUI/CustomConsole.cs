@@ -11,19 +11,10 @@ namespace TwentyFiveDotNet.ConsoleUI
         public static readonly String DevPrefix = "[DEV LOG]";
 
         // Wrapper for Console.WriteLine
-        public static void WriteLine(string message, int delay, ConsoleSettings settings)
-        {
-            Console.WriteLine(message);
 
-            if (!settings.DevMode)
-            {
-                Thread.Sleep(delay); // Introduce delay
-            }
-        }
-
-        public static void WriteLine(string message, ConsoleSettings settings)
+        public static void WriteLine(string message, string sourcePrefix, ConsoleSettings settings)
         {
-            Console.WriteLine(message);
+            Console.WriteLine(sourcePrefix + message);
 
             if (!settings.DevMode)
             {
@@ -51,13 +42,7 @@ namespace TwentyFiveDotNet.ConsoleUI
                 Console.WriteLine($"{DevPrefix} {message}");
             }
         }
-        public static void DevWriteLineNoDelayNoPrefix(string message, ConsoleSettings settings)
-        {
-            if (settings.DevMode)
-            {
-                Console.WriteLine(message);
-            }
-        }
+
 
         public static void WriteLine()
         {
@@ -83,13 +68,14 @@ namespace TwentyFiveDotNet.ConsoleUI
             }
         }
 
-        public static void DevWriteNoDelay(string message, ConsoleSettings settings)
+        public static void Write(string message, string sourcePrefix, ConsoleSettings settings)
         {
-            if (settings.DevMode)
+            Console.Write(message);
+
+            if (!settings.DevMode)
             {
-                Console.Write(message);
+                Thread.Sleep(settings.Delay); // Introduce delay
             }
-            
         }
 
         public static void WaitForKeyPress()
@@ -107,11 +93,11 @@ namespace TwentyFiveDotNet.ConsoleUI
             if (settings.DevMode) Console.Write($"{DevPrefix} ");
         }
 
-        public static void PrintListOfPlayers(List<Player> players, ConsoleSettings settings)
+        public static void PrintListOfPlayers(List<Player> players, string sourcePrefix, ConsoleSettings settings)
         {
             foreach (var player in players)
             {
-                WriteLine($"{player.Name} has joined the game.", settings);
+                WriteLine($"{player.Name} has joined the game.", sourcePrefix, settings);
             }
         }
 
@@ -121,23 +107,23 @@ namespace TwentyFiveDotNet.ConsoleUI
             {
                 DevTagPrint(settings);
 
-                DevWriteNoDelay(prefix + $"{player.Name} has:", settings);
+                Write(prefix + $"{player.Name} has:", settings);
 
                 foreach (var card in player.Hand)
                 {
-                    DevWriteNoDelay(prefix + $" {card},", settings);
+                    Write(prefix + $" {card},", settings);
                 }
                 DevWriteLine(settings);
             }
         }
 
-        public static void PrintPlayersScores(List<Player> players, ConsoleSettings settings, String prefix)
+        public static void PrintPlayersScores(List<Player> players, String sourcePrefix, ConsoleSettings settings)
         {
-            WriteLine(prefix + $"Current Scores:", settings);
+            WriteLine($"Current Scores:", sourcePrefix, settings);
 
             foreach (var player in players)
             {
-                WriteLine(prefix + $"{player.Name} has {player.Points} points.", 200, settings);
+                WriteLine($"{player.Name} has {player.Points} points.", sourcePrefix, settings);
             }
             WriteLine();
         }

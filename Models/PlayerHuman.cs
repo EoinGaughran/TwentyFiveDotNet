@@ -29,5 +29,10 @@ namespace TwentyFiveDotNet.Models
             int choice = _interaction.RequestCardChoice(Hand.Count);
             return Hand[choice];
         }
+
+        public override void PlayerFlipTrumpCard(Card card)
+        {
+            _interaction.FlipTrumpCard(card, Name);
+        }
     }
 }

@@ -24,23 +24,58 @@ namespace TwentyFiveDotNet.Game
         private Player Leader { get; set; }
         private int CurrentPlayerIndex;
         private Player CurrentPlayer => _players[CurrentPlayerIndex];
-        private int WinningPlayerIndex { get; set; }
-        private Player WinningPlayer => _players[WinningPlayerIndex];
+        private int RoundWinningPlayerIndex { get; set; }
+        private Player RoundWinningPlayer => _players[RoundWinningPlayerIndex];
         private Card TrumpCard { get; set; }
         private Card LedCard { get; set; }
-        private Card WinningCard { get; set; }
+        private Card RoundWinningCard { get; set; }
         private bool Steal { get; set; }
 
         //load from file later
         private readonly int TwoCards = 2;
         private readonly int ThreeCards = 3;
 
-        public event Action OnDealingStarted;
-        public event Action<Player> OnCardsDealtToPlayer;
-        public event Action<Card, Dictionary<Card,int>> OnTrumpCardRevealed;
+        //Messaging
         public event Action<string> OnMessage;
-        public event Action<List<Player>> ScoreChanged;
-        public event Action<IEnumerable<Card>> ShowTrumpCards;
+        public event Action<string> OnRelayTrumpInfo;
+        public event Action<string, string> OnRelayTrumpLeadInfo;
+
+        //Setup
+        public event Action<Deck> OnDeckCreated;
+        public event Action<Deck> OnDeckShuffled;
+
+        //Dealing
+        public event Action<Player> OnDealerSelected;
+        public event Action OnDealingStarted;
+        public event Action<Deck, Card, Player> OnCardDealtToPlayer;
+
+        //Trump mechanics
+        public event Action<Card, Player> OnPlayerFlipsTrumpCard;
+        public event Action<Dictionary<Card, int>> OnTrumpCardRevealed;
+        public event Action<Player> OnTrumpCardIsAceOfHearts;
+        public event Action<Card, Player> OnCardDiscarded;
+
+        //Turn Flow
+        public event Action<Player> OnLeadPlayerSelected;
+        public event Action<Card, Player> OnPlayerSteal;
+        public event Action<Player> OnLeadPlayerTurn;
+        public event Action<Player> OnNextPlayerTurn;
+
+        //Card Play
+        public event Action<Card, Player> OnLeadCardPlayed;
+        public event Action<Card, Player> OnCardPlayed;
+
+        //Scoring/Rounds
+        public event Action<List<Player>> OnScoreChanged;
+        public event Action<Card, Player> OnRoundNewWinner;
+        public event Action<Player> OnDealersTrick;
+        public event Action<Card, Player> OnRoundEnded;
+        public event Action OnNewRound;
+
+        //Game State
+        public event Action<GameState> OnGameStateChange;
+        public event Action<Player> OnGameOver;
+        public event Action OnNewGame;
         public event Action OnGameEnded;
 
         public GameManager(
@@ -100,11 +135,6 @@ namespace TwentyFiveDotNet.Game
             }
         }
 
-        private void AssignTrumpSuit()
-        {
-            TrumpCard = Deck.Draw();
-        }
-
         private void GivePlayerCards(int maxCards)
         {
             for (int i = 0; i < maxCards; i++)
@@ -112,6 +142,7 @@ namespace TwentyFiveDotNet.Game
                 var card = Deck.Draw();
                 DealtDeck.AddCardToDeck(card);
                 CurrentPlayer.Hand.Add(card);
+                OnCardDealtToPlayer?.Invoke(Deck, card, CurrentPlayer);
             }
         }
 
@@ -145,13 +176,13 @@ namespace TwentyFiveDotNet.Game
         }
         private void SetWinner(Card card, Player player)
         {
-            WinningCard = card;
-            WinningPlayerIndex = _players.IndexOf(player);
+            RoundWinningCard = card;
+            RoundWinningPlayerIndex = _players.IndexOf(player);
         }
 
         private void WinnerBecomesLeader()
         {
-            CurrentPlayerIndex = WinningPlayerIndex;
+            CurrentPlayerIndex = RoundWinningPlayerIndex;
         }
 
         private void PlayerStoleTheTrump(bool state)
@@ -166,7 +197,7 @@ namespace TwentyFiveDotNet.Game
         private void ChangeGameState(GameState state)
         {
             CurrentState = state;
-            OnMessage?.Invoke("Game State changed to: " + state);
+            OnGameStateChange?.Invoke(state);
         }
 
         private void ClearPlayersHands()
@@ -261,14 +292,14 @@ namespace TwentyFiveDotNet.Game
 
         private void Initialize()
         {
-            AssignRandomDealer();
-            OnMessage?.Invoke($"Selected dealer: {Dealer.Name}");
-
             NewDeck();
-            OnMessage?.Invoke("The deck has been created.");
+            OnDeckCreated?.Invoke(Deck);
 
             Deck.Shuffle();
-            OnMessage?.Invoke("The deck has been shuffled.");
+            OnDeckShuffled?.Invoke(Deck);
+
+            AssignRandomDealer();
+            OnDealerSelected?.Invoke(Dealer);
 
             ChangeGameState(GameState.DealCards);
         }
@@ -279,12 +310,10 @@ namespace TwentyFiveDotNet.Game
 
             DealCards();
 
-            foreach (var player in _players)
-            {
-                OnCardsDealtToPlayer?.Invoke(player);
-            }
+            TrumpCard = Deck.Draw();
+            Dealer.PlayerFlipTrumpCard(TrumpCard);
 
-            AssignTrumpSuit();
+            OnPlayerFlipsTrumpCard?.Invoke(TrumpCard, Dealer);
             
             var allCards = Deck.Cards.Concat(DealtDeck.Cards);
             var trumpCards = _rules.GetTrumpCardsSorted(allCards, TrumpCard);
@@ -293,7 +322,7 @@ namespace TwentyFiveDotNet.Game
                 card => card,
                 card => _rules.GetCardScore(card, TrumpCard));
 
-            OnTrumpCardRevealed?.Invoke(TrumpCard, display);
+            OnTrumpCardRevealed?.Invoke(display);
 
             ChangeGameState(GameState.Stealing);
         }
@@ -304,12 +333,14 @@ namespace TwentyFiveDotNet.Game
 
             if (_rules.IsTrumpCardStealable(TrumpCard))
             {
-                OnMessage?.Invoke("The Trump card is the Ace of Hearts. The Dealer can steal it.");
+                OnTrumpCardIsAceOfHearts?.Invoke(Dealer);
                 var droppedCard = Dealer.StealTrump(TrumpCard, LedCard);
-                OnMessage?.Invoke($"Dealer Dropped a card and took the Trump Card: {TrumpCard}");
 
                 Dealer.Hand.Remove(droppedCard);
+                OnCardDiscarded?.Invoke(droppedCard, Dealer);
+
                 Dealer.Hand.Add(TrumpCard);
+                OnPlayerSteal(TrumpCard, Dealer);
                 PlayerStoleTheTrump(true);
 
                 ChangeGameState(GameState.LeadTurn);
@@ -320,16 +351,15 @@ namespace TwentyFiveDotNet.Game
 
                 if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
                 {
-                    OnMessage?.Invoke($"{CurrentPlayer} has the Ace of Trumps and so gets to steal.");
-
-                    CurrentPlayer.Hand.Remove(CurrentPlayer.StealTrump(TrumpCard, LedCard));
-                    OnMessage?.Invoke($"{CurrentPlayer} placed down their worst card");
+                    var droppedCard = CurrentPlayer.StealTrump(TrumpCard, LedCard);             
+                    OnCardDiscarded(droppedCard, CurrentPlayer);
+                    CurrentPlayer.Hand.Remove(droppedCard);
 
                     CurrentPlayer.Hand.Add(TrumpCard);
-                    OnMessage?.Invoke($"{CurrentPlayer} stole the trump card {TrumpCard}.");
+                    OnPlayerSteal?.Invoke(TrumpCard, CurrentPlayer);
 
                     PlayerStoleTheTrump(true);
-                    ChangeToPlayer(Dealer);
+                    ChangeToPlayer(Dealer); //This will change when stealing is determined on players first turn
                     ChangeGameState(GameState.LeadTurn);
                 }
 
@@ -337,7 +367,7 @@ namespace TwentyFiveDotNet.Game
                 {
                     if (!HasPlayerStolen())
                     {
-                        OnMessage?.Invoke("Nobody has the Ace of Trumps so nobody steals.");
+                        OnMessage?.Invoke("Nobody has the Ace of Trumps so nobody steals."); //This is not a real event
                     }
 
                     NextPlayer();
@@ -350,21 +380,20 @@ namespace TwentyFiveDotNet.Game
         {
             ResetCardsPlayed();
             SetLeader(CurrentPlayer);
-            OnMessage?.Invoke($"{Leader.Name} is leading the trick.");
-            OnMessage?.Invoke(($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps."));
+            OnLeadPlayerTurn(CurrentPlayer);
+            OnRelayTrumpInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded());
 
             var chosenCard = CurrentPlayer.LeadCard();
             SetLedCard(chosenCard);
-            OnMessage?.Invoke($"{CurrentPlayer} played {chosenCard}");
+            OnCardPlayed(chosenCard, CurrentPlayer);
 
             SetWinner(LedCard, CurrentPlayer);
-            OnMessage?.Invoke($"{CurrentPlayer} is winning with {chosenCard}");
-
-            CurrentPlayer.Hand.Remove(chosenCard);
+            OnRoundNewWinner(chosenCard, CurrentPlayer);
 
             UpdatePlayedCards(CurrentPlayer, chosenCard);
+            CurrentPlayer.Hand.Remove(chosenCard);
 
-            OnMessage?.Invoke($"{TrumpCard.GetSuitSymbolUnicoded()} are trumps, {LedCard.GetSuitSymbolUnicoded()} were led.");
+            OnRelayTrumpLeadInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded(), LedCard.GetSuitSymbolUnicoded());
 
             ChangeGameState(GameState.PlayerTurn);
         }
@@ -372,7 +401,6 @@ namespace TwentyFiveDotNet.Game
         private void PlayerTurn()
         {
             NextPlayer();
-            OnMessage?.Invoke($"It's {CurrentPlayer}'s turn.");
 
             if (CurrentPlayer == Leader)
             {
@@ -380,35 +408,35 @@ namespace TwentyFiveDotNet.Game
             }
             else
             {
+                OnNextPlayerTurn?.Invoke(CurrentPlayer);
+
                 var playableCards = _rules.GetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
 
                 var chosenCard = CurrentPlayer.ChooseCard(playableCards, TrumpCard, LedCard);
 
-                OnMessage?.Invoke($"{CurrentPlayer.Name} played {chosenCard}.");
+                OnCardPlayed?.Invoke(chosenCard, CurrentPlayer);
 
                 UpdatePlayedCards(CurrentPlayer, chosenCard);
 
-                if (_rules.IsCardBetter(chosenCard, WinningCard, LedCard, TrumpCard))
+                if (_rules.IsCardBetter(chosenCard, RoundWinningCard, LedCard, TrumpCard))
                     SetWinner(chosenCard, CurrentPlayer);
 
                 CurrentPlayer.Hand.Remove(chosenCard);
 
-                OnMessage?.Invoke($"{WinningPlayer.Name} is currently winning with the {WinningCard}.");
+                OnRoundNewWinner?.Invoke(RoundWinningCard, RoundWinningPlayer);
             }
         }
 
         private void Scoring()
         {
-            _rules.Scoring(WinningPlayer);
-            OnMessage?.Invoke($"{WinningPlayer.Name} wins the trick with the {WinningCard} and receives 5 points.");
+            _rules.Scoring(RoundWinningPlayer);
+            OnRoundEnded?.Invoke(RoundWinningCard, RoundWinningPlayer);
 
-            ScoreChanged?.Invoke(_players);
+            OnScoreChanged?.Invoke(_players);
 
-            if (_rules.IsGameOver(WinningPlayer))
+            if (_rules.IsGameOver(RoundWinningPlayer))
             {
-                OnMessage?.Invoke("Game Over!");
-                OnMessage?.Invoke($"{WinningPlayer.Name} wins.");
-
+                OnGameOver?.Invoke(RoundWinningPlayer);
                 ChangeGameState(GameState.PlayAgain);
             }
 
@@ -419,7 +447,7 @@ namespace TwentyFiveDotNet.Game
             else
             {
                 WinnerBecomesLeader();
-                OnMessage?.Invoke($"{WinningPlayer.Name} leads the next trick.");
+                OnLeadPlayerSelected?.Invoke(RoundWinningPlayer);
 
                 ChangeGameState(GameState.LeadTurn);
 
@@ -428,13 +456,14 @@ namespace TwentyFiveDotNet.Game
 
         private void NewRound()
         {
-            RotateDealer();
             NewDeck();
+            OnDeckCreated?.Invoke(Deck);
 
             Deck.Shuffle();
-            OnMessage?.Invoke($"Deck has been shuffled.");
+            OnDeckShuffled?.Invoke(Deck);
 
-            OnMessage?.Invoke($"The dealer position has rotated clockwise to: {Dealer.Name}");
+            RotateDealer();
+            OnDealerSelected?.Invoke(Dealer);
 
             ChangeGameState(GameState.DealCards);
         }
@@ -445,11 +474,14 @@ namespace TwentyFiveDotNet.Game
             ClearPlayedCards();
             ClearPlayerPoints();
 
+            OnNewGame?.Invoke();
+
             ChangeGameState(GameState.NewRound);
         }
 
         public void EndGame()
         {
+            OnGameEnded?.Invoke();
             ChangeGameState(GameState.EndGame);
         }
     }

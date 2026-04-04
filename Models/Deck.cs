@@ -15,6 +15,11 @@ namespace TwentyFiveDotNet.Models
             cards = new List<Card>();
         }
 
+        public override string ToString()
+        {
+            return "DECK OF CARDS";
+        }
+
         public void Add52CardsToDeck()
         {
             foreach (Suits suit in Enum.GetValues(typeof(Suits)))

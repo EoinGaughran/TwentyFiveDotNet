@@ -26,5 +26,9 @@ namespace TwentyFiveDotNet.Models
         {
             return Hand[0]; // Create new best card function
         }
+        public override void PlayerFlipTrumpCard(Card card)
+        {
+
+        }
     }
 }

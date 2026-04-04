@@ -21,5 +21,6 @@ namespace TwentyFiveDotNet.Models
         public abstract Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard);
         public abstract Card LeadCard();
         public abstract Card StealTrump(Card TrumpCard, Card LedCard);
+        public abstract void PlayerFlipTrumpCard(Card card);
     }
 }
