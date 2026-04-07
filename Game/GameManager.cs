@@ -77,6 +77,7 @@ namespace TwentyFiveDotNet.Game
         public event Action<Player> OnGameOver;
         public event Action OnNewGame;
         public event Action OnGameEnded;
+        public event Action OnProgramClosed;
 
         public GameManager(
             GameConfig config,
@@ -286,6 +287,8 @@ namespace TwentyFiveDotNet.Game
 
                     case GameState.EndGame:
 
+
+
                         break;
                 }
             }
@@ -493,7 +496,7 @@ namespace TwentyFiveDotNet.Game
 
         public void EndGame()
         {
-            OnGameEnded?.Invoke();
+            OnProgramClosed?.Invoke();
             ChangeGameState(GameState.EndGame);
             return;
         }

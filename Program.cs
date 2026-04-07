@@ -142,7 +142,8 @@ namespace TwentyFiveDotNet
             {
                 if (gameUI.PlayAgainQuestion("Play again?"))
                     manager.NewGame();
-                else manager.EndGame();
+                else
+                    manager.EndGame();
             };
 
             manager.StartGame();

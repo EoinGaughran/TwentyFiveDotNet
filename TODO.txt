@@ -6,6 +6,7 @@ Minor
 - Replace linq concats of dealth cards with a refernce list of the original 52 cards
 - Replace GameManager's 'while (CurrentState != GameState.EndGame)' with 'public void Tick()'
 - Add explicit transition methods for game states
+- Add a event for the player to click to steal the trump, then discard
 
 Major
 - Add table class
@@ -26,7 +27,6 @@ Optional
 
 Bugs
 - Ace of Hearts is not renegable if hearts are led but hearts are not trumps and the player has no hearts except for the Ace of hearts
-- New Game question doesnt account for an invalid answer
 
 Done
 - Circular bufer for players, Input Validation, replaced ElementAt with '[]' operator, Magic Numbers, playerTableArea, Fixed setPlayableCards

@@ -61,7 +61,7 @@ namespace TwentyFiveDotNet.ConsoleUI
             _manager.OnGameStateChange += UpdateGameState;
             _manager.OnGameOver += ShowGameOver;
             _manager.OnNewGame += ResetForNewGame;
-            _manager.OnGameEnded += ShowGameEnded;
+            _manager.OnProgramClosed += ShowClosingResponse;
         }
 
         public string GetInput()
@@ -90,45 +90,49 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         public void HandleCardsDealt(Player player)
         {
-            CustomConsole.Write(DEVPrefix + $"{player.Name}'s hand: ", _settings);
+            CustomConsole.Write($"{player.Name}'s hand: ", DEVPrefix,  _settings);
             CustomConsole.WriteLine(string.Join(", ", player.Hand), UIPrefix, _settings);
         }
         public void HandleTrumpCard(Card TrumpCard, Dictionary<Card,int> Trumps)
         {
-            CustomConsole.WriteLine(UIPrefix + $"Dealer drew the trump card: {TrumpCard}", UIPrefix, _settings);
-            CustomConsole.WriteLine(UIPrefix + $"{TrumpCard.GetSuitSymbolUnicoded()} suit is trumps.", UIPrefix, _settings);
+            CustomConsole.WriteLine($"Dealer drew the trump card: {TrumpCard}", UIPrefix, _settings);
+            CustomConsole.WriteLine($"{TrumpCard.GetSuitSymbolUnicoded()} suit is trumps.", UIPrefix, _settings);
 
             foreach (var kvp in Trumps)
             {
-                Console.WriteLine(UIPrefix + $"{kvp.Key} is worth: {kvp.Value}");
+                Console.WriteLine($"{kvp.Key} is worth: {kvp.Value}", UIPrefix, _settings);
             }
         }
 
         public bool PlayAgainQuestion(String message)
         {
-            CustomConsole.WriteLine(UIPrefix + "Would you like to play again? (Y/N)", UIPrefix, _settings);
-            var charResponse = Console.ReadLine();
-
             while (true)
             {
+                CustomConsole.WriteLine("Would you like to play again? (Y/N)", UIPrefix, _settings);
+                var charResponse = Console.ReadLine();
+
                 if (charResponse == "y" || charResponse == "Y")
                 {
-                    CustomConsole.WriteLine(UIPrefix + "You chose to play a new game.", UIPrefix, _settings);
+                    CustomConsole.WriteLine("You chose to play a new game.", UIPrefix, _settings);
                     CustomConsole.WriteLine();
                     return true;
                 }
                 else if (charResponse == "n" || charResponse == "N")
                 {
-                    CustomConsole.WriteLine(UIPrefix + "You chose to not play a new game.", UIPrefix, _settings);
+                    CustomConsole.WriteLine("You chose to not play a new game.", UIPrefix, _settings);
                     CustomConsole.WriteLine();
                     return false;
                 }
 
-                CustomConsole.WriteLine(UIPrefix + "Invalid response, try again.", UIPrefix, _settings);
+                CustomConsole.WriteLine("Invalid response, try again.", UIPrefix, _settings);
                 CustomConsole.WriteLine();
             }
 
         }
+
+        /*********
+         * EVENTS
+         *********/
 
         //Messaging
         void DisplayMessage(string message)
@@ -258,9 +262,10 @@ namespace TwentyFiveDotNet.ConsoleUI
             CustomConsole.WriteLine($"Players scores have been cleared.", UIPrefix, _settings);
             CustomConsole.WriteLine($"The list of played cards has been cleared.", UIPrefix, _settings);
         }
-        void ShowGameEnded()
+
+        void ShowClosingResponse()
         {
-            CustomConsole.WriteLine($"The game has ended.", UIPrefix, _settings);
+            CustomConsole.WriteLine($"The game has ended. The program will now close.", UIPrefix, _settings);
         }
     }
 }
