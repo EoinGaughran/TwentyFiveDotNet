@@ -29,7 +29,7 @@ namespace TwentyFiveDotNet.Game
         private Card TrumpCard { get; set; }
         private Card LedCard { get; set; }
         private Card RoundWinningCard { get; set; }
-        private bool Steal { get; set; }
+        private bool TrumpStolen { get; set; }
 
         //load from file later
         private readonly int TwoCards = 2;
@@ -52,7 +52,7 @@ namespace TwentyFiveDotNet.Game
         //Trump mechanics
         public event Action<Card, Player> OnPlayerFlipsTrumpCard;
         public event Action<Dictionary<Card, int>> OnTrumpCardRevealed;
-        public event Action<Player> OnTrumpCardIsAceOfHearts;
+        public event Action<Player> OnTrumpCardIsAceOTrumps;
         public event Action<Card, Player> OnCardDiscarded;
 
         //Turn Flow
@@ -187,14 +187,27 @@ namespace TwentyFiveDotNet.Game
             CurrentPlayerIndex = RoundWinningPlayerIndex;
         }
 
+        private void HandleStealing()
+        {
+            var droppedCard = CurrentPlayer.StealTrump(TrumpCard, LedCard);
+            OnCardDiscarded?.Invoke(droppedCard, CurrentPlayer);
+            CurrentPlayer.Hand.Remove(droppedCard);
+
+            CurrentPlayer.Hand.Add(TrumpCard);
+            OnPlayerSteal?.Invoke(TrumpCard, CurrentPlayer);
+
+            PlayerStoleTheTrump(true);
+
+        }
+
         private void PlayerStoleTheTrump(bool state)
         {
-            Steal = state;
+            TrumpStolen = state;
         }
 
         private bool ArePlayersOutOfCards() => _players.All(p => p.Hand.Count == 0);
 
-        private bool HasPlayerStolen() => Steal;
+        private bool HasPlayerStolen() => TrumpStolen;
 
         private void ChangeGameState(GameState state)
         {
@@ -240,12 +253,6 @@ namespace TwentyFiveDotNet.Game
                     case GameState.DealCards:
 
                         HandleDealCards();
-
-                        break;
-
-                    case GameState.Stealing:
-
-                        HandleStealing();
 
                         break;
 
@@ -319,7 +326,8 @@ namespace TwentyFiveDotNet.Game
             Dealer.PlayerFlipTrumpCard(TrumpCard);
 
             OnPlayerFlipsTrumpCard?.Invoke(TrumpCard, Dealer);
-            
+
+            DealtDeck.AddCardToDeck(TrumpCard);
             var allCards = Deck.Cards.Concat(DealtDeck.Cards);
             var trumpCards = _rules.GetTrumpCardsSorted(allCards, TrumpCard);
 
@@ -329,65 +337,22 @@ namespace TwentyFiveDotNet.Game
 
             OnTrumpCardRevealed?.Invoke(display);
 
-            ChangeGameState(GameState.Stealing);
-            return;
-        }
-
-        private void HandleStealing()
-        {
             PlayerStoleTheTrump(false);
 
-            if (_rules.IsTrumpCardStealable(TrumpCard))
-            {
-                OnTrumpCardIsAceOfHearts?.Invoke(Dealer);
-                var droppedCard = Dealer.StealTrump(TrumpCard, LedCard);
-
-                Dealer.Hand.Remove(droppedCard);
-                OnCardDiscarded?.Invoke(droppedCard, Dealer);
-
-                Dealer.Hand.Add(TrumpCard);
-                OnPlayerSteal?.Invoke(TrumpCard, Dealer);
-                PlayerStoleTheTrump(true);
-
-                ChangeGameState(GameState.LeadTurn);
-                return;
-            }
-            else
-            {
-                NextPlayer();
-
-                if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
-                {
-                    var droppedCard = CurrentPlayer.StealTrump(TrumpCard, LedCard);             
-                    OnCardDiscarded?.Invoke(droppedCard, CurrentPlayer);
-                    CurrentPlayer.Hand.Remove(droppedCard);
-
-                    CurrentPlayer.Hand.Add(TrumpCard);
-                    OnPlayerSteal?.Invoke(TrumpCard, CurrentPlayer);
-
-                    PlayerStoleTheTrump(true);
-                    ChangeToPlayer(Dealer); //This will change when stealing is determined on players first turn
-                    ChangeGameState(GameState.LeadTurn);
-                    return;
-                }
-
-                if (CurrentPlayer == Dealer)
-                {
-                    if (!HasPlayerStolen())
-                    {
-                        OnMessage?.Invoke("Nobody has the Ace of Trumps so nobody steals."); //This is not a real event
-                    }
-
-                    NextPlayer();
-                    ChangeGameState(GameState.LeadTurn);
-                    return;
-                }
-            }
+            ChangeGameState(GameState.LeadTurn);
+            return;
         }
 
         private void LeadTurn()
         {
-            ResetCardsPlayed();
+            NextPlayer();
+
+            if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
+            {
+                HandleStealing();
+            }
+
+            ResetCardsPlayed(); //This should be moved
             SetLeader(CurrentPlayer);
             OnLeadPlayerTurn?.Invoke(CurrentPlayer);
             OnRelayTrumpInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded());
@@ -412,30 +377,36 @@ namespace TwentyFiveDotNet.Game
         {
             NextPlayer();
 
-            if (CurrentPlayer == Leader)
+            if (CurrentPlayer.Equals(Leader))
             {
                 ChangeGameState(GameState.Scoring);
                 return;
             }
-            else
-            {
-                OnNextPlayerTurn?.Invoke(CurrentPlayer);
 
-                var playableCards = _rules.GetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
+            if (!HasPlayerStolen() &&
+                _rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
+                HandleStealing();
 
-                var chosenCard = CurrentPlayer.ChooseCard(playableCards, TrumpCard, LedCard);
+            if (CurrentPlayer.Equals(Dealer) &&
+                _rules.IsTrumpCardStealable(TrumpCard))
+                HandleStealing();
 
-                OnCardPlayed?.Invoke(chosenCard, CurrentPlayer);
+            OnNextPlayerTurn?.Invoke(CurrentPlayer);
 
-                UpdatePlayedCards(CurrentPlayer, chosenCard);
+            var playableCards = _rules.GetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
 
-                if (_rules.IsCardBetter(chosenCard, RoundWinningCard, LedCard, TrumpCard))
-                    SetWinner(chosenCard, CurrentPlayer);
+            var chosenCard = CurrentPlayer.ChooseCard(playableCards, TrumpCard, LedCard);
 
-                CurrentPlayer.Hand.Remove(chosenCard);
+            OnCardPlayed?.Invoke(chosenCard, CurrentPlayer);
 
-                OnRoundNewWinner?.Invoke(RoundWinningCard, RoundWinningPlayer);
-            }
+            UpdatePlayedCards(CurrentPlayer, chosenCard);
+
+            if (_rules.IsCardBetter(chosenCard, RoundWinningCard, LedCard, TrumpCard))
+                SetWinner(chosenCard, CurrentPlayer);
+
+            CurrentPlayer.Hand.Remove(chosenCard);
+
+            OnRoundNewWinner?.Invoke(RoundWinningCard, RoundWinningPlayer);
         }
 
         private void Scoring()
@@ -452,19 +423,17 @@ namespace TwentyFiveDotNet.Game
                 return;
             }
 
-            else if (ArePlayersOutOfCards())
+            if (ArePlayersOutOfCards())
             {
                 ChangeGameState(GameState.NewRound);
                 return;
             }
-            else
-            {
-                WinnerBecomesLeader();
-                OnLeadPlayerSelected?.Invoke(RoundWinningPlayer);
 
-                ChangeGameState(GameState.LeadTurn);
-                return;
-            }
+            WinnerBecomesLeader();
+            OnLeadPlayerSelected?.Invoke(RoundWinningPlayer);
+
+            ChangeGameState(GameState.LeadTurn);
+            return;
         }
 
         private void NewRound()

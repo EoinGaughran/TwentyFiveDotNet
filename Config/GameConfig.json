@@ -46,9 +46,9 @@
         "DefaultTrumpBonus": 15,
         "AceOfHeartsBonus": 35,
         "TrumpBonus": {
-            "Ace": 25,
-            "Jack": 35,
-            "Five": 45
+            "Ace": 28,
+            "Jack": 31,
+            "Five": 38
         }
     }
 }

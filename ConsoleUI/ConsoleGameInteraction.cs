@@ -37,7 +37,7 @@ namespace TwentyFiveDotNet.ConsoleUI
             //Trump mechanics
             _manager.OnPlayerFlipsTrumpCard += ShowTrumpCardFlip;
             _manager.OnTrumpCardRevealed += DisplayTrumpCards;
-            _manager.OnTrumpCardIsAceOfHearts += HandleTrumpAceOfHeartsSpecial;
+            _manager.OnTrumpCardIsAceOTrumps += HandleTrumpAceOfHeartsSpecial;
             _manager.OnCardDiscarded += DiscardCard;
 
             //Turn Flow

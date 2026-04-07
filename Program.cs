@@ -39,7 +39,6 @@ namespace TwentyFiveDotNet
         NotStarted,
         Initialize,
         DealCards,
-        Stealing,
         LeadTurn,
         PlayerTurn,
         Scoring,
