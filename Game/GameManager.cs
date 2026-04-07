@@ -11,6 +11,7 @@ namespace TwentyFiveDotNet.Game
     {
         private readonly GameConfig _config;
         private readonly RulesEngine _rules;
+        private readonly TurnManager _turnManager;  
 
         private static readonly Random _rng = new Random();
 
@@ -20,17 +21,11 @@ namespace TwentyFiveDotNet.Game
         private Deck DealtDeck { get; set; }
         private GameState CurrentState { get; set; }
         private Player Dealer { get; set; }
-        private Player Leader { get; set; }
-        private Player CurrentPlayer { get; set; }
         private Player RoundWinningPlayer { get; set; }
         private Card TrumpCard { get; set; }
         private Card LedCard { get; set; }
         private Card RoundWinningCard { get; set; }
         private bool TrumpStolen { get; set; }
-
-        //load from file later
-        private readonly int TwoCards = 2;
-        private readonly int ThreeCards = 3;
 
         //Messaging
         public event Action<string> OnMessage;
@@ -85,6 +80,8 @@ namespace TwentyFiveDotNet.Game
             _rules = rules;
             _players = players;
 
+            _turnManager = new TurnManager(_players);
+
             // Initialize the properties in the constructor
             ChangeGameState(GameState.Initialize);
         }
@@ -96,7 +93,7 @@ namespace TwentyFiveDotNet.Game
 
         private void RotateDealer()
         {
-            Dealer = NextPlayer(Dealer);
+            Dealer = _turnManager.NextPlayer(Dealer);
         }
 
         private void NewDeck()
@@ -118,14 +115,14 @@ namespace TwentyFiveDotNet.Game
 
         private void DealCards()
         {
-            ChangeToPlayer(Dealer);
+            _turnManager.ChangeToPlayer(Dealer);
 
             foreach (var amount in _config.DealPattern)
             {
                 for( int i = 0; i < _players.Count; i++ )
                 {
-                    RotateCurrentPlayer();
-                    GivePlayerCards(CurrentPlayer, amount);
+                    _turnManager.RotateCurrentPlayer();
+                    GivePlayerCards(_turnManager.CurrentPlayer, amount);
                 }
             }
         }
@@ -141,31 +138,6 @@ namespace TwentyFiveDotNet.Game
             }
         }
 
-        private void RotateCurrentPlayer()
-        {
-            CurrentPlayer = NextPlayer(CurrentPlayer);
-        }
-
-        private Player NextPlayer(Player player)
-        {
-            int index = _players.IndexOf(player);
-
-            if (index == -1)
-                throw new InvalidOperationException("Player not found in player list.");
-
-            int nextIndex = (index + 1) % _players.Count;
-            return _players[nextIndex];
-        }
-
-        private void ChangeToPlayer(Player player)
-        {
-            CurrentPlayer = player;
-        }
-        private void SetLeader(Player player)
-        {
-            Leader = player;
-        }
-
         private void SetLedCard(Card card)
         {
             LedCard = card;
@@ -178,12 +150,12 @@ namespace TwentyFiveDotNet.Game
 
         private void HandleStealing()
         {
-            var droppedCard = CurrentPlayer.StealTrump(TrumpCard, LedCard);
-            OnCardDiscarded?.Invoke(droppedCard, CurrentPlayer);
-            CurrentPlayer.Hand.Remove(droppedCard);
+            var droppedCard = _turnManager.CurrentPlayer.StealTrump(TrumpCard, LedCard);
+            OnCardDiscarded?.Invoke(droppedCard, _turnManager.CurrentPlayer);
+            _turnManager.CurrentPlayer.Hand.Remove(droppedCard);
 
-            CurrentPlayer.Hand.Add(TrumpCard);
-            OnPlayerSteal?.Invoke(TrumpCard, CurrentPlayer);
+            _turnManager.CurrentPlayer.Hand.Add(TrumpCard);
+            OnPlayerSteal?.Invoke(TrumpCard, _turnManager.CurrentPlayer);
 
             PlayerStoleTheTrump(true);
 
@@ -302,7 +274,7 @@ namespace TwentyFiveDotNet.Game
             AssignRandomDealer();
             OnDealerSelected?.Invoke(Dealer);
 
-            SetLeader(NextPlayer(Dealer));
+            _turnManager.SetLeader(_turnManager.NextPlayer(Dealer));
 
             ResetCardsPlayed();
 
@@ -339,26 +311,26 @@ namespace TwentyFiveDotNet.Game
 
         private void LeadTurn()
         {
-            ChangeToPlayer(Leader);
+            _turnManager.ChangeToLeader();
 
-            if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
+            if (_rules.CanPlayerSteal(_turnManager.CurrentPlayer.Hand, TrumpCard))
             {
                 HandleStealing();
             }
 
-            SetLeader(CurrentPlayer);
-            OnLeadPlayerTurn?.Invoke(CurrentPlayer);
+            _turnManager.SetLeader();
+            OnLeadPlayerTurn?.Invoke(_turnManager.CurrentPlayer);
             OnRelayTrumpInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded());
 
-            var chosenCard = CurrentPlayer.LeadCard();
+            var chosenCard = _turnManager.CurrentPlayer.LeadCard();
             SetLedCard(chosenCard);
-            OnCardPlayed?.Invoke(chosenCard, CurrentPlayer);
+            OnCardPlayed?.Invoke(chosenCard, _turnManager.CurrentPlayer);
 
-            SetWinner(LedCard, CurrentPlayer);
-            OnRoundNewWinner?.Invoke(chosenCard, CurrentPlayer);
+            SetWinner(LedCard, _turnManager.CurrentPlayer);
+            OnRoundNewWinner?.Invoke(chosenCard, _turnManager.CurrentPlayer);
 
-            UpdatePlayedCards(CurrentPlayer, chosenCard);
-            CurrentPlayer.Hand.Remove(chosenCard);
+            UpdatePlayedCards(_turnManager.CurrentPlayer, chosenCard);
+            _turnManager.CurrentPlayer.Hand.Remove(chosenCard);
 
             OnRelayTrumpLeadInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded(), LedCard.GetSuitSymbolUnicoded());
 
@@ -368,9 +340,9 @@ namespace TwentyFiveDotNet.Game
 
         private void PlayerTurn()
         {
-            RotateCurrentPlayer();
+            _turnManager.RotateCurrentPlayer();
 
-            if (CurrentPlayer.Equals(Leader))
+            if (_turnManager.IsCurrentPlayerTheLeader())
             {
                 ChangeGameState(GameState.Scoring);
                 return;
@@ -378,28 +350,28 @@ namespace TwentyFiveDotNet.Game
 
             if (!HasPlayerStolen())
             {
-                if(_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
+                if(_rules.CanPlayerSteal(_turnManager.CurrentPlayer.Hand, TrumpCard))
                     HandleStealing();
 
-                else if (CurrentPlayer.Equals(Dealer) &&
+                else if (_turnManager.CurrentPlayer.Equals(Dealer) &&
                     _rules.IsTrumpCardStealable(TrumpCard))
                     HandleStealing();
             }
 
-            OnNextPlayerTurn?.Invoke(CurrentPlayer);
+            OnNextPlayerTurn?.Invoke(_turnManager.CurrentPlayer);
 
-            var playableCards = _rules.GetPlayableCards(CurrentPlayer.Hand, TrumpCard, LedCard);
+            var playableCards = _rules.GetPlayableCards(_turnManager.CurrentPlayer.Hand, TrumpCard, LedCard);
 
-            var chosenCard = CurrentPlayer.ChooseCard(playableCards, TrumpCard, LedCard);
+            var chosenCard = _turnManager.CurrentPlayer.ChooseCard(playableCards, TrumpCard, LedCard);
 
-            OnCardPlayed?.Invoke(chosenCard, CurrentPlayer);
+            OnCardPlayed?.Invoke(chosenCard, _turnManager.CurrentPlayer);
 
-            UpdatePlayedCards(CurrentPlayer, chosenCard);
+            UpdatePlayedCards(_turnManager.CurrentPlayer, chosenCard);
 
             if (_rules.IsCardBetter(chosenCard, RoundWinningCard, LedCard, TrumpCard))
-                SetWinner(chosenCard, CurrentPlayer);
+                SetWinner(chosenCard, _turnManager.CurrentPlayer);
 
-            CurrentPlayer.Hand.Remove(chosenCard);
+            _turnManager.CurrentPlayer.Hand.Remove(chosenCard);
 
             OnRoundNewWinner?.Invoke(RoundWinningCard, RoundWinningPlayer);
         }
@@ -424,7 +396,7 @@ namespace TwentyFiveDotNet.Game
                 return;
             }
 
-            SetLeader(RoundWinningPlayer); //Winner becomes leader
+            _turnManager.SetLeader(RoundWinningPlayer); //Winner becomes leader
             OnLeadPlayerSelected?.Invoke(RoundWinningPlayer);
 
             ChangeGameState(GameState.LeadTurn);

@@ -1,5 +1,4 @@
 Minor
-- last round, one card left, auto play everyones hands
 - Unit Testing
 - Make class variable sets private where possible
 - convert 'chosen card' to 'TableCardArea' for all play, should be an array
@@ -15,12 +14,10 @@ Major
 - Extend Deck/Score Rules
 - Data-driven design: JSON or XML for card definitions
 - Configuration file: Define the rules of your card game in a seperate XML or Json file
-- Played Card History
 - Separation of states: GameState, PlayerState
 - Make Hand its own object class
 - Create a User object for functions outside of game loop e.g. start new game, exit
 - Add CPU AI smart card selection 
-- Move stealing to be in the first round of play
 
 Optional
 - Ascii art for the trump suit
@@ -42,6 +39,9 @@ Done
 - Remove mutable variables from Card.cs, compute card values and scores when needed with rulesengine.cs
 - Remove console prints from Player card methods
 - Remove unused library includes
+- Move stealing to be in the first round of play
+- Played Card History
 
 Not Needed
+- last round, one card left, auto play everyones hands
 

@@ -50,6 +50,7 @@
     <Compile Include="ConsoleUI\ConsoleInteraction.cs" />
     <Compile Include="Game\GameManager.cs" />
     <Compile Include="Game\RulesEngine.cs" />
+    <Compile Include="Game\TurnManager.cs" />
     <Compile Include="Interfaces\IGameInteraction.cs" />
     <Compile Include="Interfaces\IPlayerInteraction.cs" />
     <Compile Include="Models\Card.cs" />
