@@ -110,6 +110,7 @@ namespace TwentyFiveDotNet.Game
 
         private void ResetCardsPlayed()
         {
+            PlayedCards ??= new Dictionary<Player, Card>();
             PlayedCards = new Dictionary<Player, Card>();
         }
 
@@ -302,6 +303,7 @@ namespace TwentyFiveDotNet.Game
             OnDealerSelected?.Invoke(Dealer);
 
             ChangeGameState(GameState.DealCards);
+            return;
         }
 
         private void HandleDealCards()
@@ -325,6 +327,7 @@ namespace TwentyFiveDotNet.Game
             OnTrumpCardRevealed?.Invoke(display);
 
             ChangeGameState(GameState.Stealing);
+            return;
         }
 
         private void HandleStealing()
@@ -340,10 +343,11 @@ namespace TwentyFiveDotNet.Game
                 OnCardDiscarded?.Invoke(droppedCard, Dealer);
 
                 Dealer.Hand.Add(TrumpCard);
-                OnPlayerSteal(TrumpCard, Dealer);
+                OnPlayerSteal?.Invoke(TrumpCard, Dealer);
                 PlayerStoleTheTrump(true);
 
                 ChangeGameState(GameState.LeadTurn);
+                return;
             }
             else
             {
@@ -352,7 +356,7 @@ namespace TwentyFiveDotNet.Game
                 if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
                 {
                     var droppedCard = CurrentPlayer.StealTrump(TrumpCard, LedCard);             
-                    OnCardDiscarded(droppedCard, CurrentPlayer);
+                    OnCardDiscarded?.Invoke(droppedCard, CurrentPlayer);
                     CurrentPlayer.Hand.Remove(droppedCard);
 
                     CurrentPlayer.Hand.Add(TrumpCard);
@@ -361,6 +365,7 @@ namespace TwentyFiveDotNet.Game
                     PlayerStoleTheTrump(true);
                     ChangeToPlayer(Dealer); //This will change when stealing is determined on players first turn
                     ChangeGameState(GameState.LeadTurn);
+                    return;
                 }
 
                 if (CurrentPlayer == Dealer)
@@ -372,6 +377,7 @@ namespace TwentyFiveDotNet.Game
 
                     NextPlayer();
                     ChangeGameState(GameState.LeadTurn);
+                    return;
                 }
             }
         }
@@ -380,15 +386,15 @@ namespace TwentyFiveDotNet.Game
         {
             ResetCardsPlayed();
             SetLeader(CurrentPlayer);
-            OnLeadPlayerTurn(CurrentPlayer);
+            OnLeadPlayerTurn?.Invoke(CurrentPlayer);
             OnRelayTrumpInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded());
 
             var chosenCard = CurrentPlayer.LeadCard();
             SetLedCard(chosenCard);
-            OnCardPlayed(chosenCard, CurrentPlayer);
+            OnCardPlayed?.Invoke(chosenCard, CurrentPlayer);
 
             SetWinner(LedCard, CurrentPlayer);
-            OnRoundNewWinner(chosenCard, CurrentPlayer);
+            OnRoundNewWinner?.Invoke(chosenCard, CurrentPlayer);
 
             UpdatePlayedCards(CurrentPlayer, chosenCard);
             CurrentPlayer.Hand.Remove(chosenCard);
@@ -396,6 +402,7 @@ namespace TwentyFiveDotNet.Game
             OnRelayTrumpLeadInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded(), LedCard.GetSuitSymbolUnicoded());
 
             ChangeGameState(GameState.PlayerTurn);
+            return;
         }
 
         private void PlayerTurn()
@@ -405,6 +412,7 @@ namespace TwentyFiveDotNet.Game
             if (CurrentPlayer == Leader)
             {
                 ChangeGameState(GameState.Scoring);
+                return;
             }
             else
             {
@@ -438,11 +446,13 @@ namespace TwentyFiveDotNet.Game
             {
                 OnGameOver?.Invoke(RoundWinningPlayer);
                 ChangeGameState(GameState.PlayAgain);
+                return;
             }
 
             else if (ArePlayersOutOfCards())
             {
                 ChangeGameState(GameState.NewRound);
+                return;
             }
             else
             {
@@ -450,7 +460,7 @@ namespace TwentyFiveDotNet.Game
                 OnLeadPlayerSelected?.Invoke(RoundWinningPlayer);
 
                 ChangeGameState(GameState.LeadTurn);
-
+                return;
             }
         }
 
@@ -466,6 +476,7 @@ namespace TwentyFiveDotNet.Game
             OnDealerSelected?.Invoke(Dealer);
 
             ChangeGameState(GameState.DealCards);
+            return;
         }
 
         public void NewGame()
@@ -477,12 +488,14 @@ namespace TwentyFiveDotNet.Game
             OnNewGame?.Invoke();
 
             ChangeGameState(GameState.NewRound);
+            return;
         }
 
         public void EndGame()
         {
             OnGameEnded?.Invoke();
             ChangeGameState(GameState.EndGame);
+            return;
         }
     }
 }
