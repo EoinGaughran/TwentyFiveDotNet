@@ -20,6 +20,7 @@ namespace TwentyFiveDotNet.Config
         public int PointsPerTrick { get; set; }
         public bool HidePlayerHands { get; set; }
         public int DelayInMilliseconds { get; set; }
+        public int [] DealPattern { get; set; }
         public CardRulesConfig CardRules { get; set; }
 
         private GameConfig() { }

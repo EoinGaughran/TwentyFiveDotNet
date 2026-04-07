@@ -8,6 +8,7 @@
     "PointsPerTrick": 5,
     "HidePlayerHands": false,
     "DelayInMilliseconds": 500,
+    "DealPattern": [3, 2],
 
     "CardRules": {
         "RedSuits": [ "Hearts", "Diamonds" ],

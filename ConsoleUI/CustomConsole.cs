@@ -70,7 +70,7 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         public static void Write(string message, string sourcePrefix, ConsoleSettings settings)
         {
-            Console.Write(message);
+            Console.Write(sourcePrefix + message);
 
             if (!settings.DevMode)
             {

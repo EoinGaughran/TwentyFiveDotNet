@@ -15,17 +15,14 @@ namespace TwentyFiveDotNet.Game
         private static readonly Random _rng = new Random();
 
         private List<Player> _players;
-        private Dictionary<Player, Card> PlayedCards { get; set; }
+        private List<(Player player, Card card)> PlayedCards { get; set; }
         private Deck Deck { get; set; }
         private Deck DealtDeck { get; set; }
         private GameState CurrentState { get; set; }
-        private int DealerPlayerIndex { get; set; }
-        private Player Dealer => _players[DealerPlayerIndex];
+        private Player Dealer { get; set; }
         private Player Leader { get; set; }
-        private int CurrentPlayerIndex;
-        private Player CurrentPlayer => _players[CurrentPlayerIndex];
-        private int RoundWinningPlayerIndex { get; set; }
-        private Player RoundWinningPlayer => _players[RoundWinningPlayerIndex];
+        private Player CurrentPlayer { get; set; }
+        private Player RoundWinningPlayer { get; set; }
         private Card TrumpCard { get; set; }
         private Card LedCard { get; set; }
         private Card RoundWinningCard { get; set; }
@@ -94,12 +91,12 @@ namespace TwentyFiveDotNet.Game
 
         private void AssignRandomDealer()
         {
-            DealerPlayerIndex = _rng.Next(0, _players.Count);
+            Dealer = _players[_rng.Next(0, _players.Count)];
         }
 
         private void RotateDealer()
         {
-            DealerPlayerIndex = NextPlayerNumber(DealerPlayerIndex);
+            Dealer = NextPlayer(Dealer);
         }
 
         private void NewDeck()
@@ -111,61 +108,58 @@ namespace TwentyFiveDotNet.Game
 
         private void ResetCardsPlayed()
         {
-            PlayedCards ??= new Dictionary<Player, Card>();
-            PlayedCards = new Dictionary<Player, Card>();
+            PlayedCards = new List<(Player player, Card card)>();
         }
 
         private void UpdatePlayedCards(Player player, Card chosenCard)
         {
-            PlayedCards.Add(player, chosenCard);
+            PlayedCards.Add((player, chosenCard));
         }
 
         private void DealCards()
         {
-            ChangeToPlayer(DealerPlayerIndex);
+            ChangeToPlayer(Dealer);
 
-            for (int i = 0; i < _players.Count; i++)
+            foreach (var amount in _config.DealPattern)
             {
-                NextPlayer();
-                GivePlayerCards(TwoCards);
-            }
-
-            for (int i = 0; i < _players.Count; i++)
-            {
-                NextPlayer();
-                GivePlayerCards(ThreeCards);
+                for( int i = 0; i < _players.Count; i++ )
+                {
+                    RotateCurrentPlayer();
+                    GivePlayerCards(CurrentPlayer, amount);
+                }
             }
         }
 
-        private void GivePlayerCards(int maxCards)
+        private void GivePlayerCards(Player player, int maxCards)
         {
             for (int i = 0; i < maxCards; i++)
             {
                 var card = Deck.Draw();
                 DealtDeck.AddCardToDeck(card);
-                CurrentPlayer.Hand.Add(card);
-                OnCardDealtToPlayer?.Invoke(Deck, card, CurrentPlayer);
+                player.Hand.Add(card);
+                OnCardDealtToPlayer?.Invoke(Deck, card, player);
             }
         }
 
-        private int NextPlayerNumber(int PlayerNumber)
+        private void RotateCurrentPlayer()
         {
-            return (PlayerNumber + 1) % _players.Count; // Move to the indexer to the next player
+            CurrentPlayer = NextPlayer(CurrentPlayer);
         }
 
-        private void NextPlayer()
+        private Player NextPlayer(Player player)
         {
-            CurrentPlayerIndex = NextPlayerNumber(CurrentPlayerIndex);
-        }
+            int index = _players.IndexOf(player);
 
-        private void ChangeToPlayer(int playerNumber)
-        {
-            CurrentPlayerIndex = playerNumber;
+            if (index == -1)
+                throw new InvalidOperationException("Player not found in player list.");
+
+            int nextIndex = (index + 1) % _players.Count;
+            return _players[nextIndex];
         }
 
         private void ChangeToPlayer(Player player)
         {
-            CurrentPlayerIndex = _players.IndexOf(player);
+            CurrentPlayer = player;
         }
         private void SetLeader(Player player)
         {
@@ -179,12 +173,7 @@ namespace TwentyFiveDotNet.Game
         private void SetWinner(Card card, Player player)
         {
             RoundWinningCard = card;
-            RoundWinningPlayerIndex = _players.IndexOf(player);
-        }
-
-        private void WinnerBecomesLeader()
-        {
-            CurrentPlayerIndex = RoundWinningPlayerIndex;
+            RoundWinningPlayer = player;
         }
 
         private void HandleStealing()
@@ -223,6 +212,7 @@ namespace TwentyFiveDotNet.Game
 
         private void ClearPlayedCards()
         {
+            PlayedCards ??= new List<(Player player, Card card)>();
             PlayedCards.Clear();
         }
 
@@ -312,6 +302,10 @@ namespace TwentyFiveDotNet.Game
             AssignRandomDealer();
             OnDealerSelected?.Invoke(Dealer);
 
+            SetLeader(NextPlayer(Dealer));
+
+            ResetCardsPlayed();
+
             ChangeGameState(GameState.DealCards);
             return;
         }
@@ -345,14 +339,13 @@ namespace TwentyFiveDotNet.Game
 
         private void LeadTurn()
         {
-            NextPlayer();
+            ChangeToPlayer(Leader);
 
             if (_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
             {
                 HandleStealing();
             }
 
-            ResetCardsPlayed(); //This should be moved
             SetLeader(CurrentPlayer);
             OnLeadPlayerTurn?.Invoke(CurrentPlayer);
             OnRelayTrumpInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded());
@@ -375,7 +368,7 @@ namespace TwentyFiveDotNet.Game
 
         private void PlayerTurn()
         {
-            NextPlayer();
+            RotateCurrentPlayer();
 
             if (CurrentPlayer.Equals(Leader))
             {
@@ -383,13 +376,15 @@ namespace TwentyFiveDotNet.Game
                 return;
             }
 
-            if (!HasPlayerStolen() &&
-                _rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
-                HandleStealing();
+            if (!HasPlayerStolen())
+            {
+                if(_rules.CanPlayerSteal(CurrentPlayer.Hand, TrumpCard))
+                    HandleStealing();
 
-            if (CurrentPlayer.Equals(Dealer) &&
-                _rules.IsTrumpCardStealable(TrumpCard))
-                HandleStealing();
+                else if (CurrentPlayer.Equals(Dealer) &&
+                    _rules.IsTrumpCardStealable(TrumpCard))
+                    HandleStealing();
+            }
 
             OnNextPlayerTurn?.Invoke(CurrentPlayer);
 
@@ -429,7 +424,7 @@ namespace TwentyFiveDotNet.Game
                 return;
             }
 
-            WinnerBecomesLeader();
+            SetLeader(RoundWinningPlayer); //Winner becomes leader
             OnLeadPlayerSelected?.Invoke(RoundWinningPlayer);
 
             ChangeGameState(GameState.LeadTurn);
@@ -438,6 +433,8 @@ namespace TwentyFiveDotNet.Game
 
         private void NewRound()
         {
+            ResetCardsPlayed();
+
             NewDeck();
             OnDeckCreated?.Invoke(Deck);
 
@@ -456,6 +453,7 @@ namespace TwentyFiveDotNet.Game
             ClearPlayersHands();
             ClearPlayedCards();
             ClearPlayerPoints();
+            ResetCardsPlayed();
 
             OnNewGame?.Invoke();
 
