@@ -6,15 +6,14 @@ using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.Game
 {
-    public class RulesEngine
+    public class RulesEngine(GameConfig config)
     {
-        private GameConfig _config;
+        private readonly GameConfig _config = config;
 
-        public RulesEngine(GameConfig config)
+        public int[] GetDealPattern()
         {
-            _config = config;
+            return _config.DealPattern;
         }
-
         public bool IsCardBetter(Card ChosenCard, Card WinningCard, Card LedCard, Card TrumpCard)
         {
             if (ChosenCard.Suit == LedCard.Suit || IsTrump(ChosenCard, TrumpCard))

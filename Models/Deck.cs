@@ -8,11 +8,14 @@ namespace TwentyFiveDotNet.Models
         private static readonly Random rng = new Random();
 
         private readonly List<Card> cards;
+        private readonly List<Card> dealtCards;
         public IReadOnlyList<Card> Cards => cards;
+        public IReadOnlyList<Card> DealtCards => dealtCards;
 
         public Deck()
         {
-            cards = new List<Card>();
+            cards = [];
+            dealtCards = [];
         }
 
         public override string ToString()
@@ -50,7 +53,8 @@ namespace TwentyFiveDotNet.Models
                 throw new InvalidOperationException("Deck is empty");
 
             var card = cards[0];
-            cards.RemoveAt(0);
+            dealtCards.Add(card);
+            cards.Remove(card);
             return card;
         }
 

@@ -43,7 +43,7 @@ namespace TwentyFiveDotNet
         PlayerTurn,
         Scoring,
         NewRound,
-        PlayAgain,
+        AwaitingReplayDecision,
         NewGame,
         EndGame
     }
@@ -117,7 +117,7 @@ namespace TwentyFiveDotNet
                 Players.Add(new PlayerCPU($"CPU Player {i + 1}", rules));
             }
 
-            GameManager manager = new(config, rules, Players);
+            GameManager manager = new(rules, Players);
             var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
 
             manager.OnGameEnded += () =>

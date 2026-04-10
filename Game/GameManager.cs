@@ -1,24 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.Models;
-using TwentyFiveDotNet.ConsoleUI;
 
 namespace TwentyFiveDotNet.Game
 {
     internal class GameManager
     {
-        private readonly GameConfig _config;
         private readonly RulesEngine _rules;
         private readonly TurnManager _turnManager;  
 
-        private static readonly Random _rng = new Random();
+        private static readonly Random _rng = new();
 
-        private List<Player> _players;
+        private readonly List<Player> _players;
         private List<(Player player, Card card)> PlayedCards { get; set; }
         private Deck Deck { get; set; }
-        private Deck DealtDeck { get; set; }
         private GameState CurrentState { get; set; }
         private Player Dealer { get; set; }
         private Player RoundWinningPlayer { get; set; }
@@ -72,11 +68,9 @@ namespace TwentyFiveDotNet.Game
         public event Action OnProgramClosed;
 
         public GameManager(
-            GameConfig config,
             RulesEngine rules,
             List<Player> players)
         {
-            _config = config;
             _rules = rules;
             _players = players;
 
@@ -100,12 +94,11 @@ namespace TwentyFiveDotNet.Game
         {
             Deck = new Deck();
             Deck.Add52CardsToDeck();
-            DealtDeck = new Deck();
         }
 
         private void ResetCardsPlayed()
         {
-            PlayedCards = new List<(Player player, Card card)>();
+            PlayedCards = [];
         }
 
         private void UpdatePlayedCards(Player player, Card chosenCard)
@@ -117,7 +110,7 @@ namespace TwentyFiveDotNet.Game
         {
             _turnManager.ChangeToPlayer(Dealer);
 
-            foreach (var amount in _config.DealPattern)
+            foreach (var amount in _rules.GetDealPattern())
             {
                 for( int i = 0; i < _players.Count; i++ )
                 {
@@ -132,7 +125,6 @@ namespace TwentyFiveDotNet.Game
             for (int i = 0; i < maxCards; i++)
             {
                 var card = Deck.Draw();
-                DealtDeck.AddCardToDeck(card);
                 player.Hand.Add(card);
                 OnCardDealtToPlayer?.Invoke(Deck, card, player);
             }
@@ -157,13 +149,7 @@ namespace TwentyFiveDotNet.Game
             _turnManager.CurrentPlayer.Hand.Add(TrumpCard);
             OnPlayerSteal?.Invoke(TrumpCard, _turnManager.CurrentPlayer);
 
-            PlayerStoleTheTrump(true);
-
-        }
-
-        private void PlayerStoleTheTrump(bool state)
-        {
-            TrumpStolen = state;
+            TrumpStolen = true;
         }
 
         private bool ArePlayersOutOfCards() => _players.All(p => p.Hand.Count == 0);
@@ -196,10 +182,6 @@ namespace TwentyFiveDotNet.Game
 
         public void StartGame()
         {
-            ConsoleSettings consoleSettings = new ConsoleSettings();
-            consoleSettings.DevMode = _config.DevMode;
-            consoleSettings.Delay = _config.DelayInMilliseconds;
-
             while (CurrentState != GameState.EndGame)
             {
                 switch (CurrentState)
@@ -209,54 +191,44 @@ namespace TwentyFiveDotNet.Game
                     case GameState.Initialize:
 
                         Initialize();
-
                         break;
 
                     case GameState.DealCards:
 
                         HandleDealCards();
-
                         break;
 
                     case GameState.LeadTurn:
 
                         LeadTurn();
-
                         break;
 
                     case GameState.PlayerTurn:
 
                         PlayerTurn();
-
                         break;
 
                     case GameState.Scoring:
 
                         Scoring();
-
                         break;
 
                     case GameState.NewRound:
 
                         NewRound();
-
                         break;
 
-                    case GameState.PlayAgain:
+                    case GameState.AwaitingReplayDecision:
 
                         OnGameEnded?.Invoke();
-
                         break;
 
                     case GameState.NewGame:
 
                         NewGame();
-
                         break;
 
                     case GameState.EndGame:
-
-
 
                         break;
                 }
@@ -293,8 +265,7 @@ namespace TwentyFiveDotNet.Game
 
             OnPlayerFlipsTrumpCard?.Invoke(TrumpCard, Dealer);
 
-            DealtDeck.AddCardToDeck(TrumpCard);
-            var allCards = Deck.Cards.Concat(DealtDeck.Cards);
+            var allCards = Deck.Cards.Concat(Deck.DealtCards);
             var trumpCards = _rules.GetTrumpCardsSorted(allCards, TrumpCard);
 
             var display = trumpCards.ToDictionary(
@@ -303,7 +274,7 @@ namespace TwentyFiveDotNet.Game
 
             OnTrumpCardRevealed?.Invoke(display);
 
-            PlayerStoleTheTrump(false);
+            TrumpStolen = false;
 
             ChangeGameState(GameState.LeadTurn);
             return;
@@ -386,7 +357,7 @@ namespace TwentyFiveDotNet.Game
             if (_rules.IsGameOver(RoundWinningPlayer))
             {
                 OnGameOver?.Invoke(RoundWinningPlayer);
-                ChangeGameState(GameState.PlayAgain);
+                ChangeGameState(GameState.AwaitingReplayDecision);
                 return;
             }
 
