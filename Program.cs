@@ -9,45 +9,6 @@ using TwentyFiveDotNet.ConsoleUI;
 
 namespace TwentyFiveDotNet
 {
-    public enum Suits
-    {
-        Hearts,
-        Diamonds,
-        Clubs,
-        Spades,
-    }
-
-    public enum Ranks
-    {
-        Two,
-        Three,
-        Four,
-        Five,
-        Six,
-        Seven,
-        Eight,
-        Nine,
-        Ten,
-        Jack,
-        Queen,
-        King,
-        Ace
-    }
-
-    public enum GameState
-    {
-        NotStarted,
-        Initialize,
-        DealCards,
-        LeadTurn,
-        PlayerTurn,
-        Scoring,
-        NewRound,
-        AwaitingReplayDecision,
-        NewGame,
-        EndGame
-    }
-
     class Program
     {
         public static readonly string UIPrefix = "[Program] ";

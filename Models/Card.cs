@@ -2,6 +2,31 @@
 {
     public class Card
     {
+        public enum Suits
+        {
+            Hearts,
+            Diamonds,
+            Clubs,
+            Spades,
+        }
+
+        public enum Ranks
+        {
+            Two,
+            Three,
+            Four,
+            Five,
+            Six,
+            Seven,
+            Eight,
+            Nine,
+            Ten,
+            Jack,
+            Queen,
+            King,
+            Ace
+        }
+
         public Suits Suit { get; set; }
         public Ranks Rank { get; set; }
 

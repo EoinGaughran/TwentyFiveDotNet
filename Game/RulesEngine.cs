@@ -74,11 +74,11 @@ namespace TwentyFiveDotNet.Game
                 return false;
 
             bool isSpecial =
-                (card.Suit == Suits.Hearts && card.Rank == Ranks.Ace) ||
+                (card.Suit == Card.Suits.Hearts && card.Rank == Card.Ranks.Ace) ||
                 (IsTrump(card, trumpCard) &&
-                    (card.Rank == Ranks.Ace ||
-                     card.Rank == Ranks.Jack ||
-                     card.Rank == Ranks.Five));
+                    (card.Rank == Card.Ranks.Ace ||
+                     card.Rank == Card.Ranks.Jack ||
+                     card.Rank == Card.Ranks.Five));
 
             if (!isSpecial)
                 return false;
@@ -95,7 +95,7 @@ namespace TwentyFiveDotNet.Game
             }
 
             // Special case
-            if (card.Suit == Suits.Hearts && card.Rank == Ranks.Ace)
+            if (card.Suit == Card.Suits.Hearts && card.Rank == Card.Ranks.Ace)
             {
                 score += 5; // move to config later
             }
@@ -135,14 +135,14 @@ namespace TwentyFiveDotNet.Game
         }
         private bool IsAceOfHearts(Card card)
         {
-            return card.Rank == Ranks.Ace && card.Suit == Suits.Hearts;
+            return card.Rank == Card.Ranks.Ace && card.Suit == Card.Suits.Hearts;
         }
 
         public bool CanPlayerSteal(List<Card> Hand, Card trumpCard)
         {
             foreach (Card card in Hand)
             {
-                if (card.Suit == trumpCard.Suit && card.Rank == Ranks.Ace)
+                if (card.Suit == trumpCard.Suit && card.Rank == Card.Ranks.Ace)
                 {
                     return true;
                 }
@@ -156,7 +156,7 @@ namespace TwentyFiveDotNet.Game
                 return true;
 
             // special rule
-            if (card.Suit == Suits.Hearts && card.Rank == Ranks.Ace)
+            if (card.Suit == Card.Suits.Hearts && card.Rank == Card.Ranks.Ace)
                 return true;
 
             return false;
@@ -164,7 +164,7 @@ namespace TwentyFiveDotNet.Game
 
         public bool IsTrumpCardStealable(Card TrumpCard)
         {
-            if (TrumpCard.Rank == Ranks.Ace) return true;
+            if (TrumpCard.Rank == Card.Ranks.Ace) return true;
 
             return false;
         }

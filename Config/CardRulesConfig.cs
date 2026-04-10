@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using static TwentyFiveDotNet.Models.Card;
 
 namespace TwentyFiveDotNet.Config
 {

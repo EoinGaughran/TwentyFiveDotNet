@@ -25,9 +25,9 @@ namespace TwentyFiveDotNet.Models
 
         public void Add52CardsToDeck()
         {
-            foreach (Suits suit in Enum.GetValues(typeof(Suits)))
+            foreach (Card.Suits suit in Enum.GetValues(typeof(Card.Suits)))
             {
-                foreach (Ranks rank in Enum.GetValues(typeof(Ranks)))
+                foreach (Card.Ranks rank in Enum.GetValues(typeof(Card.Ranks)))
                 {
                     cards.Add(new Card
                     {

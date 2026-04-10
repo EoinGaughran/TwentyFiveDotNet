@@ -247,7 +247,7 @@ namespace TwentyFiveDotNet.ConsoleUI
         }
         
         //Game State
-        void UpdateGameState(GameState state)
+        void UpdateGameState(GameManager.GameState state)
         {
             CustomConsole.WriteLine($"The game state has changed to: {state}", UIPrefix, _settings);
         }

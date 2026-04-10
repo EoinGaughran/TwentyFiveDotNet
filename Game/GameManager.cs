@@ -7,6 +7,20 @@ namespace TwentyFiveDotNet.Game
 {
     internal class GameManager
     {
+        public enum GameState
+        {
+            NotStarted,
+            Initialize,
+            DealCards,
+            LeadTurn,
+            PlayerTurn,
+            Scoring,
+            NewRound,
+            AwaitingReplayDecision,
+            NewGame,
+            EndGame
+        }
+
         private readonly RulesEngine _rules;
         private readonly TurnManager _turnManager;  
 
