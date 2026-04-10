@@ -50,91 +50,74 @@ namespace TwentyFiveDotNet
 
     class Program
     {
-        public static readonly String UIPrefix = "[Program] ";
+        public static readonly string UIPrefix = "[Program] ";
+        const string filePath = "Config/GameConfig.json";
 
         static void Main(string[] args)
         {
-            string filePath = "Config/GameConfig.json";
-            GameConfig config = ConfigLoader.LoadGameConfig(filePath);
+            GameConfig config = ConfigLoader.LoadGameConfig(filePath) ??
+                throw new InvalidOperationException("Failed to load configuration.");
 
-
-            ConsoleSettings consoleSettings = new ConsoleSettings();
-            consoleSettings.DevMode = config.DevMode;
-            consoleSettings.Delay = config.DelayInMilliseconds;
-
-            IPlayerInteraction iPlayerInteraction = new ConsoleInteraction(consoleSettings);
-
-            // Debug values
-            if (config != null)
+            RuntimeSettings runtimeSettings = new()
             {
-                Console.WriteLine(UIPrefix + $"DevMode: {config.DevMode}, Instance: {config.DevMode}");
-                Console.WriteLine(UIPrefix + $"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}");
-                Console.WriteLine(UIPrefix + $"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}");
-            }
-            else
-            {
-                Console.WriteLine("Failed to load configuration.");
-            }
-
-            //RulesEngine rulesEngine = new(config);
-            //rulesEngine.ApplyRules();
+                HidePlayerHands = config.HidePlayerHands,
+                DevMode = config.DevMode,
+            };
 
             if (args.Contains("--dev"))
+                runtimeSettings.DevMode = true;
+
+            ConsoleSettings consoleSettings = new()
             {
-                config.DevMode = true;
-                CustomConsole.DevWriteLineNoDelay("Running in DEV mode.", consoleSettings);
-            }
+                DevMode = runtimeSettings.DevMode,
+                Delay = config.DelayInMilliseconds
+            };
 
-            /*string json = File.ReadAllText(filePath);
-            Console.WriteLine("Loaded JSON:");
-            Console.WriteLine(json);*/
-
+            CustomConsole.WriteLine($"DevMode: {runtimeSettings.DevMode}.", UIPrefix, consoleSettings);
+            CustomConsole.WriteLine($"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}", UIPrefix, consoleSettings);
+            CustomConsole.WriteLine($"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}", UIPrefix, consoleSettings);
             CustomConsole.WriteLine("Welcome to the card game 25.", UIPrefix, consoleSettings);
             CustomConsole.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.", UIPrefix, consoleSettings);
-            CustomConsole.Write("How many total players would you like?: ", UIPrefix, consoleSettings);
 
-            int rTotalPlayers;
+            int totalPlayers = ReadIntInRange(
+                $"How many total players? ({config.MinPlayers}-{config.MaxPlayers}): ",
+                config.MinPlayers,
+                config.MaxPlayers,
+                UIPrefix,
+                consoleSettings);
 
-            while (!int.TryParse(Console.ReadLine(), out rTotalPlayers) || rTotalPlayers < config.MinPlayers || rTotalPlayers > config.MaxPlayers)
+            int totalHumans = ReadIntInRange(
+                $"How many Human players? (0-{totalPlayers}): ",
+                0,
+                totalPlayers,
+                UIPrefix,
+                consoleSettings);
+
+            if (totalHumans > 1)
             {
-                CustomConsole.WriteLine($"Please choose a number between {config.MinPlayers} - {config.MaxPlayers} inclusive.", UIPrefix, consoleSettings);
+                runtimeSettings.HidePlayerHands = true;
+                CustomConsole.WriteLine($"Amount of humans is greater than 1, enabling hidden player hands mode.", UIPrefix, consoleSettings);
             }
+            else runtimeSettings.HidePlayerHands = false;
 
-            CustomConsole.Write(UIPrefix + $"How many Human players would you like? 0 - {rTotalPlayers}: ", consoleSettings);
+            List<Player> Players = [];
+            IPlayerInteraction iPlayerInteraction = new ConsoleInteraction(consoleSettings);
 
-            int rTotalHumans;
-
-            while (!int.TryParse(Console.ReadLine(), out rTotalHumans) || rTotalHumans < 0 || rTotalHumans > rTotalPlayers)
+            for (int i = 0; i < totalHumans; i++)
             {
-                CustomConsole.WriteLine($"Please choose a number between 0 and {rTotalPlayers} inclusive.", UIPrefix, consoleSettings);
-            }
-
-            //CustomConsole.DevWriteLineNoDelay("Initializing Game.", consoleSettings);
-
-            if (rTotalHumans > 1)
-            {
-                config.HidePlayerHands = true;
-                CustomConsole.DevWriteLineNoDelay(UIPrefix + $"Amount of humans is greater than 1, enabling hidden player hands mode.", consoleSettings);
-            }
-            else config.HidePlayerHands = false;
-
-            List<Player> Players = new List<Player>();
-
-            for (int i = 0; i < rTotalHumans; i++)
-            {
-                CustomConsole.Write(UIPrefix + $"Player {i + 1} enter your name: ", consoleSettings);
-                var readName = Console.ReadLine();
+                CustomConsole.Write($"Player {i + 1} enter your name: ", UIPrefix, consoleSettings);
+                var readName = CustomConsole.Readline();
                 Players.Add(new PlayerHuman(readName, iPlayerInteraction));
             }
 
-            RulesEngine rules = new RulesEngine(config);
+            RulesEngine rules = new(config);
 
-            for (int i = rTotalHumans; i < rTotalPlayers; i++)
+            for (int i = totalHumans; i < totalPlayers; i++)
             {
                 Players.Add(new PlayerCPU($"CPU Player {i + 1}", rules));
             }
 
-            GameManager manager = new GameManager(config, rules, Players);
+            GameManager manager = new(config, rules, Players);
             var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
 
             manager.OnGameEnded += () =>
@@ -146,6 +129,18 @@ namespace TwentyFiveDotNet
             };
 
             manager.StartGame();
+        }
+
+        private static int ReadIntInRange(string prompt, int min, int max, string prefix, ConsoleSettings settings)
+        {
+            int value;
+            do
+            {
+                CustomConsole.Write(prompt, prefix, settings);
+            }
+            while (!int.TryParse(Console.ReadLine(), out value) || value < min || value > max);
+
+            return value;
         }
     }
 }

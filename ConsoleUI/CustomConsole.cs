@@ -12,6 +12,11 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         // Wrapper for Console.WriteLine
 
+        public static string Readline()
+        {
+            return Console.ReadLine();
+        }
+
         public static void WriteLine(string message, string sourcePrefix, ConsoleSettings settings)
         {
             Console.WriteLine(sourcePrefix + message);
@@ -26,23 +31,6 @@ namespace TwentyFiveDotNet.ConsoleUI
         {
             Console.WriteLine(message);
         }
-
-        public static void DevWriteLine(string message, ConsoleSettings settings)
-        {
-            if (settings.DevMode)
-            {
-                Console.WriteLine($"{DevPrefix} {message}");
-                Thread.Sleep(settings.Delay); // Introduce delay
-            }
-        }
-        public static void DevWriteLineNoDelay(string message, ConsoleSettings settings)
-        {
-            if (settings.DevMode)
-            {
-                Console.WriteLine($"{DevPrefix} {message}");
-            }
-        }
-
 
         public static void WriteLine()
         {

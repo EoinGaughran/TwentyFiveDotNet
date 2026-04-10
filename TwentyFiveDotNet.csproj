@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Config\CardRulesConfig.cs" />
     <Compile Include="Config\GameConfig.cs" />
+    <Compile Include="Config\RuntimeSettings.cs" />
     <Compile Include="ConsoleUI\ConsoleGameInteraction.cs" />
     <Compile Include="ConsoleUI\ConsoleInteraction.cs" />
     <Compile Include="Game\GameManager.cs" />
