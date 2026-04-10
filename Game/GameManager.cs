@@ -180,58 +180,66 @@ namespace TwentyFiveDotNet.Game
                 player.Points = 0;
         }
 
+        public bool IsGameOver()
+        {
+            if(CurrentState == GameState.EndGame) return true;
+
+            return false;
+        }
+
         public void StartGame()
         {
-            while (CurrentState != GameState.EndGame)
+            ChangeGameState(GameState.Initialize);
+        }
+        public void AdvanceGame()
+        {
+            switch (CurrentState)
             {
-                switch (CurrentState)
-                {
-                    case GameState.NotStarted:
+                case GameState.NotStarted:
 
-                    case GameState.Initialize:
+                case GameState.Initialize:
 
-                        Initialize();
-                        break;
+                    Initialize();
+                    break;
 
-                    case GameState.DealCards:
+                case GameState.DealCards:
 
-                        HandleDealCards();
-                        break;
+                    HandleDealCards();
+                    break;
 
-                    case GameState.LeadTurn:
+                case GameState.LeadTurn:
 
-                        LeadTurn();
-                        break;
+                    LeadTurn();
+                    break;
 
-                    case GameState.PlayerTurn:
+                case GameState.PlayerTurn:
 
-                        PlayerTurn();
-                        break;
+                    PlayerTurn();
+                    break;
 
-                    case GameState.Scoring:
+                case GameState.Scoring:
 
-                        Scoring();
-                        break;
+                    Scoring();
+                    break;
 
-                    case GameState.NewRound:
+                case GameState.NewRound:
 
-                        NewRound();
-                        break;
+                    NewRound();
+                    break;
 
-                    case GameState.AwaitingReplayDecision:
+                case GameState.AwaitingReplayDecision:
 
-                        OnGameEnded?.Invoke();
-                        break;
+                    OnGameEnded?.Invoke();
+                    break;
 
-                    case GameState.NewGame:
+                case GameState.NewGame:
 
-                        NewGame();
-                        break;
+                    NewGame();
+                    break;
 
-                    case GameState.EndGame:
+                case GameState.EndGame:
 
-                        break;
-                }
+                    break;
             }
         }
 

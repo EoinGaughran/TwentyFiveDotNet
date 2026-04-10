@@ -129,6 +129,13 @@ namespace TwentyFiveDotNet
             };
 
             manager.StartGame();
+
+            while (true)
+            {
+                manager.AdvanceGame();
+
+                if (manager.IsGameOver()) break;
+            }
         }
 
         private static int ReadIntInRange(string prompt, int min, int max, string prefix, ConsoleSettings settings)
