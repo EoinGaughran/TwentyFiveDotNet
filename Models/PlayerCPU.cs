@@ -12,21 +12,21 @@ namespace TwentyFiveDotNet.Models
             _rules = rules;
         }
 
-        public override Card StealTrump(Card TrumpCard, Card LedCard)
+        public Card StealTrump(Card TrumpCard, Card LedCard)
         {
             return _rules.GetWorstCard(Hand, TrumpCard);
         }
 
-        public override Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
+        public Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
         {
             return _rules.GetBestCard(Hand, TrumpCard, LedCard);
         }
 
-        public override Card LeadCard()
+        public Card LeadCard()
         {
             return Hand[0]; // Create new best card function
         }
-        public override void PlayerFlipTrumpCard(Card card)
+        public void PlayerFlipTrumpCard(Card card)
         {
 
         }

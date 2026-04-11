@@ -17,7 +17,8 @@ Major
 - Separation of states: GameState, PlayerState
 - Make Hand its own object class
 - Create a User object for functions outside of game loop e.g. start new game, exit
-- Add CPU AI smart card selection 
+- Add CPU AI smart card selection
+- Convert GameManager Human/Cpu differentiation if statements to decision tree helper method
 
 Optional
 - Ascii art for the trump suit

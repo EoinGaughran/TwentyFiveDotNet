@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TwentyFiveDotNet.Models;
 
@@ -130,6 +133,65 @@ namespace TwentyFiveDotNet.ConsoleUI
             {
                 WriteLineNoDelay($"{card.Key} played {card.Value}");
             }
+        }
+
+        public static int RequestCardChoice(int max, string sourcePrefix, ConsoleSettings settings)
+        {
+            CustomConsole.Write("Enter your choice: ", sourcePrefix, settings);
+
+            int choice;
+
+            while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > max)
+            {
+                CustomConsole.WriteLine("Invalid choice, try again.", sourcePrefix, settings);
+            }
+
+            return choice - 1;
+        }
+
+        public static void ShowCards(IEnumerable<Card> cards, string sourcePrefix, ConsoleSettings settings)
+        {
+            CustomConsole.Write(sourcePrefix, settings);
+            Console.Write($"Players hand: ");
+            int i = 1;
+            foreach (var card in cards)
+            {
+                Console.Write($"{card}");
+                if (i < cards.Count())
+                    Console.Write(", ");
+
+                else Console.Write(".");
+                i++;
+            }
+            Console.WriteLine();
+
+        }
+
+        public static void ShowLegalCards(IEnumerable<Card> legalCards, string sourcePrefix, ConsoleSettings settings)
+        {
+            CustomConsole.Write($"Legal Cards to play: ", sourcePrefix, settings);
+            int i = 1;
+            foreach (var card in legalCards)
+            {
+                Console.Write($"{i}: {card}");
+                if (i < legalCards.Count())
+                    Console.Write(", ");
+
+                else Console.Write(".");
+                i++;
+            }
+            Console.WriteLine();
+        }
+
+        public static void WaitForPlayer(string playerName, string sourcePrefix, ConsoleSettings settings)
+        {
+            CustomConsole.WriteLine($"{playerName}, press any key when ready.", sourcePrefix, settings);
+            Console.ReadKey(true);
+        }
+
+        public static void FlipTrumpCard(string playerName, string sourcePrefix, ConsoleSettings settings)
+        {
+            WaitForPlayer(playerName, sourcePrefix, settings);
         }
     }
 }

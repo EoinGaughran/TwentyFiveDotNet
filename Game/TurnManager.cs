@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.Game
@@ -13,6 +10,7 @@ namespace TwentyFiveDotNet.Game
 
         public Player CurrentPlayer { get; private set; }
         public Player Leader { get; private set; }
+        public Player Dealer { get; private set; }
 
         public TurnManager(List<Player> players)
         {
@@ -47,15 +45,42 @@ namespace TwentyFiveDotNet.Game
         {
             Leader = CurrentPlayer;
         }
+        public void SetDealer()
+        {
+            Dealer = CurrentPlayer;
+        }
+
+        public void SetDealer(Player player)
+        {
+            Dealer = player;
+        }
+        public void AssignRandomDealer(Random _rng)
+        {
+            SetDealer(_players[_rng.Next(0, _players.Count)]);
+        }
+        public void RotateDealer()
+        {
+            Dealer = NextPlayer(Dealer);
+        }
 
         public void ChangeToLeader()
         {
             CurrentPlayer = Leader;
         }
 
+        public void ChangeToDealer()
+        {
+            CurrentPlayer = Dealer;
+        }
+
         public bool IsCurrentPlayerTheLeader()
         {
             return CurrentPlayer == Leader;
+        }
+
+        public bool IsCurrentPlayerTheDealer()
+        {
+            return CurrentPlayer == Dealer;
         }
     }
 }

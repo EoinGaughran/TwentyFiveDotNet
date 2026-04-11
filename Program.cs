@@ -48,27 +48,19 @@ namespace TwentyFiveDotNet
                 consoleSettings);
 
             int totalHumans = ReadIntInRange(
-                $"How many Human players? (0-{totalPlayers}): ",
+                $"How many Human players? (0-1): ",
                 0,
-                totalPlayers,
+                1,
                 UIPrefix,
                 consoleSettings);
 
-            if (totalHumans > 1)
-            {
-                runtimeSettings.HidePlayerHands = true;
-                CustomConsole.WriteLine($"Amount of humans is greater than 1, enabling hidden player hands mode.", UIPrefix, consoleSettings);
-            }
-            else runtimeSettings.HidePlayerHands = false;
-
             List<Player> Players = [];
-            IPlayerInteraction iPlayerInteraction = new ConsoleInteraction(consoleSettings);
 
             for (int i = 0; i < totalHumans; i++)
             {
                 CustomConsole.Write($"Player {i + 1} enter your name: ", UIPrefix, consoleSettings);
                 var readName = CustomConsole.Readline();
-                Players.Add(new PlayerHuman(readName, iPlayerInteraction));
+                Players.Add(new PlayerHuman(readName));
             }
 
             RulesEngine rules = new(config);
