@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TwentyFiveDotNet.Game;
+using static TwentyFiveDotNet.Game.GameManager;
 
 namespace TwentyFiveDotNet.Models
 {
@@ -10,6 +11,20 @@ namespace TwentyFiveDotNet.Models
         {
             Name = name;
             _rules = rules;
+        }
+
+        public Card Decide(
+            PlayerDecisionType type,
+            List<Card> options,
+            Card trump, Card led)
+        {
+            return type switch
+            {
+                PlayerDecisionType.LeadCard => (Card) LeadCard(),
+                PlayerDecisionType.PlayCard => (Card) ChooseCard(options, trump, led),
+                PlayerDecisionType.StealTrump => (Card) StealTrump(trump, led),
+                _ => null,
+            };
         }
 
         public Card StealTrump(Card TrumpCard, Card LedCard)

@@ -36,6 +36,9 @@ namespace TwentyFiveDotNet.Game
         private Deck Deck { get; set; }
         private GameState CurrentState { get; set; }
         private Player RoundWinningPlayer { get; set; }
+        private Player PendingPlayer { get; set; }
+        private List<Card> PendingOptions { get; set; }
+        private PlayerDecisionType PendingDecisionType { get; set; }
         private Card TrumpCard { get; set; }
         private Card LedCard { get; set; }
         private Card RoundWinningCard { get; set; }
@@ -66,14 +69,11 @@ namespace TwentyFiveDotNet.Game
         public event Action<Card, Player> OnPlayerSteal;
         public event Action<Player> OnLeadPlayerTurn;
         public event Action<Player> OnPlayerTurnStarted;
+        public event Action<Player, PlayerDecisionType, List<Card>> OnPlayerInputRequest;
 
         //Card Play
-        public event Action<Player> OnFlipTrumpCardRequest;
         public event Action<Card, Player> OnLeadCardPlayed;
         public event Action<Card, Player> OnCardPlayed;
-        public event Action<Player> OnLeaderCardRequest;
-        public event Action<Player, List<Card>> OnPlayerCardRequest;
-        public event Action<Player> OnDiscardCardRequest;
 
         //Scoring/Rounds
         public event Action<List<Player>> OnScoreChanged;
@@ -265,6 +265,50 @@ namespace TwentyFiveDotNet.Game
             }
         }
 
+        private void RequestPlayerDecision(
+            Player player,
+            PlayerDecisionType type,
+            List<Card> options = null)
+        {
+            if (player is PlayerCPU cpu)
+            {
+                PendingDecisionType = type;
+                var chosen = cpu.Decide(type, options, TrumpCard, LedCard);
+                SubmitPlayerAction(chosen);
+            }
+            else
+            {
+                PendingPlayer = player;
+                PendingOptions = options;
+                PendingDecisionType = type;
+
+                ChangeGameState(GameState.AwaitingPlayerInput);
+                OnPlayerInputRequest?.Invoke(player, type, options);
+            }
+        }
+
+        public void SubmitPlayerAction(Card chosenCard)
+        {
+            switch (PendingDecisionType)
+            {
+                case PlayerDecisionType.FlipTrump:
+                    AcceptTrumpCardFlip();
+                    break;
+
+                case PlayerDecisionType.LeadCard:
+                    SubmitLeadCard(chosenCard);
+                    break;
+
+                case PlayerDecisionType.StealTrump:
+                    DiscardCard(chosenCard);
+                    break;
+
+                case PlayerDecisionType.PlayCard:
+                    SubmitPlayerCard(chosenCard);
+                    break;
+            }
+        }
+
         private void Initialize()
         {
             NewDeck();
@@ -292,16 +336,12 @@ namespace TwentyFiveDotNet.Game
 
             TrumpCard = Deck.Draw();
 
-            if (_turnManager.Dealer is PlayerCPU cpu)
-            {
-                cpu.PlayerFlipTrumpCard(TrumpCard);
-                AcceptTrumpCardFlip();
-            }
-            else
-            {
-                ChangeGameState(GameState.AwaitingPlayerInput);
-                OnFlipTrumpCardRequest?.Invoke(_turnManager.CurrentPlayer);
-            }
+            RequestPlayerDecision(
+                    _turnManager.CurrentPlayer,
+                    PlayerDecisionType.FlipTrump,
+                    null
+                    );
+
             return;
         }
 
@@ -349,16 +389,12 @@ namespace TwentyFiveDotNet.Game
         { 
             OnRelayTrumpInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded());
 
-            if (_turnManager.CurrentPlayer is PlayerCPU cpu)
-            {
-                var chosenCard = cpu.LeadCard();
-                SubmitLeadCard(chosenCard);
-            }
-            else
-            {
-                ChangeGameState(GameState.AwaitingPlayerInput);
-                OnLeaderCardRequest?.Invoke(_turnManager.CurrentPlayer);
-            }
+            RequestPlayerDecision(
+                    _turnManager.CurrentPlayer,
+                    PlayerDecisionType.LeadCard,
+                    null
+                    );
+
             return;
         }
 
@@ -381,16 +417,12 @@ namespace TwentyFiveDotNet.Game
 
         private void PlayerTurn_StealDecision()
         {
-            if (_turnManager.CurrentPlayer is PlayerCPU cpu)
-            {
-                var droppedCard = cpu.StealTrump(TrumpCard, LedCard);
-                DiscardCard(droppedCard);
-            }
-            else
-            {
-                ChangeGameState(GameState.AwaitingPlayerInput);
-                OnDiscardCardRequest?.Invoke(_turnManager.CurrentPlayer);
-            }
+            RequestPlayerDecision(
+                    _turnManager.CurrentPlayer,
+                    PlayerDecisionType.StealTrump,
+                    null
+                    );
+
             return;
         }
 
@@ -453,16 +485,12 @@ namespace TwentyFiveDotNet.Game
         {
             var playableCards = _rules.GetPlayableCards(_turnManager.CurrentPlayer.Hand, TrumpCard, LedCard);
 
-            if (_turnManager.CurrentPlayer is PlayerCPU cpu)
-            {
-                var chosenCard = cpu.ChooseCard(playableCards, TrumpCard, LedCard);
-                SubmitPlayerCard(chosenCard);
-            }
-            else
-            {
-                ChangeGameState(GameState.AwaitingPlayerInput);
-                OnPlayerCardRequest?.Invoke(_turnManager.CurrentPlayer, playableCards);
-            }
+            RequestPlayerDecision(
+                    _turnManager.CurrentPlayer,
+                    PlayerDecisionType.PlayCard,
+                    playableCards
+                    );
+
             return;
         }
 

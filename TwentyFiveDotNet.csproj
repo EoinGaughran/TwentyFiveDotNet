@@ -34,6 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -57,6 +60,7 @@
     <Compile Include="Models\Card.cs" />
     <Compile Include="Models\PlayerCPU.cs" />
     <Compile Include="Models\Deck.cs" />
+    <Compile Include="Models\PlayerDecisionType.cs" />
     <Compile Include="Models\PlayerHuman.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Program.cs" />
@@ -69,12 +73,7 @@
     <None Include="Config\GameConfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Libraries\Newtonsoft.Json-13.0.3\Src\Newtonsoft.Json\Newtonsoft.Json.csproj">
-      <Project>{d4b75611-1e31-4779-8025-8d188a9ebb1e}</Project>
-      <Name>Newtonsoft.Json</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

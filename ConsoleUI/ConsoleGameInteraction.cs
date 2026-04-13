@@ -118,40 +118,53 @@ namespace TwentyFiveDotNet.ConsoleUI
                 CustomConsole.WriteLine($"{player.Name} played the {card}", UIPrefix, _settings);
             };
 
-            _manager.OnLeaderCardRequest += (player) =>
+            _manager.OnPlayerInputRequest += (player, decisionType, options) =>
             {
-                CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
-                var chosen = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
+                CustomConsole.WriteLine($"PlayerDecisionType: {decisionType}", UIPrefix, _settings);
 
-                _manager.SubmitPlayerCard(player.Hand[chosen]);
-            };
+                switch (decisionType)
+                {
+                    case PlayerDecisionType.FlipTrump:
 
-            _manager.OnPlayerCardRequest += (player, legalCards) =>
-            {
-                CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
-                CustomConsole.ShowLegalCards(legalCards, UIPrefix, _settings);
+                        CustomConsole.WriteLine($"{player.Name}, please flip over the trump card.", UIPrefix, _settings);
+                        CustomConsole.FlipTrumpCard(player.Name, UIPrefix, _settings);
 
-                var chosen = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
+                        _manager.SubmitPlayerAction(null);
 
-                _manager.SubmitPlayerCard(legalCards[chosen]);
-            };
+                        break;
 
-            _manager.OnFlipTrumpCardRequest += (player) =>
-            {
-                CustomConsole.WriteLine($"{player.Name}, please flip over the trump card.", UIPrefix, _settings);
-                CustomConsole.FlipTrumpCard(player.Name, UIPrefix, _settings);
+                    case PlayerDecisionType.LeadCard:
 
-                _manager.AcceptTrumpCardFlip();
-            };
+                        CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
+                        var chosenLeadCard = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
 
-            _manager.OnDiscardCardRequest += (player) =>
-            {
-                CustomConsole.WriteLine($"{player.Name}, please discard a card to steal the trump card.", UIPrefix, _settings);
-                CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
+                        _manager.SubmitPlayerAction(player.Hand[chosenLeadCard]);
 
-                var chosen = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
+                        break;
 
-                _manager.DiscardCard(player.Hand[chosen]);
+                    case PlayerDecisionType.StealTrump:
+
+                        CustomConsole.WriteLine($"{player.Name}, please discard a card to steal the trump card.", UIPrefix, _settings);
+                        CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
+
+                        var chosenDroppedCard = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
+
+                        _manager.SubmitPlayerAction(player.Hand[chosenDroppedCard]);
+
+                        break;
+
+                    case PlayerDecisionType.PlayCard:
+
+                        CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
+                        CustomConsole.ShowLegalCards(options, UIPrefix, _settings);
+
+                        var chosen = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
+
+                        _manager.SubmitPlayerAction(options[chosen]);
+
+                        break;
+                }
+
             };
 
             //Scoring/Rounds
