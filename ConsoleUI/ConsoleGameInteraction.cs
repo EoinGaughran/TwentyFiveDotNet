@@ -135,7 +135,7 @@ namespace TwentyFiveDotNet.ConsoleUI
 
                     case PlayerDecisionType.LeadCard:
 
-                        CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
+                        CustomConsole.ShowPlayableCards(player.Hand, UIPrefix, _settings);
                         var chosenLeadCard = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
 
                         _manager.SubmitPlayerAction(player.Hand[chosenLeadCard]);
@@ -145,7 +145,7 @@ namespace TwentyFiveDotNet.ConsoleUI
                     case PlayerDecisionType.StealTrump:
 
                         CustomConsole.WriteLine($"{player.Name}, please discard a card to steal the trump card.", UIPrefix, _settings);
-                        CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
+                        CustomConsole.ShowPlayableCards(player.Hand, UIPrefix, _settings);
 
                         var chosenDroppedCard = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
 
@@ -156,7 +156,7 @@ namespace TwentyFiveDotNet.ConsoleUI
                     case PlayerDecisionType.PlayCard:
 
                         CustomConsole.ShowCards(player.Hand, UIPrefix, _settings);
-                        CustomConsole.ShowLegalCards(options, UIPrefix, _settings);
+                        CustomConsole.ShowPlayableCards(options, UIPrefix, _settings);
 
                         var chosen = CustomConsole.RequestCardChoice(player.Hand.Count, UIPrefix, _settings);
 

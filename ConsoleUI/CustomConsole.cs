@@ -167,9 +167,9 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         }
 
-        public static void ShowLegalCards(IEnumerable<Card> legalCards, string sourcePrefix, ConsoleSettings settings)
+        public static void ShowPlayableCards(IEnumerable<Card> legalCards, string sourcePrefix, ConsoleSettings settings)
         {
-            CustomConsole.Write($"Legal Cards to play: ", sourcePrefix, settings);
+            CustomConsole.Write($"Playable cards: ", sourcePrefix, settings);
             int i = 1;
             foreach (var card in legalCards)
             {
