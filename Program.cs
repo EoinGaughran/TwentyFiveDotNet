@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Config;
-using TwentyFiveDotNet.Interfaces;
 using TwentyFiveDotNet.ConsoleUI;
 
 namespace TwentyFiveDotNet
@@ -54,7 +53,7 @@ namespace TwentyFiveDotNet
                 UIPrefix,
                 consoleSettings);
 
-            List<Player> Players = [];
+            List<Player> Players = new List<Player>();
 
             for (int i = 0; i < totalHumans; i++)
             {

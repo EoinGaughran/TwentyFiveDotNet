@@ -6,9 +6,14 @@ using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.Game
 {
-    public class RulesEngine(GameConfig config)
+    public class RulesEngine
     {
-        private readonly GameConfig _config = config;
+        private readonly GameConfig _config;
+
+        public RulesEngine(GameConfig config)
+        {
+            _config = config;
+        }
 
         public int[] GetDealPattern()
         {

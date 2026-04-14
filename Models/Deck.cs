@@ -14,8 +14,8 @@ namespace TwentyFiveDotNet.Models
 
         public Deck()
         {
-            cards = [];
-            dealtCards = [];
+            cards = new List<Card>();
+            dealtCards = new List<Card>();
         }
 
         public override string ToString()

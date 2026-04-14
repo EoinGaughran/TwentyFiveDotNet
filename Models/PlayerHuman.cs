@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using TwentyFiveDotNet.Interfaces;
-
-namespace TwentyFiveDotNet.Models
+﻿namespace TwentyFiveDotNet.Models
 {
     public class PlayerHuman : Player
     {

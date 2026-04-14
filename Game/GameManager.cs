@@ -110,7 +110,7 @@ namespace TwentyFiveDotNet.Game
 
         private void ResetCardsPlayed()
         {
-            PlayedCards = [];
+            PlayedCards = new List<(Player player, Card card)>();
         }
 
         private void UpdatePlayedCards(Player player, Card chosenCard)
