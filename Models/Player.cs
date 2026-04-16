@@ -17,6 +17,12 @@ namespace TwentyFiveDotNet.Models
         {
             return Name;
         }
-        
+
+        public Player(string name)
+        {
+            Name = name;
+            Hand = new List<Card>();
+            Points = 0;
+        }
     }
 }

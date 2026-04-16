@@ -5,6 +5,7 @@ using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.ConsoleUI;
+using TwentyFiveDotNet.Game.Builders;
 
 namespace TwentyFiveDotNet
 {
@@ -12,9 +13,10 @@ namespace TwentyFiveDotNet
     {
         public static readonly string UIPrefix = "[Program] ";
         const string filePath = "Config/GameConfig.json";
-
         static void Main(string[] args)
         {
+            GameMode mode = ParseMode(args);
+
             GameConfig config = ConfigLoader.LoadGameConfig(filePath) ??
                 throw new InvalidOperationException("Failed to load configuration.");
 
@@ -34,6 +36,18 @@ namespace TwentyFiveDotNet
             };
 
             CustomConsole.WriteLine($"DevMode: {runtimeSettings.DevMode}.", UIPrefix, consoleSettings);
+
+            if (mode != GameMode.Real)
+            {
+                RunTestMode(mode, config, consoleSettings);
+                return;
+            }
+
+            RunRealGame(config, consoleSettings);
+        }
+
+        static void RunRealGame(GameConfig config, ConsoleSettings consoleSettings)
+        {
             CustomConsole.WriteLine($"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}", UIPrefix, consoleSettings);
             CustomConsole.WriteLine($"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}", UIPrefix, consoleSettings);
             CustomConsole.WriteLine("Welcome to the card game 25.", UIPrefix, consoleSettings);
@@ -70,6 +84,11 @@ namespace TwentyFiveDotNet
             }
 
             GameManager manager = new(rules, Players);
+            RunGameLoop(manager, consoleSettings);
+        }
+
+        static void RunGameLoop(GameManager manager, ConsoleSettings consoleSettings)
+        {
             var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
 
             manager.OnGameEnded += () =>
@@ -88,6 +107,23 @@ namespace TwentyFiveDotNet
 
                 if (manager.IsGameOver()) break;
             }
+        }
+
+        static void RunTestMode(GameMode mode, GameConfig config, ConsoleSettings consoleSettings)
+        {
+            CustomConsole.WriteLine("Running TEST MODE", UIPrefix, consoleSettings);
+
+            RulesEngine rules = new(config);
+
+            TestGameBuilder.CreateBasicGame(rules);
+        }
+
+        static GameMode ParseMode(string[] args)
+        {
+            if (args.Contains("--test"))
+                return GameMode.TestBasic;
+
+            return GameMode.Real;
         }
 
         private static int ReadIntInRange(string prompt, int min, int max, string prefix, ConsoleSettings settings)

@@ -52,12 +52,16 @@
     <Compile Include="Config\RuntimeSettings.cs" />
     <Compile Include="ConsoleUI\ConsoleGameInteraction.cs" />
     <Compile Include="ConsoleUI\ConsoleInteraction.cs" />
+    <Compile Include="Game\Builders\TestGameBuilder.cs" />
+    <Compile Include="Game\GameLoader.cs" />
     <Compile Include="Game\GameManager.cs" />
     <Compile Include="Game\RulesEngine.cs" />
     <Compile Include="Game\TurnManager.cs" />
     <Compile Include="Interfaces\IGameInteraction.cs" />
     <Compile Include="Interfaces\IPlayerInteraction.cs" />
     <Compile Include="Models\Card.cs" />
+    <Compile Include="Models\GameMode.cs" />
+    <Compile Include="Models\GameState.cs" />
     <Compile Include="Models\PlayerCPU.cs" />
     <Compile Include="Models\Deck.cs" />
     <Compile Include="Models\PlayerDecisionType.cs" />
