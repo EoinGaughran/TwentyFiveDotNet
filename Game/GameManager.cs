@@ -7,7 +7,7 @@ namespace TwentyFiveDotNet.Game
 {
     internal class GameManager
     {
-        public enum GameState
+        public enum GamePhase
         {
             NotStarted,
             Initialize,
@@ -27,14 +27,15 @@ namespace TwentyFiveDotNet.Game
         }
 
         private readonly RulesEngine _rules;
-        private readonly TurnManager _turnManager;  
+        private readonly TurnManager _turnManager;
+        private readonly GameState _gameState;
 
         private static readonly Random _rng = new();
 
-        private readonly List<Player> _players;
+        private List<Player> Players => _gameState.Players;
         private List<(Player player, Card card)> PlayedCards { get; set; }
-        private Deck Deck { get; set; }
-        private GameState CurrentState { get; set; }
+        private Deck Deck => _gameState.Deck;
+        private GamePhase CurrentPhase { get; set; }
         private Player RoundWinningPlayer { get; set; }
         private Player PendingPlayer { get; set; }
         private List<Card> PendingOptions { get; set; }
@@ -83,7 +84,7 @@ namespace TwentyFiveDotNet.Game
         public event Action OnNewRound;
 
         //Game State
-        public event Action<GameState> OnGameStateChange;
+        public event Action<GamePhase> OnGameStateChange;
         public event Action<Player> OnGameOver;
         public event Action OnNewGame;
         public event Action OnGameEnded;
@@ -91,20 +92,20 @@ namespace TwentyFiveDotNet.Game
 
         public GameManager(
             RulesEngine rules,
-            List<Player> players)
+            GameState gameState)
         {
             _rules = rules;
-            _players = players;
+            _gameState = gameState;
 
-            _turnManager = new TurnManager(_players);
+            _turnManager = new TurnManager(_gameState.Players);
 
             // Initialize the properties in the constructor
-            ChangeGameState(GameState.Initialize);
+            ChangeGameState(GamePhase.Initialize);
         }
 
         private void NewDeck()
         {
-            Deck = new Deck();
+            _gameState.Deck = new Deck();
             Deck.Add52CardsToDeck();
         }
 
@@ -120,11 +121,9 @@ namespace TwentyFiveDotNet.Game
 
         private void DealCards()
         {
-            _turnManager.ChangeToPlayer(_turnManager.Dealer);
-
             foreach (var amount in _rules.GetDealPattern())
             {
-                for( int i = 0; i < _players.Count; i++ )
+                for( int i = 0; i < Players.Count; i++ )
                 {
                     _turnManager.RotateCurrentPlayer();
                     GivePlayerCards(_turnManager.CurrentPlayer, amount);
@@ -152,17 +151,17 @@ namespace TwentyFiveDotNet.Game
             RoundWinningPlayer = player;
         }
 
-        private bool ArePlayersOutOfCards() => _players.All(p => p.Hand.Count == 0);
+        private bool ArePlayersOutOfCards() => Players.All(p => p.Hand.Count == 0);
 
-        private void ChangeGameState(GameState state)
+        private void ChangeGameState(GamePhase state)
         {
-            CurrentState = state;
+            CurrentPhase = state;
             OnGameStateChange?.Invoke(state);
         }
 
         private void ClearPlayersHands()
         {
-            foreach (var player in _players)
+            foreach (var player in Players)
                 player.Hand.Clear();
         }
 
@@ -174,92 +173,92 @@ namespace TwentyFiveDotNet.Game
 
         private void ClearPlayerPoints()
         {
-            foreach (var player in _players)
+            foreach (var player in Players)
                 player.Points = 0;
         }
 
         public bool IsGameOver()
         {
-            if(CurrentState == GameState.EndGame) return true;
+            if(CurrentPhase == GamePhase.EndGame) return true;
 
             return false;
         }
 
         public void StartGame()
         {
-            ChangeGameState(GameState.Initialize);
+            ChangeGameState(GamePhase.Initialize);
         }
         public void AdvanceGame()
         {
-            switch (CurrentState)
+            switch (CurrentPhase)
             {
-                case GameState.NotStarted:
+                case GamePhase.NotStarted:
 
-                case GameState.Initialize:
+                case GamePhase.Initialize:
 
                     Initialize();
                     break;
 
-                case GameState.DealCards:
+                case GamePhase.DealCards:
 
                     HandleDealCards();
                     break;
 
-                case GameState.HandleTrumps:
+                case GamePhase.HandleTrumps:
 
                     HandleTrumps();
                     break;
 
-                case GameState.PlayerTurn_LeadStart:
+                case GamePhase.PlayerTurn_LeadStart:
 
                     PlayerTurn_LeadStart();
                     break;
 
-                case GameState.PlayerTurn_StealDecision:
+                case GamePhase.PlayerTurn_StealDecision:
 
                     PlayerTurn_StealDecision();
                     break;
 
-                case GameState.PlayerTurn_LeadPlayCard:
+                case GamePhase.PlayerTurn_LeadPlayCard:
 
                     PlayerTurn_LeadPlayCard();
                     break;
 
-                case GameState.PlayerTurn_Start:
+                case GamePhase.PlayerTurn_Start:
 
                     PlayerTurn_Start();
                     break;
 
-                case GameState.PlayerTurn_PlayCard:
+                case GamePhase.PlayerTurn_PlayCard:
 
                     PlayerTurn_PlayCard();
                     break;
 
-                case GameState.Scoring:
+                case GamePhase.Scoring:
 
                     Scoring();
                     break;
 
-                case GameState.NewRound:
+                case GamePhase.NewRound:
 
                     NewRound();
                     break;
 
-                case GameState.AwaitingReplayDecision:
+                case GamePhase.AwaitingReplayDecision:
 
                     OnGameEnded?.Invoke();
                     break;
 
-                case GameState.NewGame:
+                case GamePhase.NewGame:
 
                     NewGame();
                     break;
 
-                case GameState.EndGame:
+                case GamePhase.EndGame:
 
                     break;
 
-                case GameState.AwaitingPlayerInput:
+                case GamePhase.AwaitingPlayerInput:
 
                     break;
             }
@@ -282,7 +281,7 @@ namespace TwentyFiveDotNet.Game
                 PendingOptions = options;
                 PendingDecisionType = type;
 
-                ChangeGameState(GameState.AwaitingPlayerInput);
+                ChangeGameState(GamePhase.AwaitingPlayerInput);
                 OnPlayerInputRequest?.Invoke(player, type, options);
             }
         }
@@ -311,11 +310,14 @@ namespace TwentyFiveDotNet.Game
 
         private void Initialize()
         {
-            NewDeck();
-            OnDeckCreated?.Invoke(Deck);
+            if (_gameState.Players.All(p => p.Hand.Count == 0))
+            {
+                NewDeck();
+                OnDeckCreated?.Invoke(Deck);
 
-            Deck.Shuffle();
-            OnDeckShuffled?.Invoke(Deck);
+                Deck.Shuffle();
+                OnDeckShuffled?.Invoke(Deck);
+            }
 
             _turnManager.AssignRandomDealer(_rng);
             OnDealerSelected?.Invoke(_turnManager.Dealer);
@@ -324,15 +326,20 @@ namespace TwentyFiveDotNet.Game
 
             ResetCardsPlayed();
 
-            ChangeGameState(GameState.DealCards);
+            ChangeGameState(GamePhase.DealCards);
             return;
         }
 
         private void HandleDealCards()  
         {
+            _turnManager.ChangeToDealer();
+
             OnDealingStarted?.Invoke();
 
-            DealCards();
+            if (_gameState.Players.All(p => p.Hand.Count == 0))
+            {
+                DealCards();
+            }
 
             TrumpCard = Deck.Draw();
 
@@ -351,7 +358,7 @@ namespace TwentyFiveDotNet.Game
 
             TrumpStolen = false;
 
-            ChangeGameState(GameState.HandleTrumps);
+            ChangeGameState(GamePhase.HandleTrumps);
             return;
         }
 
@@ -366,7 +373,7 @@ namespace TwentyFiveDotNet.Game
 
             OnTrumpSuitRevealed?.Invoke(display);
 
-            ChangeGameState(GameState.PlayerTurn_LeadStart);
+            ChangeGameState(GamePhase.PlayerTurn_LeadStart);
             return;
         }
 
@@ -377,11 +384,11 @@ namespace TwentyFiveDotNet.Game
 
             if (_rules.CanPlayerSteal(_turnManager.CurrentPlayer.Hand, TrumpCard))
             {
-                ChangeGameState(GameState.PlayerTurn_StealDecision);
+                ChangeGameState(GamePhase.PlayerTurn_StealDecision);
                 return;
             }
 
-            ChangeGameState(GameState.PlayerTurn_LeadPlayCard);
+            ChangeGameState(GamePhase.PlayerTurn_LeadPlayCard);
             return;
         }
 
@@ -411,7 +418,7 @@ namespace TwentyFiveDotNet.Game
 
             OnRelayTrumpLeadInfo?.Invoke(TrumpCard.GetSuitSymbolUnicoded(), LedCard.GetSuitSymbolUnicoded());
 
-            ChangeGameState(GameState.PlayerTurn_Start);
+            ChangeGameState(GamePhase.PlayerTurn_Start);
             return;
         }
 
@@ -437,9 +444,9 @@ namespace TwentyFiveDotNet.Game
             TrumpStolen = true;
 
             if(_turnManager.CurrentPlayer == _turnManager.Leader)
-                ChangeGameState(GameState.PlayerTurn_LeadPlayCard);
+                ChangeGameState(GamePhase.PlayerTurn_LeadPlayCard);
             else
-                ChangeGameState(GameState.PlayerTurn_PlayCard);
+                ChangeGameState(GamePhase.PlayerTurn_PlayCard);
 
             return;
         }
@@ -451,7 +458,7 @@ namespace TwentyFiveDotNet.Game
 
             if (_turnManager.IsCurrentPlayerTheLeader())
             {
-                ChangeGameState(GameState.Scoring);
+                ChangeGameState(GamePhase.Scoring);
                 return;
             }
 
@@ -472,12 +479,12 @@ namespace TwentyFiveDotNet.Game
 
                 if (canPlayerSteal)
                 {
-                    ChangeGameState(GameState.PlayerTurn_StealDecision);
+                    ChangeGameState(GamePhase.PlayerTurn_StealDecision);
                     return;
                 }
             }
 
-            ChangeGameState(GameState.PlayerTurn_PlayCard);
+            ChangeGameState(GamePhase.PlayerTurn_PlayCard);
             return;
         }
 
@@ -507,7 +514,7 @@ namespace TwentyFiveDotNet.Game
 
             OnRoundNewWinner?.Invoke(RoundWinningCard, RoundWinningPlayer);
 
-            ChangeGameState(GameState.PlayerTurn_Start);
+            ChangeGameState(GamePhase.PlayerTurn_Start);
             return;
         }
 
@@ -516,25 +523,25 @@ namespace TwentyFiveDotNet.Game
             _rules.Scoring(RoundWinningPlayer);
             OnRoundEnded?.Invoke(RoundWinningCard, RoundWinningPlayer);
 
-            OnScoreChanged?.Invoke(_players);
+            OnScoreChanged?.Invoke(Players);
 
             if (_rules.IsGameOver(RoundWinningPlayer))
             {
                 OnGameOver?.Invoke(RoundWinningPlayer);
-                ChangeGameState(GameState.AwaitingReplayDecision);
+                ChangeGameState(GamePhase.AwaitingReplayDecision);
                 return;
             }
 
             if (ArePlayersOutOfCards())
             {
-                ChangeGameState(GameState.NewRound);
+                ChangeGameState(GamePhase.NewRound);
                 return;
             }
 
             _turnManager.SetLeader(RoundWinningPlayer); //Winner becomes leader
             OnLeadPlayerSelected?.Invoke(RoundWinningPlayer);
 
-            ChangeGameState(GameState.PlayerTurn_LeadStart);
+            ChangeGameState(GamePhase.PlayerTurn_LeadStart);
             return;
         }
 
@@ -553,7 +560,7 @@ namespace TwentyFiveDotNet.Game
 
             _turnManager.SetLeader(_turnManager.NextPlayer(_turnManager.Dealer));
 
-            ChangeGameState(GameState.DealCards);
+            ChangeGameState(GamePhase.DealCards);
             return;
         }
 
@@ -566,14 +573,14 @@ namespace TwentyFiveDotNet.Game
 
             OnNewGame?.Invoke();
 
-            ChangeGameState(GameState.NewRound);
+            ChangeGameState(GamePhase.NewRound);
             return;
         }
 
         public void EndGame()
         {
             OnProgramClosed?.Invoke();
-            ChangeGameState(GameState.EndGame);
+            ChangeGameState(GamePhase.EndGame);
             return;
         }
     }

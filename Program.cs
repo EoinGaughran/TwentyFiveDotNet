@@ -6,6 +6,7 @@ using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.ConsoleUI;
 using TwentyFiveDotNet.Game.Builders;
+using System.Data;
 
 namespace TwentyFiveDotNet
 {
@@ -43,51 +44,40 @@ namespace TwentyFiveDotNet
                 return;
             }
 
-            RunRealGame(config, consoleSettings);
+            RunMainGame(config, consoleSettings);
         }
 
-        static void RunRealGame(GameConfig config, ConsoleSettings consoleSettings)
+        static void RunMainGame(GameConfig config, ConsoleSettings consoleSettings)
         {
             CustomConsole.WriteLine($"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}", UIPrefix, consoleSettings);
             CustomConsole.WriteLine($"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}", UIPrefix, consoleSettings);
             CustomConsole.WriteLine("Welcome to the card game 25.", UIPrefix, consoleSettings);
             CustomConsole.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.", UIPrefix, consoleSettings);
 
-            int totalPlayers = ReadIntInRange(
-                $"How many total players? ({config.MinPlayers}-{config.MaxPlayers}): ",
-                config.MinPlayers,
-                config.MaxPlayers,
-                UIPrefix,
-                consoleSettings);
+            RulesEngine rules = new(config);
 
-            int totalHumans = ReadIntInRange(
-                $"How many Human players? (0-1): ",
-                0,
-                1,
-                UIPrefix,
-                consoleSettings);
+            GameManager manager = new(rules, ConsoleGameBuilder.CreateMainGame(rules, config, consoleSettings));
+            Run(manager, consoleSettings);
+        }
 
-            List<Player> Players = new List<Player>();
-
-            for (int i = 0; i < totalHumans; i++)
-            {
-                CustomConsole.Write($"Player {i + 1} enter your name: ", UIPrefix, consoleSettings);
-                var readName = CustomConsole.Readline();
-                Players.Add(new PlayerHuman(readName));
-            }
+        static void RunTestMode(GameMode mode, GameConfig config, ConsoleSettings consoleSettings)
+        {
+            CustomConsole.WriteLine("Running TEST MODE", UIPrefix, consoleSettings);
 
             RulesEngine rules = new(config);
 
-            for (int i = totalHumans; i < totalPlayers; i++)
-            {
-                Players.Add(new PlayerCPU($"CPU Player {i + 1}", rules));
-            }
-
-            GameManager manager = new(rules, Players);
-            RunGameLoop(manager, consoleSettings);
+            GameManager manager = new(rules, TestGameBuilder.CreateBasicGame(rules));
+            Run(manager, consoleSettings);
         }
 
-        static void RunGameLoop(GameManager manager, ConsoleSettings consoleSettings)
+        static GameMode ParseMode(string[] args)
+        {
+            if (args.Contains("--test"))
+                return GameMode.TestBasic;
+
+            return GameMode.Real;
+        }
+        static void Run(GameManager manager, ConsoleSettings consoleSettings)
         {
             var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
 
@@ -107,35 +97,6 @@ namespace TwentyFiveDotNet
 
                 if (manager.IsGameOver()) break;
             }
-        }
-
-        static void RunTestMode(GameMode mode, GameConfig config, ConsoleSettings consoleSettings)
-        {
-            CustomConsole.WriteLine("Running TEST MODE", UIPrefix, consoleSettings);
-
-            RulesEngine rules = new(config);
-
-            TestGameBuilder.CreateBasicGame(rules);
-        }
-
-        static GameMode ParseMode(string[] args)
-        {
-            if (args.Contains("--test"))
-                return GameMode.TestBasic;
-
-            return GameMode.Real;
-        }
-
-        private static int ReadIntInRange(string prompt, int min, int max, string prefix, ConsoleSettings settings)
-        {
-            int value;
-            do
-            {
-                CustomConsole.Write(prompt, prefix, settings);
-            }
-            while (!int.TryParse(Console.ReadLine(), out value) || value < min || value > max);
-
-            return value;
         }
     }
 }

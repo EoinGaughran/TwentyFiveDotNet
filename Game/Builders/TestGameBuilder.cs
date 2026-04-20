@@ -6,6 +6,7 @@ namespace TwentyFiveDotNet.Game.Builders
 {
     public static class TestGameBuilder
     {
+        private static readonly Random _rng = new();
         public static GameState CreateBasicGame(RulesEngine rulesEngine)
         {
             GameState gameState = new GameState();
@@ -25,6 +26,10 @@ namespace TwentyFiveDotNet.Game.Builders
 
             gameState.TrickPile = new List<Card>();
             gameState.CurrentPlayerIndex = 0;
+            gameState.Deck = new Deck();
+            gameState.Deck.Add52CardsToDeck();
+
+            gameState.IsPreconfigured = true;
 
             return gameState;
         }
@@ -32,14 +37,14 @@ namespace TwentyFiveDotNet.Game.Builders
         private static List<Card> CreateHand(int count)
         {
             List<Card> hand = new List<Card>();
-            Random rng = new Random();
+
             var suits = (Card.Suits[])Enum.GetValues(typeof(Card.Suits));
             var ranks = (Card.Ranks[])Enum.GetValues(typeof(Card.Ranks));
 
             for (int i = 0; i < count; i++)
             {
-                var suit = (Card.Suits)suits.GetValue(rng.Next(suits.Length));
-                var rank = (Card.Ranks)ranks.GetValue(rng.Next(ranks.Length));
+                var suit = (Card.Suits)suits.GetValue(_rng.Next(suits.Length));
+                var rank = (Card.Ranks)ranks.GetValue(_rng.Next(ranks.Length));
 
                 hand.Add(new Card
                 {
