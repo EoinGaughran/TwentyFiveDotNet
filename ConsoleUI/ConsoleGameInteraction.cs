@@ -25,6 +25,15 @@ namespace TwentyFiveDotNet.ConsoleUI
                 CustomConsole.WriteLine(message, TextUIPrefix, _settings);
             };
 
+            _manager.OnStateSnapshot += (gameState) =>
+            {
+                CustomConsole.WriteLine($"GamePhase: {gameState.CurrentPhase}", UIPrefix, _settings);
+                CustomConsole.PrintListOfPlayers(gameState.Players, UIPrefix, _settings);
+                CustomConsole.PrintPlayersHands(gameState.Players, UIPrefix, _settings);
+                CustomConsole.PrintPlayedCards(gameState.PlayedCards, UIPrefix, _settings);
+                CustomConsole.PrintPlayersScores(gameState.Players, UIPrefix, _settings);
+            };
+                
             _manager.OnRelayTrumpInfo += (message) =>
             {
                 CustomConsole.WriteLine(message + " are trumps.", TextUIPrefix, _settings);

@@ -61,6 +61,7 @@
     <Compile Include="Interfaces\IPlayerInteraction.cs" />
     <Compile Include="Models\Card.cs" />
     <Compile Include="Models\GameMode.cs" />
+    <Compile Include="Models\GamePhase.cs" />
     <Compile Include="Models\GameState.cs" />
     <Compile Include="Models\PlayerCPU.cs" />
     <Compile Include="Models\Deck.cs" />

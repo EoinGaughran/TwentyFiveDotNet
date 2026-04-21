@@ -67,7 +67,10 @@ namespace TwentyFiveDotNet
             RulesEngine rules = new(config);
 
             GameManager manager = new(rules, TestGameBuilder.CreateBasicGame(rules));
-            Run(manager, consoleSettings);
+
+            var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
+
+            manager.PublishState();
         }
 
         static GameMode ParseMode(string[] args)

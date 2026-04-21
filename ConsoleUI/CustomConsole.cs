@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime;
 using System.Threading;
 using TwentyFiveDotNet.Models;
 
@@ -90,23 +91,23 @@ namespace TwentyFiveDotNet.ConsoleUI
             }
         }
 
-        public static void PrintPlayersHands(List<Player> players, ConsoleSettings settings, String prefix)
+        public static void PrintPlayersHands(List<Player> players, string sourcePrefix, ConsoleSettings settings)
         {
             foreach (var player in players)
             {
                 DevTagPrint(settings);
 
-                Write(prefix + $"{player.Name} has:", settings);
+                Write($"{player.Name} has:", settings);
 
                 foreach (var card in player.Hand)
                 {
-                    Write(prefix + $" {card},", settings);
+                    Write($" {card},", settings);
                 }
                 DevWriteLine(settings);
             }
         }
 
-        public static void PrintPlayersScores(List<Player> players, String sourcePrefix, ConsoleSettings settings)
+        public static void PrintPlayersScores(List<Player> players, string sourcePrefix, ConsoleSettings settings)
         {
             WriteLine($"Current Scores:", sourcePrefix, settings);
 
@@ -125,11 +126,17 @@ namespace TwentyFiveDotNet.ConsoleUI
             }
         }
 
-        public static void PrintPlayedCards(Dictionary<Player, Card> PlayedCards)
+        public static void PrintPlayedCards(List<(Player player, Card card)> PlayedCards, string sourcePrefix, ConsoleSettings settings)
         {
-            foreach (KeyValuePair<Player, Card> card in PlayedCards)
+            if (PlayedCards.Count == 0)
+                CustomConsole.WriteLine("No cards have been played yet.", sourcePrefix, settings);
+
+            else
             {
-                WriteLineNoDelay($"{card.Key} played {card.Value}");
+                foreach (var entry in PlayedCards)
+                {
+                    CustomConsole.WriteLine($"{entry.player.Name} played {entry.card.Rank} of {entry.card.Suit}", sourcePrefix, settings);
+                }
             }
         }
 

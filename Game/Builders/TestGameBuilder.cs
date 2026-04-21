@@ -24,12 +24,11 @@ namespace TwentyFiveDotNet.Game.Builders
                 player.Hand = CreateHand(5);
             }
 
-            gameState.TrickPile = new List<Card>();
+            gameState.PlayedCards = new List<(Player player, Card card)>();
             gameState.CurrentPlayerIndex = 0;
             gameState.Deck = new Deck();
             gameState.Deck.Add52CardsToDeck();
-
-            gameState.IsPreconfigured = true;
+            gameState.CurrentPhase = GamePhase.NotStarted;
 
             return gameState;
         }

@@ -43,13 +43,11 @@ namespace TwentyFiveDotNet.Game.Builders
                 gameState.Players.Add(new PlayerCPU($"CPU Player {i + 1}", rules));
             }
 
-            gameState.TrickPile = new List<Card>();
+            gameState.PlayedCards = new List<(Player player, Card card)>();
             gameState.CurrentPlayerIndex = 0;
             gameState.Deck = new Deck();
             gameState.Deck.Add52CardsToDeck();
             gameState.Deck.Shuffle();
-
-            gameState.IsPreconfigured = true;
 
             return gameState;
         }
