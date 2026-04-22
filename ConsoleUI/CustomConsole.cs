@@ -1,162 +1,153 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime;
 using System.Threading;
 using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.ConsoleUI
 {
-    public static class CustomConsole
+    public class CustomConsole
     {
+        private readonly ConsoleSettings _settings;
+        private readonly string _prefix;
+        private readonly string DevPrefix = "[DevMode] ";
 
-        public static readonly String DevPrefix = "[DEV LOG]";
+        public CustomConsole(ConsoleSettings settings, string prefix)
+        {
+            _settings = settings;
+            _prefix = prefix;
+        }
 
         // Wrapper for Console.WriteLine
+        private void ApplyDelay()
+        {
+            if (!_settings.DevMode)
+                Thread.Sleep(_settings.Delay);
+        }
 
-        public static string Readline()
+        public string Readline()
         {
             return Console.ReadLine();
         }
 
-        public static void WriteLine(string message, string sourcePrefix, ConsoleSettings settings)
+        public void WriteLine(string message)
         {
-            Console.WriteLine(sourcePrefix + message);
+            Console.WriteLine(_prefix + message);
 
-            if (!settings.DevMode)
-            {
-                Thread.Sleep(settings.Delay); // Introduce delay
-            }
+            ApplyDelay();
         }
 
-        public static void WriteLineNoDelay(string message)
+        public void WriteLineNoDelay(string message)
         {
             Console.WriteLine(message);
         }
 
-        public static void WriteLine()
+        public void WriteLine()
         {
             Console.WriteLine();
         }
 
-        public static void DevWriteLine(ConsoleSettings settings)
-        {
-            if (settings.DevMode)
-            {
-                Console.WriteLine();
-            }
-        }
-
         // Wrapper for Console.Write
-        public static void Write(string message, ConsoleSettings settings)
+        public void Write(string message)
         {
             Console.Write(message);
 
-            if (!settings.DevMode)
-            {
-                Thread.Sleep(settings.Delay); // Introduce delay
-            }
+            ApplyDelay();
         }
 
-        public static void Write(string message, string sourcePrefix, ConsoleSettings settings)
+        public void WriteWithPrefix()
         {
-            Console.Write(sourcePrefix + message);
+            Console.Write(_prefix);
 
-            if (!settings.DevMode)
-            {
-                Thread.Sleep(settings.Delay); // Introduce delay
-            }
+            ApplyDelay();
         }
 
-        public static void WaitForKeyPress()
+        public void WaitForKeyPress()
         {
             Console.ReadKey(true); // Waits for a key press, but doesn't display the key on the console
         }
 
-        public static void Clear()
+        public void Clear()
         {
             Console.Clear();
         }
 
-        public static void DevTagPrint(ConsoleSettings settings)
-        {
-            if (settings.DevMode) Console.Write($"{DevPrefix} ");
-        }
-
-        public static void PrintListOfPlayers(List<Player> players, string sourcePrefix, ConsoleSettings settings)
+        public void PrintListOfPlayers(List<Player> players)
         {
             foreach (var player in players)
             {
-                WriteLine($"{player.Name} has joined the game.", sourcePrefix, settings);
+                WriteLine($"{player.Name} has joined the game.");
             }
         }
 
-        public static void PrintPlayersHands(List<Player> players, string sourcePrefix, ConsoleSettings settings)
+        public void PrintPlayersHands(List<Player> players)
         {
             foreach (var player in players)
             {
-                DevTagPrint(settings);
+                if (_settings.DevMode)
+                    Console.Write($"{DevPrefix}");
 
-                Write($"{player.Name} has:", settings);
+                Write($"{player.Name} has:");
 
                 foreach (var card in player.Hand)
                 {
-                    Write($" {card},", settings);
+                    Write($" {card},");
                 }
-                DevWriteLine(settings);
+
+                WriteLine();
             }
         }
 
-        public static void PrintPlayersScores(List<Player> players, string sourcePrefix, ConsoleSettings settings)
+        public void PrintPlayersScores(List<Player> players)
         {
-            WriteLine($"Current Scores:", sourcePrefix, settings);
+            WriteLine($"Current Scores:");
 
             foreach (var player in players)
             {
-                WriteLine($"{player.Name} has {player.Points} points.", sourcePrefix, settings);
+                WriteLine($"{player.Name} has {player.Points} points.");
             }
             WriteLine();
         }
 
-        public static void PrintCards(List<Card> hand, ConsoleSettings settings)
+        public void PrintCards(List<Card> hand)
         {
             foreach (var card in hand)
             {   
-                 Write($"{card}, ", settings);
+                 Write($"{card}, ");
             }
         }
 
-        public static void PrintPlayedCards(List<(Player player, Card card)> PlayedCards, string sourcePrefix, ConsoleSettings settings)
+        public void PrintPlayedCards(List<(Player player, Card card)> PlayedCards)
         {
             if (PlayedCards.Count == 0)
-                CustomConsole.WriteLine("No cards have been played yet.", sourcePrefix, settings);
+                WriteLine("No cards have been played yet.");
 
             else
             {
                 foreach (var entry in PlayedCards)
                 {
-                    CustomConsole.WriteLine($"{entry.player.Name} played {entry.card.Rank} of {entry.card.Suit}", sourcePrefix, settings);
+                    WriteLine($"{entry.player.Name} played {entry.card.Rank} of {entry.card.Suit}");
                 }
             }
         }
 
-        public static int RequestCardChoice(int max, string sourcePrefix, ConsoleSettings settings)
+        public int RequestCardChoice(int max)
         {
-            CustomConsole.Write("Enter your choice: ", sourcePrefix, settings);
+            Write("Enter your choice: ");
 
             int choice;
 
             while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > max)
             {
-                CustomConsole.WriteLine("Invalid choice, try again.", sourcePrefix, settings);
+                WriteLine("Invalid choice, try again.");
             }
 
             return choice - 1;
         }
 
-        public static void ShowCards(IEnumerable<Card> cards, string sourcePrefix, ConsoleSettings settings)
+        public void ShowCards(IEnumerable<Card> cards)
         {
-            CustomConsole.Write(sourcePrefix, settings);
+            WriteWithPrefix();
             Console.Write($"Players hand: ");
             int i = 1;
             foreach (var card in cards)
@@ -172,9 +163,9 @@ namespace TwentyFiveDotNet.ConsoleUI
 
         }
 
-        public static void ShowPlayableCards(IEnumerable<Card> legalCards, string sourcePrefix, ConsoleSettings settings)
+        public void ShowPlayableCards(IEnumerable<Card> legalCards)
         {
-            CustomConsole.Write($"Playable cards: ", sourcePrefix, settings);
+            Write($"Playable cards: ");
             int i = 1;
             foreach (var card in legalCards)
             {
@@ -188,15 +179,24 @@ namespace TwentyFiveDotNet.ConsoleUI
             Console.WriteLine();
         }
 
-        public static void WaitForPlayer(string playerName, string sourcePrefix, ConsoleSettings settings)
+        public void WaitForPlayer(string playerName)
         {
-            CustomConsole.WriteLine($"{playerName}, press any key when ready.", sourcePrefix, settings);
+            WriteLine($"{playerName}, press any key when ready.");
             Console.ReadKey(true);
         }
 
-        public static void FlipTrumpCard(string playerName, string sourcePrefix, ConsoleSettings settings)
+        public void FlipTrumpCard(string playerName)
         {
-            WaitForPlayer(playerName, sourcePrefix, settings);
+            WaitForPlayer(playerName);
+        }
+
+        public void PrintSnapShot(GameState gameState)
+        {
+            WriteLine($"GamePhase: {gameState.CurrentPhase}");
+            PrintListOfPlayers(gameState.Players);
+            PrintPlayersHands(gameState.Players);
+            PrintPlayedCards(gameState.PlayedCards);
+            PrintPlayersScores(gameState.Players);
         }
     }
 }

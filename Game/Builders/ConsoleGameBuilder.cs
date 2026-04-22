@@ -16,31 +16,25 @@ namespace TwentyFiveDotNet.Game.Builders
             int totalPlayers = ReadIntInRange(
                 $"How many total players? ({config.MinPlayers}-{config.MaxPlayers}): ",
                 config.MinPlayers,
-                config.MaxPlayers,
-                UIPrefix,
-                consoleSettings);
+                config.MaxPlayers);
 
             int totalHumans = ReadIntInRange(
                 $"How many Human players? (0-1): ",
                 0,
-                1,
-                UIPrefix,
-                consoleSettings);
+                1);
 
             gameState.Players = new List<Player>();
 
             for (int i = 0; i < totalHumans; i++)
             {
-                CustomConsole.Write($"Player {i + 1} enter your name: ", UIPrefix, consoleSettings);
-                var readName = CustomConsole.Readline();
+                Console.Write($"Player {i + 1} enter your name: ", UIPrefix, consoleSettings);
+                var readName = Console.ReadLine();
                 gameState.Players.Add(new PlayerHuman(readName));
             }
 
-            RulesEngine rules = new(config);
-
             for (int i = totalHumans; i < totalPlayers; i++)
             {
-                gameState.Players.Add(new PlayerCPU($"CPU Player {i + 1}", rules));
+                gameState.Players.Add(new PlayerCPU($"CPU Player {i + 1}", rulesEngine));
             }
 
             gameState.PlayedCards = new List<(Player player, Card card)>();
@@ -52,12 +46,12 @@ namespace TwentyFiveDotNet.Game.Builders
             return gameState;
         }
 
-        private static int ReadIntInRange(string prompt, int min, int max, string prefix, ConsoleSettings settings)
+        private static int ReadIntInRange(string prompt, int min, int max)
         {
             int value;
             do
             {
-                CustomConsole.Write(prompt, prefix, settings);
+                Console.Write(prompt);
             }
             while (!int.TryParse(Console.ReadLine(), out value) || value < min || value > max);
 

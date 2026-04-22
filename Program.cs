@@ -36,7 +36,7 @@ namespace TwentyFiveDotNet
                 Delay = config.DelayInMilliseconds
             };
 
-            CustomConsole.WriteLine($"DevMode: {runtimeSettings.DevMode}.", UIPrefix, consoleSettings);
+            Console.WriteLine($"DevMode: {runtimeSettings.DevMode}.");
 
             if (mode != GameMode.Real)
             {
@@ -49,10 +49,10 @@ namespace TwentyFiveDotNet
 
         static void RunMainGame(GameConfig config, ConsoleSettings consoleSettings)
         {
-            CustomConsole.WriteLine($"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}", UIPrefix, consoleSettings);
-            CustomConsole.WriteLine($"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}", UIPrefix, consoleSettings);
-            CustomConsole.WriteLine("Welcome to the card game 25.", UIPrefix, consoleSettings);
-            CustomConsole.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.", UIPrefix, consoleSettings);
+            Console.WriteLine($"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}");
+            Console.WriteLine($"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}");
+            Console.WriteLine("Welcome to the card game 25.");
+            Console.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.");
 
             RulesEngine rules = new(config);
 
@@ -62,7 +62,7 @@ namespace TwentyFiveDotNet
 
         static void RunTestMode(GameMode mode, GameConfig config, ConsoleSettings consoleSettings)
         {
-            CustomConsole.WriteLine("Running TEST MODE", UIPrefix, consoleSettings);
+            Console.WriteLine("Running TEST MODE");
 
             RulesEngine rules = new(config);
 
