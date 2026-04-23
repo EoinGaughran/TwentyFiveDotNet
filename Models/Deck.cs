@@ -33,6 +33,7 @@ namespace TwentyFiveDotNet.Models
                     {
                         Suit = suit,
                         Rank = rank,
+                        Id = ((int)suit * 13) + (int)rank //deterministic ID
                     });
                 }
             }

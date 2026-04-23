@@ -6,10 +6,15 @@ namespace TwentyFiveDotNet.Game.Builders
 {
     public static class TestGameBuilder
     {
-        private static readonly Random _rng = new();
         public static GameState CreateBasicGame(RulesEngine rulesEngine)
         {
             GameState gameState = new GameState();
+
+            gameState.PlayedCards = new List<(Player player, Card card)>();
+            gameState.CurrentPlayerIndex = 0;
+            gameState.Deck = new Deck();
+            gameState.Deck.Add52CardsToDeck();
+            gameState.CurrentPhase = GamePhase.NotStarted;
 
             gameState.Players = new List<Player>
             {
@@ -19,37 +24,22 @@ namespace TwentyFiveDotNet.Game.Builders
                 new PlayerCPU("Opponent 3", rulesEngine),
             };
 
-            foreach (var player in gameState.Players)
+            for (int i = 0; i < gameState.Players.Count; i++)
             {
-                player.Hand = CreateHand(5);
+                gameState.Players[i].Id = i;
+                gameState.Players[i].Hand = CreateHand(5, gameState.Deck);
             }
-
-            gameState.PlayedCards = new List<(Player player, Card card)>();
-            gameState.CurrentPlayerIndex = 0;
-            gameState.Deck = new Deck();
-            gameState.Deck.Add52CardsToDeck();
-            gameState.CurrentPhase = GamePhase.NotStarted;
 
             return gameState;
         }
 
-        private static List<Card> CreateHand(int count)
+        private static List<Card> CreateHand(int count, Deck deck)
         {
             List<Card> hand = new List<Card>();
 
-            var suits = (Card.Suits[])Enum.GetValues(typeof(Card.Suits));
-            var ranks = (Card.Ranks[])Enum.GetValues(typeof(Card.Ranks));
-
             for (int i = 0; i < count; i++)
             {
-                var suit = (Card.Suits)suits.GetValue(_rng.Next(suits.Length));
-                var rank = (Card.Ranks)ranks.GetValue(_rng.Next(ranks.Length));
-
-                hand.Add(new Card
-                {
-                    Suit = suit,
-                    Rank = rank
-                });
+                hand.Add(deck.Draw());
             }
 
             return hand;

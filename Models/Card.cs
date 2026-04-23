@@ -1,4 +1,6 @@
-﻿namespace TwentyFiveDotNet.Models
+﻿using System.Data.Common;
+
+namespace TwentyFiveDotNet.Models
 {
     public class Card
     {
@@ -27,6 +29,7 @@
             Ace
         }
 
+        public int Id { get; set; }
         public Suits Suit { get; set; }
         public Ranks Rank { get; set; }
 

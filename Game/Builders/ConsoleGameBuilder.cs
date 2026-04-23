@@ -41,6 +41,11 @@ namespace TwentyFiveDotNet.Game.Builders
                 gameState.Players.Add(new PlayerCPU($"CPU Player {i + 1}", rulesEngine));
             }
 
+            for (int i = 0; i < totalPlayers; i++)
+            {
+                gameState.Players[i].Id = i;
+            }
+
             gameState.PlayedCards = new List<(Player player, Card card)>();
             gameState.CurrentPlayerIndex = 0;
             gameState.Deck = new Deck();

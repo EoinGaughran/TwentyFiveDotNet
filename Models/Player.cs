@@ -8,6 +8,7 @@ namespace TwentyFiveDotNet.Models
         protected Player()
         {}
 
+        public int Id { get; set; }
         public string Name { get; set; }
         public int Points { get; set; }
         public List<Card> Hand { get; set; } = new();
