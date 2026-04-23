@@ -8,7 +8,7 @@ namespace TwentyFiveDotNet.Models
 {
     public enum GameMode
     {
-        Real,
-        TestBasic
+        Main,
+        Snapshot
     }
 }

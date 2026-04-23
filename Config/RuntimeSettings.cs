@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using TwentyFiveDotNet.ConsoleUI;
+using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.Config
 {
-    internal class RuntimeSettings
+    public class RuntimeSettings
     {
         public bool HidePlayerHands { get; set; }
         public bool DevMode { get; set; }
+        public GameMode GameMode { get; set; }
+        public int Delay { get; set; }
+
     }
 }

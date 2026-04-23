@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.AccessControl;
+using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Interfaces;
 using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.ConsoleUI
 {
-    internal class ConsoleGameInteraction : IGameInteraction
+    public class ConsoleGameInteraction : IGameInteraction
     {
         private readonly CustomConsole customConsole;
         private readonly GameManager _manager;
@@ -15,10 +16,10 @@ namespace TwentyFiveDotNet.ConsoleUI
         public const string TextUIPrefix = "[TEXT UI] ";
         public const string DEVPrefix = "[DEV UI] ";
 
-        public ConsoleGameInteraction(ConsoleSettings settings, GameManager manager)
+        public ConsoleGameInteraction(RuntimeSettings runtimeSettings, GameManager manager)
         {
             _manager = manager;
-            customConsole = new CustomConsole(settings, UIPrefix);
+            customConsole = new CustomConsole(runtimeSettings, UIPrefix);
 
             //Messaging
             _manager.OnMessage += (message) =>
@@ -224,42 +225,7 @@ namespace TwentyFiveDotNet.ConsoleUI
             };
         }
 
-        public string GetInput()
-        {
-            return Console.ReadLine();
-        }
-
-        public void WaitForInput()
-        {
-            customConsole.WriteLine("Enter any key to continue.");
-            customConsole.WaitForKeyPress();
-        }
-        public void ShowPlayers(List<Player> players)
-        {
-
-        }
-        public void ShowPlayedCards(Dictionary<Player, Card> cards)
-        {
-
-        }
-
-        public void HandleCardsDealt(Player player)
-        {
-            customConsole.Write($"{player.Name}'s hand: ");
-            customConsole.WriteLine(string.Join(", ", player.Hand));
-        }
-        public void HandleTrumpCard(Card TrumpCard, Dictionary<Card,int> Trumps)
-        {
-            customConsole.WriteLine($"Dealer drew the trump card: {TrumpCard}");
-            customConsole.WriteLine($"{TrumpCard.GetSuitSymbolUnicoded()} suit is trumps.");
-
-            foreach (var kvp in Trumps)
-            {
-                Console.WriteLine($"{kvp.Key} is worth: {kvp.Value}");
-            }
-        }
-
-        public bool PlayAgainQuestion(String message)
+        public bool PlayAgain()
         {
             while (true)
             {

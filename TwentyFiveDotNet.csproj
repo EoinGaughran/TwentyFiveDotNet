@@ -47,18 +47,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Application\GameApp.cs" />
     <Compile Include="Config\CardRulesConfig.cs" />
     <Compile Include="Config\GameConfig.cs" />
     <Compile Include="Config\RuntimeSettings.cs" />
     <Compile Include="ConsoleUI\ConsoleGameInteraction.cs" />
-    <Compile Include="ConsoleUI\ConsoleInteraction.cs" />
     <Compile Include="Game\Builders\ConsoleGameBuilder.cs" />
     <Compile Include="Game\Builders\TestGameBuilder.cs" />
     <Compile Include="Game\GameManager.cs" />
     <Compile Include="Game\RulesEngine.cs" />
     <Compile Include="Game\TurnManager.cs" />
     <Compile Include="Interfaces\IGameInteraction.cs" />
-    <Compile Include="Interfaces\IPlayerInteraction.cs" />
     <Compile Include="Models\Card.cs" />
     <Compile Include="Models\GameMode.cs" />
     <Compile Include="Models\GamePhase.cs" />
@@ -70,7 +69,6 @@
     <Compile Include="Models\Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ConsoleUI\ConsoleSettings.cs" />
     <Compile Include="ConsoleUI\CustomConsole.cs" />
   </ItemGroup>
   <ItemGroup>

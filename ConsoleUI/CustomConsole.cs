@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.ConsoleUI
 {
     public class CustomConsole
     {
-        private readonly ConsoleSettings _settings;
+        private readonly RuntimeSettings _settings;
         private readonly string _prefix;
         private readonly string DevPrefix = "[DevMode] ";
 
-        public CustomConsole(ConsoleSettings settings, string prefix)
+        public CustomConsole(RuntimeSettings runtimeSettings, string prefix)
         {
-            _settings = settings;
+            _settings = runtimeSettings;
             _prefix = prefix;
         }
 

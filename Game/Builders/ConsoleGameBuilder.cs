@@ -9,9 +9,13 @@ namespace TwentyFiveDotNet.Game.Builders
     public static class ConsoleGameBuilder
     {
         public static readonly string UIPrefix = "[Program] ";
-        public static GameState CreateMainGame(RulesEngine rulesEngine, GameConfig config, ConsoleSettings consoleSettings)
+        public static GameState CreateMainGame(RulesEngine rulesEngine, GameConfig config)
         {
             GameState gameState = new GameState();
+
+            Console.WriteLine($"GameTitle: {config.GameTitle}");
+            Console.WriteLine("Welcome to the card game 25.");
+            Console.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.");
 
             int totalPlayers = ReadIntInRange(
                 $"How many total players? ({config.MinPlayers}-{config.MaxPlayers}): ",
@@ -27,7 +31,7 @@ namespace TwentyFiveDotNet.Game.Builders
 
             for (int i = 0; i < totalHumans; i++)
             {
-                Console.Write($"Player {i + 1} enter your name: ", UIPrefix, consoleSettings);
+                Console.Write($"Player {i + 1} enter your name: ");
                 var readName = Console.ReadLine();
                 gameState.Players.Add(new PlayerHuman(readName));
             }

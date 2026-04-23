@@ -1,105 +1,60 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Models;
 using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.ConsoleUI;
 using TwentyFiveDotNet.Game.Builders;
-using System.Data;
+using TwentyFiveDotNet.Application;
 
 namespace TwentyFiveDotNet
 {
     class Program
     {
-        public static readonly string UIPrefix = "[Program] ";
+        public static readonly string UIPrefix = "[DotNet Program] ";
         const string filePath = "Config/GameConfig.json";
         static void Main(string[] args)
         {
-            GameMode mode = ParseMode(args);
-
-            GameConfig config = ConfigLoader.LoadGameConfig(filePath) ??
+            GameConfig GameConfig = ConfigLoader.LoadGameConfig(filePath) ??
                 throw new InvalidOperationException("Failed to load configuration.");
 
             RuntimeSettings runtimeSettings = new()
             {
-                HidePlayerHands = config.HidePlayerHands,
-                DevMode = config.DevMode,
+                GameMode = ParseMode(args),
+                HidePlayerHands = GameConfig.HidePlayerHands,
+                DevMode = GameConfig.DevMode,
+                Delay = GameConfig.DelayInMilliseconds
             };
 
             if (args.Contains("--dev"))
                 runtimeSettings.DevMode = true;
 
-            ConsoleSettings consoleSettings = new()
+            RulesEngine rules = new(GameConfig);
+
+            GameState gameState = runtimeSettings.GameMode switch
             {
-                DevMode = runtimeSettings.DevMode,
-                Delay = config.DelayInMilliseconds
+                GameMode.Main => ConsoleGameBuilder.CreateMainGame(rules, GameConfig),
+                GameMode.Snapshot => TestGameBuilder.CreateBasicGame(rules),
+                _ => throw new InvalidOperationException($"Unsupported GameMode: {runtimeSettings.GameMode}")
             };
 
-            Console.WriteLine($"DevMode: {runtimeSettings.DevMode}.");
+            GameManager manager = new(rules, gameState);
+            var ui = new ConsoleGameInteraction(runtimeSettings, manager);
 
-            if (mode != GameMode.Real)
+            GameApp.Start(manager, ui);
+
+            while (!manager.IsGameOver())
             {
-                RunTestMode(mode, config, consoleSettings);
-                return;
+                GameApp.Tick(manager);
             }
-
-            RunMainGame(config, consoleSettings);
-        }
-
-        static void RunMainGame(GameConfig config, ConsoleSettings consoleSettings)
-        {
-            Console.WriteLine($"MaxPlayers: {config.MaxPlayers}, Instance: {config.MaxPlayers}");
-            Console.WriteLine($"GameTitle: {config.GameTitle}, Instance: {config.GameTitle}");
-            Console.WriteLine("Welcome to the card game 25.");
-            Console.WriteLine($"The game is for {config.MinPlayers} - {config.MaxPlayers} players.");
-
-            RulesEngine rules = new(config);
-
-            GameManager manager = new(rules, ConsoleGameBuilder.CreateMainGame(rules, config, consoleSettings));
-            Run(manager, consoleSettings);
-        }
-
-        static void RunTestMode(GameMode mode, GameConfig config, ConsoleSettings consoleSettings)
-        {
-            Console.WriteLine("Running TEST MODE");
-
-            RulesEngine rules = new(config);
-
-            GameManager manager = new(rules, TestGameBuilder.CreateBasicGame(rules));
-
-            var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
-
-            manager.PublishState();
         }
 
         static GameMode ParseMode(string[] args)
         {
             if (args.Contains("--test"))
-                return GameMode.TestBasic;
+                return GameMode.Snapshot;
 
-            return GameMode.Real;
-        }
-        static void Run(GameManager manager, ConsoleSettings consoleSettings)
-        {
-            var gameUI = new ConsoleGameInteraction(consoleSettings, manager);
-
-            manager.OnGameEnded += () =>
-            {
-                if (gameUI.PlayAgainQuestion("Play again?"))
-                    manager.NewGame();
-                else
-                    manager.EndGame();
-            };
-
-            manager.StartGame();
-
-            while (true)
-            {
-                manager.AdvanceGame();
-
-                if (manager.IsGameOver()) break;
-            }
+            return GameMode.Main;
         }
     }
 }

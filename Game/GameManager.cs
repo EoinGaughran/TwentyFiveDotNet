@@ -5,7 +5,7 @@ using TwentyFiveDotNet.Models;
 
 namespace TwentyFiveDotNet.Game
 {
-    internal class GameManager
+    public class GameManager
     {
         private readonly RulesEngine _rules;
         private readonly TurnManager _turnManager;
