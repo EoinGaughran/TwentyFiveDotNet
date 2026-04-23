@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Security.AccessControl;
 using TwentyFiveDotNet.Config;
 using TwentyFiveDotNet.Game;
 using TwentyFiveDotNet.Interfaces;
@@ -78,7 +76,7 @@ namespace TwentyFiveDotNet.ConsoleUI
             {
                 foreach (var kvp in trumps)
                 {
-                    customConsole.WriteLine(UIPrefix + $"{kvp.Key} is worth: {kvp.Value}");
+                    customConsole.WriteLine($"{kvp.Key} is worth: {kvp.Value}");
                 }
             };
 

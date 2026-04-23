@@ -28,11 +28,10 @@ namespace TwentyFiveDotNet.Config
             string json = File.ReadAllText(filePath);
             return JsonConvert.DeserializeObject<GameConfig>(json);
         }
-    }
 
-    public class WinningRules
-    {
-        public bool WinOnExactScore { get; set; }
-        public bool AllowTie { get; set; }
+        public static GameConfig LoadJsonText(string jsonText)
+        {
+            return JsonConvert.DeserializeObject<GameConfig>(jsonText);
+        }
     }
 }

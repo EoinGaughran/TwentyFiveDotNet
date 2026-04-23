@@ -169,7 +169,7 @@ namespace TwentyFiveDotNet.Game
 
         public void StartGame()
         {
-            ChangeGameState(GamePhase.Initialize);
+            PublishState();
         }
         public void AdvanceGame()
         {
