@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-	  <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
+	<LangVersion>9.0</LangVersion>
+	<GenerateGlobalUsings>false</GenerateGlobalUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   

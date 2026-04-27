@@ -1,4 +1,5 @@
-﻿using TwentyFiveDotNet.Core.Game;
+﻿using System.Collections.Generic;
+using TwentyFiveDotNet.Core.Game;
 
 namespace TwentyFiveDotNet.Core.Models
 {

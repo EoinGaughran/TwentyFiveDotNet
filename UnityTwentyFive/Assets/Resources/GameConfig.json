@@ -1,0 +1,55 @@
+{
+    "DevMode": true,
+    "GameTitle": "Twenty Five (25)",
+    "MaxHand": 5,
+    "MaxPlayers": 10,
+    "MinPlayers": 3,
+    "MaxPoints": 25,
+    "PointsPerTrick": 5,
+    "HidePlayerHands": false,
+    "DelayInMilliseconds": 500,
+    "DealPattern": [3, 2],
+
+    "CardRules": {
+        "RedSuits": [ "Hearts", "Diamonds" ],
+        "BlackSuits": [ "Clubs", "Spades" ],
+
+        "BaseScoresRed": {
+            "Ace": 1,
+            "Two": 2,
+            "Three": 3,
+            "Four": 4,
+            "Five": 5,
+            "Six": 6,
+            "Seven": 7,
+            "Eight": 8,
+            "Nine": 9,
+            "Ten": 10,
+            "Jack": 11,
+            "Queen": 12,
+            "King": 13
+        },
+        "BaseScoresBlack": {
+            "Ten": 2,
+            "Nine": 3,
+            "Eight": 4,
+            "Seven": 5,
+            "Six": 6,
+            "Five": 7,
+            "Four": 8,
+            "Three": 9,
+            "Two": 10,
+            "Ace": 11,
+            "Jack": 12,
+            "Queen": 13,
+            "King": 14
+        },
+        "DefaultTrumpBonus": 15,
+        "AceOfHeartsBonus": 35,
+        "TrumpBonus": {
+            "Ace": 28,
+            "Jack": 31,
+            "Five": 38
+        }
+    }
+}

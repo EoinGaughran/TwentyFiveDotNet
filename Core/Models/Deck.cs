@@ -1,4 +1,7 @@
-﻿namespace TwentyFiveDotNet.Core.Models
+﻿using System;
+using System.Collections.Generic;
+
+namespace TwentyFiveDotNet.Core.Models
 {
     public class Deck
     {

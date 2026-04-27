@@ -1,4 +1,6 @@
-﻿namespace TwentyFiveDotNet.Core.Models
+﻿using System.Collections.Generic;
+
+namespace TwentyFiveDotNet.Core.Models
 {
     public class GameState
     {

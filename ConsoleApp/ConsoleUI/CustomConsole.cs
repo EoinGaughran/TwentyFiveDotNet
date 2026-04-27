@@ -1,4 +1,5 @@
-﻿using TwentyFiveDotNet.Core.Config;
+﻿
+using TwentyFiveDotNet.Core.Config;
 using TwentyFiveDotNet.Core.Models;
 
 namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI

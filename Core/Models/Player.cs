@@ -1,6 +1,7 @@
-﻿namespace TwentyFiveDotNet.Core.Models
-{
+﻿using System.Collections.Generic;
 
+namespace TwentyFiveDotNet.Core.Models
+{
     public abstract class Player
     {
         protected Player()

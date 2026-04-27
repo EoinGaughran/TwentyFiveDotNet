@@ -1,4 +1,5 @@
-﻿using static TwentyFiveDotNet.Core.Models.Card;
+﻿using System.Collections.Generic;
+using static TwentyFiveDotNet.Core.Models.Card;
 
 namespace TwentyFiveDotNet.Core.Config
 {
