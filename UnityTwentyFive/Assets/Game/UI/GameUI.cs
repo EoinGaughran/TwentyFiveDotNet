@@ -8,9 +8,11 @@ public class GameUI : MonoBehaviour, IGameInteraction
 {
     private GameManager _manager;
 
-    private Dictionary<int, PlayerUI> _players = new();
+    public PlayerUI humanUI;
+    public Transform opponentContainer;
+    public GameObject opponentPrefab;
 
-    [SerializeField] private GameObject playerPrefab;
+    private List<PlayerUI> opponentUIs = new();
     public void Init(GameManager manager)
     {
         Debug.Log("GameUI.Init called");
@@ -26,27 +28,28 @@ public class GameUI : MonoBehaviour, IGameInteraction
     {
         Debug.Log("Snapshot received");
 
-        foreach (var player in gameState.Players)
+        // --- HUMAN ---
+        Player human = gameState.Players[0];
+        humanUI.Bind(human);
+
+        // --- CLEAR OLD OPPONENTS ---
+        foreach (Transform child in opponentContainer)
         {
-            if (!_players.ContainsKey(player.Id))
-            {
-                CreatePlayerUI(player);
-            }
-
-            _players[player.Id].UpdateFrom(player);
+            Destroy(child.gameObject);
         }
-    }
 
-    private void CreatePlayerUI(Player player)
-    {
-        Debug.Log($"Creating UI for player {player.Id}");
+        opponentUIs.Clear();
 
-        var obj = Instantiate(playerPrefab);
-        var ui = obj.GetComponent<PlayerUI>();
+        // --- CREATE OPPONENTS ---
+        for (int i = 1; i < gameState.Players.Count; i++)
+        {
+            GameObject opponentGO = Instantiate(opponentPrefab, opponentContainer);
 
-        ui.Init(player.Id);
+            PlayerUI ui = opponentGO.GetComponent<PlayerUI>();
+            ui.Bind(gameState.Players[i]);
 
-        _players[player.Id] = ui;
+            opponentUIs.Add(ui);
+        }
     }
 
     void OnDestroy()
