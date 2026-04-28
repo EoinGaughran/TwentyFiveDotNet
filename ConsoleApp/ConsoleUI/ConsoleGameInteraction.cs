@@ -19,10 +19,6 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
             customConsole = new CustomConsole(runtimeSettings, UIPrefix);
 
             //Messaging
-            _manager.OnMessage += (message) =>
-            {
-                customConsole.WriteLine(message);
-            };
 
             _manager.OnStateSnapshot += (gameState) =>
             {
@@ -157,6 +153,9 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
                         break;
 
                     case PlayerDecisionType.PlayCard:
+
+                        if (options == null)
+                            throw new InvalidOperationException("Options was null");
 
                         customConsole.ShowCards(player.Hand);
                         customConsole.ShowPlayableCards(options);

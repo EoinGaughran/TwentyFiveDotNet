@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TwentyFiveDotNet.Core.Game;
 
 namespace TwentyFiveDotNet.Core.Models
@@ -12,28 +13,40 @@ namespace TwentyFiveDotNet.Core.Models
             _rules = rules;
         }
 
-        public Card Decide(
+        public Card? Decide(
             PlayerDecisionType type,
-            List<Card> options,
-            Card trump, Card led)
+            List<Card>? options,
+            Card? trump, Card? led)
         {
             return type switch
             {
-                PlayerDecisionType.LeadCard => (Card) LeadCard(),
-                PlayerDecisionType.PlayCard => (Card) ChooseCard(options, trump, led),
-                PlayerDecisionType.StealTrump => (Card) StealTrump(trump, led),
+                PlayerDecisionType.LeadCard => LeadCard(),
+
+                PlayerDecisionType.PlayCard =>
+                options is not null &&
+                trump is not null &&
+                led is not null
+                    ? ChooseCard(options, trump, led)
+                    : throw new ArgumentException("PlayCard requires options, trump, and led"),
+
+                PlayerDecisionType.StealTrump => trump is not null
+                    ? StealTrump(trump)
+                    : throw new ArgumentException("StealTrump requires trump"),
+
+                PlayerDecisionType.FlipTrump => null,
+
                 _ => null,
             };
         }
 
-        public Card StealTrump(Card TrumpCard, Card LedCard)
+        public Card StealTrump(Card TrumpCard)
         {
             return _rules.GetWorstCard(Hand, TrumpCard);
         }
 
         public Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
         {
-            return _rules.GetBestCard(Hand, TrumpCard, LedCard);
+            return _rules.GetBestCard(legalCards, TrumpCard, LedCard);
         }
 
         public Card LeadCard()

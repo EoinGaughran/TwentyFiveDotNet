@@ -1,5 +1,4 @@
-﻿
-using TwentyFiveDotNet.Core.Config;
+﻿using TwentyFiveDotNet.Core.Config;
 using TwentyFiveDotNet.Core.Models;
 
 namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
@@ -21,11 +20,6 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
         {
             if (!_settings.DevMode)
                 Thread.Sleep(_settings.Delay);
-        }
-
-        public string Readline()
-        {
-            return Console.ReadLine();
         }
 
         public void WriteLine(string message)
@@ -115,7 +109,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
             }
         }
 
-        public void PrintPlayedCards(List<(Player player, Card card)> PlayedCards)
+        public void PrintPlayedCards(List<PlayedCard> PlayedCards)
         {
             if (PlayedCards.Count == 0)
                 WriteLine("No cards have been played yet.");
@@ -124,7 +118,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
             {
                 foreach (var entry in PlayedCards)
                 {
-                    WriteLine($"{entry.player.Name} played {entry.card.Rank} of {entry.card.Suit}");
+                    WriteLine($"{entry.Player} played {entry.Card.Rank} of {entry.Card.Suit}");
                 }
             }
         }

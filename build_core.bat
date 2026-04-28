@@ -9,7 +9,7 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b %ERRORLEVEL%
 )
 
-echo Copying DLL to Unity...
+echo Copying DLL from %SOURCE% to %DEST%
 
 set SOURCE=Core\bin\Debug\netstandard2.1\Core.dll
 set DEST=UnityTwentyFive\Assets\Plugins\Generated\Core.dll

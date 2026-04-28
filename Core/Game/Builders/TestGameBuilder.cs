@@ -9,7 +9,7 @@ namespace TwentyFiveDotNet.Core.Game.Builders
         {
             GameState gameState = new GameState();
 
-            gameState.PlayedCards = new List<(Player player, Card card)>();
+            gameState.PlayedCards = new List<PlayedCard>();
             gameState.CurrentPlayerIndex = 0;
             gameState.Deck = new Deck();
             gameState.Deck.Add52CardsToDeck();

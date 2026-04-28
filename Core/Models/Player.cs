@@ -8,10 +8,9 @@ namespace TwentyFiveDotNet.Core.Models
         {}
 
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public int Points { get; set; }
         public List<Card> Hand { get; set; } = new();
-        public Card TableAreaCard { get; set; }
 
         public override string ToString()
         {

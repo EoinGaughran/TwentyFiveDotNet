@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Newtonsoft.Json;
 
 namespace TwentyFiveDotNet.Core.Config
@@ -7,7 +8,7 @@ namespace TwentyFiveDotNet.Core.Config
     {
 
         public bool DevMode { get; set; }
-        public string GameTitle { get; set; }
+        public string GameTitle { get; set; } = "TwentyFive";
         public int MaxHand { get; set; }
         public int MaxPlayers { get; set; }
         public int MinPlayers { get; set; }
@@ -15,10 +16,8 @@ namespace TwentyFiveDotNet.Core.Config
         public int PointsPerTrick { get; set; }
         public bool HidePlayerHands { get; set; }
         public int DelayInMilliseconds { get; set; }
-        public int [] DealPattern { get; set; }
-        public CardRulesConfig CardRules { get; set; }
-
-        private GameConfig() { }
+        public int[] DealPattern { get; set; } = { 3, 2 };
+        public CardRulesConfig CardRules { get; set; } = null!;
     }
 
     public class ConfigLoader
@@ -26,12 +25,15 @@ namespace TwentyFiveDotNet.Core.Config
         public static GameConfig LoadGameConfig(string filePath)
         {
             string json = File.ReadAllText(filePath);
-            return JsonConvert.DeserializeObject<GameConfig>(json);
+
+            return JsonConvert.DeserializeObject<GameConfig>(json)
+                ?? throw new InvalidOperationException("Failed to deserialize GameConfig");
         }
 
         public static GameConfig LoadJsonText(string jsonText)
         {
-            return JsonConvert.DeserializeObject<GameConfig>(jsonText);
+            return JsonConvert.DeserializeObject<GameConfig>(jsonText)
+                ?? throw new InvalidOperationException("Failed to deserialize GameConfig");
         }
     }
 }

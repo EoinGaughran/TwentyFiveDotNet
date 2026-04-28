@@ -17,6 +17,8 @@ namespace TwentyFiveDotNet
             GameConfig GameConfig = ConfigLoader.LoadGameConfig(filePath) ??
                 throw new InvalidOperationException("Failed to load configuration.");
 
+            GameConfig.CardRules.Validate();
+
             RuntimeSettings runtimeSettings = new()
             {
                 GameMode = ParseMode(args),

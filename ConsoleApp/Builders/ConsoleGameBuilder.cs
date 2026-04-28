@@ -30,7 +30,8 @@ namespace TwentyFiveDotNet.ConsoleApp.Builders
             for (int i = 0; i < totalHumans; i++)
             {
                 Console.Write($"Player {i + 1} enter your name: ");
-                var readName = Console.ReadLine();
+                var readName = Console.ReadLine() ?? $"Player{i + 1}";
+
                 gameState.Players.Add(new PlayerHuman(readName));
             }
 
@@ -44,7 +45,7 @@ namespace TwentyFiveDotNet.ConsoleApp.Builders
                 gameState.Players[i].Id = i;
             }
 
-            gameState.PlayedCards = new List<(Player player, Card card)>();
+            gameState.PlayedCards = new List<PlayedCard>();
             gameState.CurrentPlayerIndex = 0;
             gameState.Deck = new Deck();
             gameState.Deck.Add52CardsToDeck();

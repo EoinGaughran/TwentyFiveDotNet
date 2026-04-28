@@ -182,31 +182,6 @@ namespace TwentyFiveDotNet.Core.Game
                 .ToList();
         }
 
-        public Player DetermineWinner(Dictionary<Player, Card> PlayedCards, Card trumpCard)
-        {
-            Player winner = null;
-            Card highestCard = null;
-
-            foreach (var entry in PlayedCards)
-            {
-                if (highestCard == null || CompareCards(entry.Value, highestCard, trumpCard) > 0)
-                {
-                    highestCard = entry.Value;
-                    winner = entry.Key;
-                }
-            }
-
-            return winner;
-        }
-
-        private int CompareCards(Card card1, Card card2, Card trumpCard)
-        {
-            if (IsTrump(card1, trumpCard) && !IsTrump(card2, trumpCard)) return 1;
-            if (IsTrump(card2, trumpCard) && !IsTrump(card1, trumpCard)) return -1;
-
-            return GetCardScore(card1, trumpCard).CompareTo(GetCardScore(card1, trumpCard));
-        }
-
         public Card GetBestCard(List<Card> Set, Card TrumpCard, Card LedCard)
         {
             Card bestCard = Set[0];

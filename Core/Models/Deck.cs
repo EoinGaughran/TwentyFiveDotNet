@@ -5,7 +5,7 @@ namespace TwentyFiveDotNet.Core.Models
 {
     public class Deck
     {
-        private static readonly Random rng = new Random();
+        private static readonly Random rng = new();
 
         private readonly List<Card> cards;
         private readonly List<Card> dealtCards;
