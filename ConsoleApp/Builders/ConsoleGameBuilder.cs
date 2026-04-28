@@ -9,7 +9,7 @@ namespace TwentyFiveDotNet.ConsoleApp.Builders
         public static readonly string UIPrefix = "[Program] ";
         public static GameState CreateMainGame(RulesEngine rulesEngine, GameConfig config)
         {
-            GameState gameState = new GameState();
+            GameState gameState = new();
 
             Console.WriteLine($"GameTitle: {config.GameTitle}");
             Console.WriteLine("Welcome to the card game 25.");
@@ -25,29 +25,24 @@ namespace TwentyFiveDotNet.ConsoleApp.Builders
                 0,
                 1);
 
-            gameState.Players = new List<Player>();
-
             for (int i = 0; i < totalHumans; i++)
             {
                 Console.Write($"Player {i + 1} enter your name: ");
                 var readName = Console.ReadLine() ?? $"Player{i + 1}";
 
-                gameState.Players.Add(new PlayerHuman(readName));
+                gameState.AddPlayer(new PlayerHuman(readName));
             }
 
             for (int i = totalHumans; i < totalPlayers; i++)
             {
-                gameState.Players.Add(new PlayerCPU($"CPU Player {i + 1}", rulesEngine));
+                gameState.AddPlayer(new PlayerCPU($"CPU Player {i + 1}", rulesEngine));
             }
 
             for (int i = 0; i < totalPlayers; i++)
             {
-                gameState.Players[i].Id = i;
+                gameState.Players[i].SetID(i);
             }
 
-            gameState.PlayedCards = new List<PlayedCard>();
-            gameState.CurrentPlayerIndex = 0;
-            gameState.Deck = new Deck();
             gameState.Deck.Add52CardsToDeck();
             gameState.Deck.Shuffle();
 

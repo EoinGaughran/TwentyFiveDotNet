@@ -184,11 +184,14 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
 
         public void PrintSnapShot(GameState gameState)
         {
+            var players = (List<Player>)gameState.Players;
+            var playedCards = (List<PlayedCard>)gameState.PlayedCards;
+
             WriteLine($"GamePhase: {gameState.CurrentPhase}");
-            PrintListOfPlayers(gameState.Players);
-            PrintPlayersHands(gameState.Players);
-            PrintPlayedCards(gameState.PlayedCards);
-            PrintPlayersScores(gameState.Players);
+            PrintListOfPlayers(players);
+            PrintPlayersHands(players);
+            PrintPlayedCards(playedCards);
+            PrintPlayersScores(players);
         }
     }
 }

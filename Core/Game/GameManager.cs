@@ -75,17 +75,9 @@ namespace TwentyFiveDotNet.Core.Game
             OnStateSnapshot?.Invoke(_gameState);
         }
 
-        private Deck NewDeck()
-        {
-            _gameState.Deck = new Deck();
-            _gameState.Deck.Add52CardsToDeck();
-
-            return _gameState.Deck;
-        }
-
         private void UpdatePlayedCards(Player player, Card chosenCard)
         {
-            _gameState.PlayedCards.Add(new PlayedCard(player, chosenCard));
+            _gameState.AddPlayedCard(player, chosenCard);
         }
 
         private void DealCards(Deck deck, List<Player> players, Player dealer)
@@ -105,7 +97,7 @@ namespace TwentyFiveDotNet.Core.Game
             for (int i = 0; i < maxCards; i++)
             {
                 var card = deck.Draw();
-                player.Hand.Add(card);
+                player.AddCard(card);
 
                 OnCardDealtToPlayer?.Invoke(
                     deck,
@@ -114,44 +106,10 @@ namespace TwentyFiveDotNet.Core.Game
             }
         }
 
-        private void SetLedCard(Card card)
-        {
-            _gameState.LedCard = card;
-        }
-        private void SetWinningCard(Card card)
-        {
-            _gameState.RoundWinningCard = card;
-        }
-
-        private void SetWinningPlayer(Player player)
-        {
-            _gameState.RoundWinningPlayer = player;
-        }
-
-        private static bool ArePlayersOutOfCards(List<Player> players)
-            => players.All(p => p.Hand.Count == 0);
-
         private void ChangeGameState(GamePhase state)
         {
-            _gameState.CurrentPhase = state;
+            _gameState.SetGamePhase(state);
             OnGameStateChange?.Invoke(state);
-        }
-
-        private static void ClearPlayersHands(List<Player> players)
-        {
-            foreach (var player in players)
-                player.Hand.Clear();
-        }
-
-        private static void ClearPlayedCards(List<PlayedCard> playedCards)
-        {
-            playedCards.Clear();
-        }
-
-        private static void ClearPlayerPoints(List<Player> players)
-        {
-            foreach (var player in players)
-                player.Points = 0;
         }
 
         public bool IsGameOver()
@@ -175,6 +133,21 @@ namespace TwentyFiveDotNet.Core.Game
                 case GamePhase.Initialize:
 
                     Initialize();
+                    break;
+
+                case GamePhase.NewRound:
+
+                    NewRound();
+                    break;
+
+                case GamePhase.AssignRandomDealer:
+
+                    AssignRandomDealer();
+                    break;
+
+                case GamePhase.RotateDealer:
+
+                    RotateDealer();
                     break;
 
                 case GamePhase.DealCards:
@@ -217,11 +190,6 @@ namespace TwentyFiveDotNet.Core.Game
                     Scoring();
                     break;
 
-                case GamePhase.NewRound:
-
-                    NewRound();
-                    break;
-
                 case GamePhase.AwaitingReplayDecision:
 
                     OnGameEnded?.Invoke();
@@ -250,7 +218,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             if (player is PlayerCPU cpu)
             {
-                _gameState.PendingDecisionType = type;
+                _gameState.SetPendingDecisionType(type);
                 var chosen = cpu.Decide(
                     type,
                     options,
@@ -261,9 +229,9 @@ namespace TwentyFiveDotNet.Core.Game
             }
             else
             {
-                _gameState.PendingPlayer = player;
-                _gameState.PendingOptions = options;
-                _gameState.PendingDecisionType = type;
+                _gameState.SetPendingPlayer(player);
+                _gameState.SetPendingOptions(options);
+                _gameState.SetPendingDecisionType(type);
 
                 ChangeGameState(GamePhase.AwaitingPlayerInput);
 
@@ -306,22 +274,44 @@ namespace TwentyFiveDotNet.Core.Game
         }
 
         private void Initialize()
-        {
-            if (_gameState.Players.All(p => p.Hand.Count == 0))
-            {
-                var deck = NewDeck();
-                OnDeckCreated?.Invoke(deck);
+        {      
+            ChangeGameState(GamePhase.AssignRandomDealer);
+            return;
+        }
 
-                deck.Shuffle();
-                OnDeckShuffled?.Invoke(deck);
-            }
-            
+        private void AssignRandomDealer()
+        {
             var dealer = _turnManager.AssignRandomDealer(_rng);
             OnDealerSelected?.Invoke(dealer);
 
-            _turnManager.SetLeader(_turnManager.NextPlayer(dealer));
+            ChangeGameState(GamePhase.NewRound);
+            return;
+        }
 
-            ClearPlayedCards(_gameState.PlayedCards);
+        private void RotateDealer()
+        {
+            var dealer = _turnManager.RotateDealer();
+            OnDealerSelected?.Invoke(dealer);
+
+            ChangeGameState(GamePhase.NewRound);
+            return;
+        }
+
+        private void NewRound()
+        {
+            var dealer = _turnManager.GetDealerOrThrow();
+
+            OnNewRound?.Invoke();
+
+            _gameState.StartNewRound();
+
+            var deck = _gameState.NewDeck();
+            OnDeckCreated?.Invoke(deck);
+
+            deck.Shuffle();
+            OnDeckShuffled?.Invoke(deck);
+
+            _turnManager.SetLeader(_turnManager.NextPlayer(dealer));
 
             ChangeGameState(GamePhase.DealCards);
             return;
@@ -342,7 +332,7 @@ namespace TwentyFiveDotNet.Core.Game
                 DealCards(deck, players, dealer);
             }
 
-            _gameState.TrumpCard = deck.Draw();
+            _gameState.SetTrumpCard(deck.Draw());
 
             RequestPlayerDecision(
                     dealer,
@@ -361,7 +351,7 @@ namespace TwentyFiveDotNet.Core.Game
                 trumpCard,
                 dealer);
 
-            _gameState.TrumpStolen = false;
+            _gameState.SetTrumpStolenBool(false);
 
             ChangeGameState(GamePhase.HandleTrumps);
             return;
@@ -395,7 +385,7 @@ namespace TwentyFiveDotNet.Core.Game
             OnLeadPlayerTurn?.Invoke(currentPlayer);
 
             if (_rules.CanPlayerSteal(
-                currentPlayer.Hand,
+                currentPlayer.GetCards(),
                 trumpCard))
             {
                 ChangeGameState(GamePhase.PlayerTurn_StealDecision);
@@ -427,13 +417,14 @@ namespace TwentyFiveDotNet.Core.Game
             var trumpCard = _gameState.GetTrumpCardOrThrow();
             var currentPlayer = _turnManager.GetCurrentPlayerOrThrow();
 
-            SetLedCard(ledCard);
+            _gameState.SetLedCard(ledCard);
             OnLeadCardPlayed?.Invoke(
                 ledCard,
                 currentPlayer);
 
-            SetWinningPlayer(currentPlayer);
-            SetWinningCard(ledCard);
+            _gameState.SetTrickResult(
+                currentPlayer,
+                ledCard);
 
             OnRoundNewWinner?.Invoke(
                 ledCard,
@@ -443,7 +434,7 @@ namespace TwentyFiveDotNet.Core.Game
                 currentPlayer,
                 ledCard);
 
-            currentPlayer.Hand.Remove(ledCard);
+            currentPlayer.RemoveCard(ledCard);
 
             OnRelayTrumpLeadInfo?.Invoke(
                 trumpCard.GetSuitSymbolUnicoded(),
@@ -471,19 +462,19 @@ namespace TwentyFiveDotNet.Core.Game
             var trumpCard = _gameState.GetTrumpCardOrThrow();
             var currentPlayer = _turnManager.GetCurrentPlayerOrThrow();
 
+            currentPlayer.RemoveCard(droppedCard);
+
             OnCardDiscarded?.Invoke(
                 droppedCard,
                 currentPlayer);
 
-            currentPlayer.Hand.Remove(droppedCard);
-
-            currentPlayer.Hand.Add(trumpCard);
+            currentPlayer.AddCard(trumpCard);
 
             OnPlayerSteal?.Invoke(
                 trumpCard,
                 currentPlayer);
 
-            _gameState.TrumpStolen = true;
+            _gameState.SetTrumpStolenBool(true);
 
             if(currentPlayer == _turnManager.Leader)
                 ChangeGameState(GamePhase.PlayerTurn_LeadPlayCard);
@@ -511,7 +502,7 @@ namespace TwentyFiveDotNet.Core.Game
                 bool canPlayerSteal = false;
 
                 if (_rules.CanPlayerSteal(
-                    currentPlayer.Hand,
+                    currentPlayer.GetCards(),
                     trumpCard))
 
                     canPlayerSteal = true;
@@ -542,7 +533,7 @@ namespace TwentyFiveDotNet.Core.Game
             var currentPlayer = _turnManager.GetCurrentPlayerOrThrow();
 
             var playableCards = _rules.GetPlayableCards(
-                currentPlayer.Hand,
+                currentPlayer.GetCards(),
                 trumpCard,
                 ledCard);
 
@@ -577,14 +568,15 @@ namespace TwentyFiveDotNet.Core.Game
                 ledCard,
                 trumpCard))
             {
-                SetWinningPlayer(currentPlayer);
-                SetWinningCard(chosenCard);
+                _gameState.SetTrickResult(
+                currentPlayer,
+                ledCard);
 
                 if (_turnManager.IsCurrentPlayerTheDealer())
                     OnDealersTrick?.Invoke(currentPlayer);
             }
 
-            currentPlayer.Hand.Remove(chosenCard);
+            currentPlayer.RemoveCard(chosenCard);
 
             OnRoundNewWinner?.Invoke(
                 roundWinningCard,
@@ -615,7 +607,7 @@ namespace TwentyFiveDotNet.Core.Game
                 return;
             }
 
-            if (ArePlayersOutOfCards(players))
+            if (_gameState.ArePlayersOutOfCards())
             {
                 ChangeGameState(GamePhase.NewRound);
                 return;
@@ -628,40 +620,13 @@ namespace TwentyFiveDotNet.Core.Game
             return;
         }
 
-        private void NewRound()
-        {
-            var deck = _gameState.GetDeckOrThrow();
-
-            OnNewRound?.Invoke();
-
-            ClearPlayedCards(_gameState.PlayedCards);
-
-            NewDeck();
-            OnDeckCreated?.Invoke(deck);
-
-            deck.Shuffle();
-            OnDeckShuffled?.Invoke(deck);
-            
-            var dealer = _turnManager.RotateDealer();
-
-            OnDealerSelected?.Invoke(dealer);
-            _turnManager.SetLeader(_turnManager.NextPlayer(dealer));
-
-            ChangeGameState(GamePhase.DealCards);
-            return;
-        }
-
         public void NewGame()
         {
-            var players = _gameState.GetPlayersOrThrow();
-
-            ClearPlayersHands(players);
-            ClearPlayedCards(_gameState.PlayedCards);
-            ClearPlayerPoints(players);
+            _gameState.ClearPlayerPoints();
 
             OnNewGame?.Invoke();
 
-            ChangeGameState(GamePhase.NewRound);
+            ChangeGameState(GamePhase.RotateDealer);
             return;
         }
 

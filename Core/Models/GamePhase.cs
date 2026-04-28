@@ -4,6 +4,8 @@
     {
         NotStarted,
         Initialize,
+        AssignRandomDealer,
+        RotateDealer,
         DealCards,
         HandleTrumps,
 

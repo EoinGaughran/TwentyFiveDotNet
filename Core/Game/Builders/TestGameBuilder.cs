@@ -7,26 +7,25 @@ namespace TwentyFiveDotNet.Core.Game.Builders
     {
         public static GameState CreateBasicGame(RulesEngine rulesEngine)
         {
-            GameState gameState = new GameState();
+            GameState gameState = new();
 
-            gameState.PlayedCards = new List<PlayedCard>();
-            gameState.CurrentPlayerIndex = 0;
-            gameState.Deck = new Deck();
             gameState.Deck.Add52CardsToDeck();
-            gameState.CurrentPhase = GamePhase.NotStarted;
+            gameState.SetGamePhase(GamePhase.NotStarted);
 
-            gameState.Players = new List<Player>
+            gameState.AddPlayers(new List<Player>
             {
                 new PlayerHuman("You"),
                 new PlayerCPU("Opponent 1", rulesEngine),
                 new PlayerCPU("Opponent 2", rulesEngine),
                 new PlayerCPU("Opponent 3", rulesEngine),
-            };
+            });
+
+            
 
             for (int i = 0; i < gameState.Players.Count; i++)
             {
-                gameState.Players[i].Id = i;
-                gameState.Players[i].Hand = CreateHand(5, gameState.Deck);
+                gameState.Players[i].SetID(i);
+                gameState.Players[i].AddCards(CreateHand(5, gameState.Deck));
             }
 
             return gameState;
@@ -34,7 +33,7 @@ namespace TwentyFiveDotNet.Core.Game.Builders
 
         private static List<Card> CreateHand(int count, Deck deck)
         {
-            List<Card> hand = new List<Card>();
+            List<Card> hand = new();
 
             for (int i = 0; i < count; i++)
             {

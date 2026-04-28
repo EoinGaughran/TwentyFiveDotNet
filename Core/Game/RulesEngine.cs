@@ -33,7 +33,7 @@ namespace TwentyFiveDotNet.Core.Game
 
         public void Scoring(Player WinningPlayer)
         {
-            WinningPlayer.Points += _config.PointsPerTrick;
+            WinningPlayer.AddPoints(_config.PointsPerTrick);
         }
 
         public List<Card> GetPlayableCards(List<Card> hand, Card trumpCard, Card ledCard)
@@ -199,22 +199,6 @@ namespace TwentyFiveDotNet.Core.Game
             return bestCard;
         }
 
-        public Card GetWorstLegalCard(List<Card> Set, Card TrumpCard, Card LedCard)
-        {
-            Card worstCard = Set[0];
-
-            if (Set.Count > 1)
-            {
-                var legalCards = GetPlayableCards(Set, TrumpCard, LedCard);
-
-                foreach (var card in legalCards)
-                {
-                    if (GetCardScore(card, TrumpCard) < GetCardScore(worstCard, TrumpCard)) worstCard = card;
-                }
-            }
-            return worstCard;
-        }
-
         public Card GetWorstCard(List<Card> Set, Card TrumpCard)
         {
             Card worstCard = Set[0];
@@ -236,12 +220,6 @@ namespace TwentyFiveDotNet.Core.Game
                 return true;
             }
             else return false;
-        }
-
-        public bool HasWon()
-        {
-            // Logic to determine if this player has won
-            return false;
         }
     }
 }

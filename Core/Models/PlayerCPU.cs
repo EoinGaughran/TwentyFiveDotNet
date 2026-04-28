@@ -41,7 +41,7 @@ namespace TwentyFiveDotNet.Core.Models
 
         public Card StealTrump(Card TrumpCard)
         {
-            return _rules.GetWorstCard(Hand, TrumpCard);
+            return _rules.GetWorstCard(_hand, TrumpCard);
         }
 
         public Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
