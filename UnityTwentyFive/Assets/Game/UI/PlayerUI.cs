@@ -33,8 +33,8 @@ public class PlayerUI : MonoBehaviour
 
         foreach (var card in player.Hand)
         {
-            if (card == null)
-                Debug.LogError("card is NULL");
+            if (IsCardNull(card))
+                return;
 
             GameObject cardGO = Instantiate(cardPrefab, cardParent);
 
@@ -52,12 +52,48 @@ public class PlayerUI : MonoBehaviour
         if(selectedCard != null)
             selectedCard.SetSelected(false);
 
-        selectedCard = card;
-        selectedCard.SetSelected(true);
+        if(selectedCard == card)
+        {
+            selectedCard.SetSelected(false);
+            selectedCard = null;
+        }
+        else
+        {
+            selectedCard = card;
+            selectedCard.SetSelected(true);
+        }
+    }
+
+    public bool IsCardUINull(CardUI card)
+    {
+        if (card == null)
+        {
+            Debug.LogError("cardUI is NULL");
+            return true;
+        }
+        return false;
+    }
+
+    public bool IsCardNull(Card card)
+    {
+        if (card == null)
+        {
+            Debug.LogError("card is NULL");
+            return true;
+        }
+        return false;
     }
 
     public Card GetSelectedCard()
     {
         return selectedCard?.GetCard();
+    }
+
+    public void RemoveCardFromHand(CardUI card)
+    {
+        if (IsCardUINull(card))
+            return;
+
+
     }
 }

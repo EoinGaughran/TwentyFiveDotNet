@@ -9,6 +9,9 @@ using UnityEngine;
 public class Main : MonoBehaviour
 {
     [SerializeField] private GameUI ui;
+    [SerializeField] private RuntimeSettings runtimeSettings;
+
+    private bool autoAdvance = true;
 
     private GameManager _manager;
 
@@ -19,7 +22,7 @@ public class Main : MonoBehaviour
         TextAsset json = Resources.Load<TextAsset>("GameConfig");
         GameConfig config = ConfigLoader.LoadJsonText(json.text);
 
-        RuntimeSettings runtimeSettings = new()
+        runtimeSettings = new()
         {
             GameMode = GameMode.Snapshot,
             HidePlayerHands = config.HidePlayerHands,
@@ -44,16 +47,26 @@ public class Main : MonoBehaviour
             return;
         }
 
-        ui.Init(_manager);
+        ui.Init(_manager, runtimeSettings);
 
         GameApp.Start(_manager, ui);
     }
 
     void Update()
     {
-        if (_manager != null)
+        if (_manager != null &&
+            autoAdvance)
         {
             GameApp.Tick(_manager);
         }
+    }
+
+    public void StepButton()
+    {
+        GameApp.Tick(_manager);
+    }
+    public void SetAutoAdvance(bool value)
+    {
+        autoAdvance = value;
     }
 }
