@@ -609,7 +609,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             if (_gameState.ArePlayersOutOfCards())
             {
-                ChangeGamePhase(GamePhase.NewRound);
+                ChangeGamePhase(GamePhase.RotateDealer);
                 return;
             }
 
