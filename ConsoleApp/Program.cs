@@ -24,7 +24,8 @@ namespace TwentyFiveDotNet
                 GameMode = ParseMode(args),
                 HidePlayerHands = GameConfig.HidePlayerHands,
                 DevMode = GameConfig.DevMode,
-                Delay = GameConfig.DelayInMilliseconds
+                Delay = GameConfig.DelayInMilliseconds,
+                TestStateMode = GameConfig.TestStateMode
             };
 
             if (args.Contains("--dev"))
@@ -47,6 +48,11 @@ namespace TwentyFiveDotNet
             while (!manager.IsGameOver())
             {
                 GameApp.Tick(manager);
+
+                if (runtimeSettings.TestStateMode)
+                {
+                    Console.ReadKey(); // step
+                }
             }
         }
 

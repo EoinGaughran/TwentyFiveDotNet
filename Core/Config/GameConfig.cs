@@ -6,8 +6,8 @@ namespace TwentyFiveDotNet.Core.Config
 {
     public class GameConfig
     {
-
         public bool DevMode { get; set; }
+        public bool TestStateMode { get; set; }
         public string GameTitle { get; set; } = "TwentyFive";
         public int MaxHand { get; set; }
         public int MaxPlayers { get; set; }

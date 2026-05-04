@@ -8,6 +8,7 @@ namespace TwentyFiveDotNet.Core.Config
         public bool DevMode { get; set; }
         public GameMode GameMode { get; set; }
         public int Delay { get; set; }
+        public bool TestStateMode { get; set; }
 
     }
 }
