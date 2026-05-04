@@ -52,7 +52,7 @@ namespace TwentyFiveDotNet.Core.Game
         public event Action? OnNewRound;
 
         //Game State
-        public event Action<GamePhase>? OnGameStateChange;
+        public event Action<GamePhase>? OnGamePhaseChange;
         public event Action<Player>? OnGameOver;
         public event Action? OnNewGame;
         public event Action? OnGameEnded;
@@ -106,10 +106,10 @@ namespace TwentyFiveDotNet.Core.Game
             }
         }
 
-        private void ChangeGameState(GamePhase state)
+        private void ChangeGamePhase(GamePhase phase)
         {
-            _gameState.SetGamePhase(state);
-            OnGameStateChange?.Invoke(state);
+            _gameState.SetGamePhase(phase);
+            OnGamePhaseChange?.Invoke(phase);
         }
 
         public bool IsGameOver()
@@ -233,7 +233,7 @@ namespace TwentyFiveDotNet.Core.Game
                 _gameState.SetPendingOptions(options);
                 _gameState.SetPendingDecisionType(type);
 
-                ChangeGameState(GamePhase.AwaitingPlayerInput);
+                ChangeGamePhase(GamePhase.AwaitingPlayerInput);
 
                 OnPlayerInputRequest?.Invoke(
                     player,
@@ -275,7 +275,7 @@ namespace TwentyFiveDotNet.Core.Game
 
         private void Initialize()
         {      
-            ChangeGameState(GamePhase.AssignRandomDealer);
+            ChangeGamePhase(GamePhase.AssignRandomDealer);
             return;
         }
 
@@ -284,7 +284,7 @@ namespace TwentyFiveDotNet.Core.Game
             var dealer = _turnManager.AssignRandomDealer(_rng);
             OnDealerSelected?.Invoke(dealer);
 
-            ChangeGameState(GamePhase.NewRound);
+            ChangeGamePhase(GamePhase.NewRound);
             return;
         }
 
@@ -293,7 +293,7 @@ namespace TwentyFiveDotNet.Core.Game
             var dealer = _turnManager.RotateDealer();
             OnDealerSelected?.Invoke(dealer);
 
-            ChangeGameState(GamePhase.NewRound);
+            ChangeGamePhase(GamePhase.NewRound);
             return;
         }
 
@@ -313,7 +313,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             _turnManager.SetLeader(_turnManager.NextPlayer(dealer));
 
-            ChangeGameState(GamePhase.DealCards);
+            ChangeGamePhase(GamePhase.DealCards);
             return;
         }
 
@@ -353,7 +353,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             _gameState.SetTrumpStolenBool(false);
 
-            ChangeGameState(GamePhase.HandleTrumps);
+            ChangeGamePhase(GamePhase.HandleTrumps);
             return;
         }
 
@@ -372,7 +372,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             OnTrumpSuitRevealed?.Invoke(display);
 
-            ChangeGameState(GamePhase.PlayerTurn_LeadStart);
+            ChangeGamePhase(GamePhase.PlayerTurn_LeadStart);
             return;
         }
 
@@ -388,11 +388,11 @@ namespace TwentyFiveDotNet.Core.Game
                 currentPlayer.GetCards(),
                 trumpCard))
             {
-                ChangeGameState(GamePhase.PlayerTurn_StealDecision);
+                ChangeGamePhase(GamePhase.PlayerTurn_StealDecision);
                 return;
             }
 
-            ChangeGameState(GamePhase.PlayerTurn_LeadPlayCard);
+            ChangeGamePhase(GamePhase.PlayerTurn_LeadPlayCard);
             return;
         }
 
@@ -440,7 +440,7 @@ namespace TwentyFiveDotNet.Core.Game
                 trumpCard.GetSuitSymbolUnicoded(),
                 ledCard.GetSuitSymbolUnicoded());
 
-            ChangeGameState(GamePhase.PlayerTurn_Start);
+            ChangeGamePhase(GamePhase.PlayerTurn_Start);
             return;
         }
 
@@ -477,9 +477,9 @@ namespace TwentyFiveDotNet.Core.Game
             _gameState.SetTrumpStolenBool(true);
 
             if(currentPlayer == _turnManager.Leader)
-                ChangeGameState(GamePhase.PlayerTurn_LeadPlayCard);
+                ChangeGamePhase(GamePhase.PlayerTurn_LeadPlayCard);
             else
-                ChangeGameState(GamePhase.PlayerTurn_PlayCard);
+                ChangeGamePhase(GamePhase.PlayerTurn_PlayCard);
 
             return;
         }
@@ -493,7 +493,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             if (_turnManager.IsCurrentPlayerTheLeader())
             {
-                ChangeGameState(GamePhase.Scoring);
+                ChangeGamePhase(GamePhase.Scoring);
                 return;
             }
 
@@ -517,12 +517,12 @@ namespace TwentyFiveDotNet.Core.Game
 
                 if (canPlayerSteal)
                 {
-                    ChangeGameState(GamePhase.PlayerTurn_StealDecision);
+                    ChangeGamePhase(GamePhase.PlayerTurn_StealDecision);
                     return;
                 }
             }
 
-            ChangeGameState(GamePhase.PlayerTurn_PlayCard);
+            ChangeGamePhase(GamePhase.PlayerTurn_PlayCard);
             return;
         }
 
@@ -582,7 +582,7 @@ namespace TwentyFiveDotNet.Core.Game
                 roundWinningCard,
                 roundWinningPlayer);
 
-            ChangeGameState(GamePhase.PlayerTurn_Start);
+            ChangeGamePhase(GamePhase.PlayerTurn_Start);
             return;
         }
 
@@ -603,20 +603,20 @@ namespace TwentyFiveDotNet.Core.Game
             if (_rules.IsGameOver(roundWinningPlayer))
             {
                 OnGameOver?.Invoke(roundWinningPlayer);
-                ChangeGameState(GamePhase.AwaitingReplayDecision);
+                ChangeGamePhase(GamePhase.AwaitingReplayDecision);
                 return;
             }
 
             if (_gameState.ArePlayersOutOfCards())
             {
-                ChangeGameState(GamePhase.NewRound);
+                ChangeGamePhase(GamePhase.NewRound);
                 return;
             }
 
             _turnManager.SetLeader(roundWinningPlayer); //Winner becomes leader
             OnLeadPlayerSelected?.Invoke(roundWinningPlayer);
 
-            ChangeGameState(GamePhase.PlayerTurn_LeadStart);
+            ChangeGamePhase(GamePhase.PlayerTurn_LeadStart);
             return;
         }
 
@@ -626,14 +626,14 @@ namespace TwentyFiveDotNet.Core.Game
 
             OnNewGame?.Invoke();
 
-            ChangeGameState(GamePhase.RotateDealer);
+            ChangeGamePhase(GamePhase.RotateDealer);
             return;
         }
 
         public void EndGame()
         {
             OnProgramClosed?.Invoke();
-            ChangeGameState(GamePhase.EndGame);
+            ChangeGamePhase(GamePhase.EndGame);
             return;
         }
     }

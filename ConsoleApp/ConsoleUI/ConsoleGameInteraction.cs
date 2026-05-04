@@ -196,10 +196,10 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
                 customConsole.WriteLine($"New Round!");
             };
 
-            //Game State
-            _manager.OnGameStateChange += (gameState) =>
+            //Game State 
+            _manager.OnGamePhaseChange += (gamePhase) =>
             {
-                customConsole.WriteLine($"The game state has changed to: {gameState}");
+                customConsole.WriteLine($"The game state has changed to: {gamePhase}");
             };
 
             _manager.OnGameOver += (winner) =>
