@@ -420,6 +420,7 @@ namespace TwentyFiveDotNet.Core.Game
                 ledCard);
 
             currentPlayer.RemoveCard(ledCard);
+            currentPlayer.AddCardToPlayedCards(ledCard);
 
             ChangeGamePhase(GamePhase.PlayerTurn_Start);
             return;
@@ -561,6 +562,7 @@ namespace TwentyFiveDotNet.Core.Game
             }
 
             currentPlayer.RemoveCard(chosenCard);
+            currentPlayer.AddCardToPlayedCards(chosenCard);
 
             OnRoundNewWinner?.Invoke(
                 roundWinningCard,

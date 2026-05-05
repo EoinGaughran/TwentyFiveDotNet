@@ -10,6 +10,8 @@ namespace TwentyFiveDotNet.Core.Models
         public int Points { get; private set; }
         public IReadOnlyList<Card> Hand => _hand;
         protected readonly List<Card> _hand = new();
+        public IReadOnlyList<Card> PlayedCards => _playedCards;
+        protected readonly List<Card> _playedCards = new();
 
         protected Player() { }
 
@@ -32,10 +34,18 @@ namespace TwentyFiveDotNet.Core.Models
 
         public void AddCard(Card card) => _hand.Add(card);
 
+        public void AddCardToPlayedCards(Card card) => _playedCards.Add(card);
+
         public void AddCards(List<Card> cards)
         {
             foreach(Card card in cards)
                 _hand.Add(card);
+        }
+
+        public void AddCardsToPlayedCards(List<Card> cards)
+        {
+            foreach (Card card in cards)
+                _playedCards.Add(card);
         }
 
         public void RemoveCard(Card card)

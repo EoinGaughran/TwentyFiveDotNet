@@ -47,7 +47,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
                     customConsole.WriteLine($"{kvp.Key} is worth: {kvp.Value}");
                 }
 
-                //customConsole.WriteLine($"Dealer {dealer.Name} has the Ace of Hearts. They may steal it.");
+                //customConsole.WriteLine($"Dealer {dealer.Name} has the Ace of Trumps. They may steal it.");
             };
 
             //Dealing

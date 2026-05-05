@@ -26,6 +26,7 @@ namespace TwentyFiveDotNet.Core.Game.Builders
             {
                 gameState.Players[i].SetID(i);
                 gameState.Players[i].AddCards(CreateHand(5, gameState.Deck));
+                gameState.Players[i].AddCardsToPlayedCards(CreateHand(5, gameState.Deck));
             }
 
             return gameState;
