@@ -656,6 +656,7 @@ MonoBehaviour:
   opponentPrefab: {fileID: 715761205}
   CurrentPhase: {fileID: 1714941112}
   PlayCard: {fileID: 1625744705}
+  main: {fileID: 1236668780}
 --- !u!4 &550039118
 Transform:
   m_ObjectHideFlags: 0

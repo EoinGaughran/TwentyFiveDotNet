@@ -20,6 +20,11 @@ namespace TwentyFiveDotNet.Core.Models
             Points = 0;
         }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
         public void SetID(int id) => Id = id;
 
         public void AddPoints(int amount) => Points += amount;

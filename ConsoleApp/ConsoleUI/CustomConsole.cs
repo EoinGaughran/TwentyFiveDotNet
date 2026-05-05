@@ -174,7 +174,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
         public void WaitForPlayer(string playerName)
         {
             WriteLine($"{playerName}, press any key when ready.");
-            Console.ReadKey(true);
+            Console.ReadKey(false);
         }
 
         public void FlipTrumpCard(string playerName)

@@ -1,4 +1,6 @@
-﻿using TwentyFiveDotNet.Core.Config;
+﻿using System.Numerics;
+using Core.Models;
+using TwentyFiveDotNet.Core.Config;
 using TwentyFiveDotNet.Core.Game;
 using TwentyFiveDotNet.Core.Interfaces;
 using TwentyFiveDotNet.Core.Models;
@@ -24,60 +26,35 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
             {
                 customConsole.PrintSnapShot(gameState);
             };
-                
-            _manager.OnRelayTrumpInfo += (message) =>
-            {
-                customConsole.WriteLine(message + " are trumps.");
-            };
 
-            _manager.OnRelayTrumpLeadInfo += (line1, line2) =>
+            _manager.OnDealingCompleted += (gameState) =>
             {
-                customConsole.WriteLine($"The trump suit is {line1}. The leading suit is {line2}.");
-            };
-
-            //Setup
-            _manager.OnDeckCreated += (deck) =>
-            {
-                customConsole.WriteLine($"{deck} with {deck.Cards.Count} cards was created.");
-            };
-            _manager.OnDeckShuffled += (deck) =>
-            {
-                customConsole.WriteLine($"{deck} was shuffled.");
-            };
-
-            //Dealing
-            _manager.OnDealerSelected += (player) =>
-            {
-                customConsole.WriteLine($"{player.Name} has been selected as the dealer.");
-            };
-
-            _manager.OnDealingStarted += () =>
-            {
+                customConsole.WriteLine($"{gameState.Deck} was created.");
+                customConsole.WriteLine($"{gameState.Deck} was shuffled.");
                 customConsole.WriteLine("Dealing cards...");
+
+                customConsole.PrintPlayersHands(gameState.GetPlayersOrThrow());
+
+                customConsole.WriteLine($"{gameState.Deck.Cards.Count} cards remain in {gameState.Deck}");
             };
 
-            _manager.OnCardDealtToPlayer += (deck, card, player) =>
+            _manager.OnTrumpResolved += (trumpData, dealer) =>
             {
-                customConsole.WriteLine($"The {card} has been dealt from the {deck} to {player.Name}.");
-            };
+                customConsole.WriteLine($"Dealer {dealer.Name} flipped the trump card. It's the {trumpData._trumpCard}");
 
-            //Trump mechanics
-            _manager.OnPlayerFlipsTrumpCard += (trumpCard, dealer) =>
-            {
-                customConsole.WriteLine($"Dealer {dealer.Name} flipped the trump card. It's the {trumpCard}");
-            };
-
-            _manager.OnTrumpSuitRevealed += (trumps) =>
-            {
-                foreach (var kvp in trumps)
+                foreach (var kvp in trumpData._trumpCards)
                 {
                     customConsole.WriteLine($"{kvp.Key} is worth: {kvp.Value}");
                 }
+
+                //customConsole.WriteLine($"Dealer {dealer.Name} has the Ace of Hearts. They may steal it.");
             };
 
-            _manager.OnTrumpCardIsAceOTrumps += (dealer) =>
+            //Dealing
+            _manager.OnRolesSelected += (dealer, leader) =>
             {
-                customConsole.WriteLine($"Dealer {dealer.Name} has the Ace of Hearts. They may steal it.");
+                customConsole.WriteLine($"{dealer} has been selected as the dealer.");
+                customConsole.WriteLine($"{leader} is leading the trick.");
             };
 
             _manager.OnCardDiscarded += (card, player) =>
@@ -86,35 +63,27 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
             };
 
             //Turn Flow
-            _manager.OnLeadPlayerSelected += (player) =>
-            {
-                customConsole.WriteLine($"{player.Name} is leading the trick.");
-            };
 
             _manager.OnPlayerSteal += (card, player) =>
             {
                 customConsole.WriteLine($"{player.Name} stole the trump card {card}.");
             };
 
-            _manager.OnLeadPlayerTurn += (player) =>
+            _manager.OnTurnStarted += (player, isLeader) =>
             {
-                customConsole.WriteLine($"{player.Name} will now lead the trick.");
-            };
-
-            _manager.OnPlayerTurnStarted += (player) =>
-            {
-                customConsole.WriteLine($"It's {player.Name}'s turn.");
+                if(isLeader)
+                    customConsole.WriteLine($"{player.Name} is leading the trick.");
+                else
+                    customConsole.WriteLine($"It's {player.Name}'s turn.");
             };
 
             //Card Play
-            _manager.OnLeadCardPlayed += (card, player) =>
+            _manager.OnCardPlayed += (cardPlayedEvent) =>
             {
-                customConsole.WriteLine($"{player.Name} led with the {card}. Suit {card.Suit} is leading.");
-            };
-
-            _manager.OnCardPlayed += (card, player) =>
-            {
-                customConsole.WriteLine($"{player.Name} played the {card}");
+                if(cardPlayedEvent.IsLeader)
+                    customConsole.WriteLine($"{cardPlayedEvent.Player} led with the {cardPlayedEvent.PlayedCard}. Suit {cardPlayedEvent.PlayedCard.GetSuitSymbolUnicoded()} is leading.");
+                else
+                    customConsole.WriteLine($"{cardPlayedEvent.Player.Name} played the {cardPlayedEvent.PlayedCard}");
             };
 
             _manager.OnPlayerInputRequest += (player, decisionType, options) =>
@@ -178,11 +147,8 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
             _manager.OnRoundNewWinner += (winningCard, player) =>
             {
                 customConsole.WriteLine($"{player.Name} is currently winning with the {winningCard}");
-            };
 
-            _manager.OnDealersTrick += (player) =>
-            {
-                customConsole.WriteLine($"{player.Name} got his dealer's trick.");
+                //customConsole.WriteLine($"{player.Name} got his dealer's trick.");
             };
 
             _manager.OnRoundEnded += (winningCard, player) =>

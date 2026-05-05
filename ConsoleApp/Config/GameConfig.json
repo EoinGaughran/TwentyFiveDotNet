@@ -1,6 +1,6 @@
 {
     "DevMode": true,
-    "TestStateMode": false,
+    "TestStateMode": true,
     "GameTitle": "Twenty Five (25)",
     "MaxHand": 5,
     "MaxPlayers": 10,
