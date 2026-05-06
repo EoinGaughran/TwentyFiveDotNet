@@ -33,7 +33,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _runtimeSettings = runtimeSettings;
 
         _manager.OnStateSnapshot += OnStateSnapshot;
-        _manager.OnGameStateChange += OnStateChange;
+        _manager.OnGamePhaseChange += OnPhaseChange;
     }
 
     public bool PlayAgain() => false;
@@ -67,11 +67,11 @@ public class GameUI : MonoBehaviour, IGameInteraction
         }
     }
 
-    private void OnStateChange(GamePhase gamePhase)
+    private void OnPhaseChange(GamePhase gamePhase)
     {
         CurrentPhase.text = "CurrenPhase: " + gamePhase.ToString();
 
-        Debug.Log($"State changed: {gamePhase.ToString()}");
+        Debug.Log($"State changed: {gamePhase}");
 
         if (_runtimeSettings.TestStateMode)
         {
@@ -97,6 +97,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
 {
     if (_manager != null)
         _manager.OnStateSnapshot -= OnStateSnapshot;
-        _manager.OnGameStateChange -= OnStateChange;
+        _manager.OnGamePhaseChange -= OnPhaseChange;
     }
 }

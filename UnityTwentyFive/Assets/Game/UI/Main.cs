@@ -27,7 +27,9 @@ public class Main : MonoBehaviour
             GameMode = GameMode.Snapshot,
             HidePlayerHands = config.HidePlayerHands,
             DevMode = config.DevMode,
-            Delay = config.DelayInMilliseconds
+            Delay = config.DelayInMilliseconds,
+            TestStateMode = config.TestStateMode,
+            SnapshotOnLaunch = config.SnapshotOnLaunch,
         };
 
         RulesEngine rules = new(config);
@@ -48,6 +50,11 @@ public class Main : MonoBehaviour
         }
 
         ui.Init(_manager, runtimeSettings);
+
+        if (runtimeSettings.SnapshotOnLaunch)
+        {
+            _manager.PublishState();
+        }
 
         GameApp.Start(_manager, ui);
     }

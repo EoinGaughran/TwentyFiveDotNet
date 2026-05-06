@@ -6,9 +6,9 @@ namespace TwentyFiveDotNet.Core.Config
     {
         public bool HidePlayerHands { get; set; }
         public bool DevMode { get; set; }
+        public bool SnapshotOnLaunch { get; set; }
         public GameMode GameMode { get; set; }
         public int Delay { get; set; }
         public bool TestStateMode { get; set; }
-
     }
 }

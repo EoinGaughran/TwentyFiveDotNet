@@ -25,5 +25,10 @@ namespace TwentyFiveDotNet.Core.Application
                 manager.AdvanceGame();
             }
         }
+
+        public static void Snapshot(GameManager manager)
+        {
+            manager.PublishState();
+        }
     }
 }

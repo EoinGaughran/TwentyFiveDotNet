@@ -25,7 +25,8 @@ namespace TwentyFiveDotNet
                 HidePlayerHands = GameConfig.HidePlayerHands,
                 DevMode = GameConfig.DevMode,
                 Delay = GameConfig.DelayInMilliseconds,
-                TestStateMode = GameConfig.TestStateMode
+                TestStateMode = GameConfig.TestStateMode,
+                SnapshotOnLaunch = GameConfig.SnapshotOnLaunch,
             };
 
             if (args.Contains("--dev"))
@@ -44,6 +45,13 @@ namespace TwentyFiveDotNet
             var ui = new ConsoleGameInteraction(runtimeSettings, manager);
 
             GameApp.Start(manager, ui);
+
+            Console.WriteLine($"SnapshotOnLaunch: {runtimeSettings.SnapshotOnLaunch}");
+
+            if (runtimeSettings.SnapshotOnLaunch)
+            {
+                GameApp.Snapshot(manager);
+            }
 
             while (!manager.IsGameOver())
             {
