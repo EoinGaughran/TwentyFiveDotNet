@@ -1,26 +1,44 @@
+using System;
+using System.Collections.Generic;
 using TMPro;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
 
 public class PlayerUI : MonoBehaviour
 {
-    public Transform cardParent;
+    public Transform cardHandParent;
+    public Transform cardsPlayedParent;
     public GameObject cardPrefab;
-    public CardUI selectedCard;
 
     public TextMeshProUGUI NameTextUI;
     public TextMeshProUGUI ScoreTextUI;
 
     private Player player;
+    private CardUI selectedCard;
+
+    public event Action<CardUI> OnCardSelected;
 
     public void Bind(Player player)
     {
         this.player = player;
 
-        RenderHand();
+        RenderPlayer();
     }
 
-    void RenderHand()
+    void RenderPlayer()
+    {
+        UpdateText();
+        RenderCardGroup(player.Hand, cardHandParent);
+        RenderCardGroup(player.PlayedCards, cardsPlayedParent);
+    }
+
+    public void UpdateText()
+    {
+        NameTextUI.text = player.Name;
+        ScoreTextUI.text = "Score: " + player.Points;
+    }
+
+    private void RenderCardGroup(IReadOnlyList<Card> cardGroup, Transform cardParent)
     {
         // Clear existing cards
         foreach (Transform child in cardParent)
@@ -28,24 +46,21 @@ public class PlayerUI : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        NameTextUI.text = player.Name;
-        ScoreTextUI.text = "Score: " + player.Points;
-
-        foreach (var card in player.Hand)
+        foreach (var card in cardGroup)
         {
             if (IsCardNull(card))
                 return;
 
-            GameObject cardGO = Instantiate(cardPrefab, cardParent);
+            GameObject cardHandGO = Instantiate(cardPrefab, cardParent);
 
-            CardUI cardUI = cardGO.GetComponent<CardUI>();
+            CardUI cardUI = cardHandGO.GetComponent<CardUI>();
             cardUI.Setup(card, player.Id);
 
             cardUI.OnCardClicked += HandleCardClicked;
         }
     }
 
-    void HandleCardClicked(CardUI card, int playerID)
+    public void HandleCardClicked(CardUI card, int playerID)
     {
         if (playerID != 0) return;
 
@@ -54,7 +69,6 @@ public class PlayerUI : MonoBehaviour
 
         if(selectedCard == card)
         {
-            selectedCard.SetSelected(false);
             selectedCard = null;
         }
         else
@@ -62,6 +76,8 @@ public class PlayerUI : MonoBehaviour
             selectedCard = card;
             selectedCard.SetSelected(true);
         }
+
+        OnCardSelected?.Invoke(selectedCard);
     }
 
     public bool IsCardUINull(CardUI card)
@@ -84,10 +100,9 @@ public class PlayerUI : MonoBehaviour
         return false;
     }
 
-    public Card GetSelectedCard()
-    {
-        return selectedCard?.GetCard();
-    }
+    public Card GetSelectedCard() => selectedCard.GetCard();
+
+    public CardUI GetSelectedCardUI() => selectedCard.GetCardUI();
 
     public void RemoveCardFromHand(CardUI card)
     {

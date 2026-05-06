@@ -32,6 +32,8 @@ public class Main : MonoBehaviour
             SnapshotOnLaunch = config.SnapshotOnLaunch,
         };
 
+        Debug.Log($"SnapshotOnLaunch: {runtimeSettings.SnapshotOnLaunch}");
+
         RulesEngine rules = new(config);
 
         GameState gameState = runtimeSettings.GameMode switch

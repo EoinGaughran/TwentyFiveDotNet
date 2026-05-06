@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
@@ -10,7 +11,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     private Card card;
     private int playerID;
 
-    public System.Action<CardUI, int> OnCardClicked;
+    public event Action<CardUI, int> OnCardClicked;
 
     public void Setup(Card card, int playerID)
     {
@@ -33,6 +34,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     }
 
     public Card GetCard() => card;
+
+    public CardUI GetCardUI() => this;
 
     public void OnPointerClick(PointerEventData eventData)
     {
