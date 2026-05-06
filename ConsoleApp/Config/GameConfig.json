@@ -1,7 +1,7 @@
 {
     "DevMode": true,
     "TestStateMode": false,
-    "SnapshotOnLaunch": true,
+    "SnapshotOnLaunch": false,
     "GameTitle": "Twenty Five (25)",
     "MaxHand": 5,
     "MaxPlayers": 10,

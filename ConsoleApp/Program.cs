@@ -29,8 +29,23 @@ namespace TwentyFiveDotNet
                 SnapshotOnLaunch = GameConfig.SnapshotOnLaunch,
             };
 
-            if (args.Contains("--dev"))
-                runtimeSettings.DevMode = true;
+            foreach(string arg in args)
+            {
+                switch (arg)
+                {
+                    case "--dev":
+                        runtimeSettings.DevMode = true;
+                        break;
+
+                    case "--ls":
+                        runtimeSettings.SnapshotOnLaunch = true;
+                        break;
+
+                    case "--test":
+                        runtimeSettings.SnapshotOnLaunch = true;
+                        break;
+                }
+            }
 
             RulesEngine rules = new(GameConfig);
 

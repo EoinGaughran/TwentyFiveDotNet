@@ -12,13 +12,16 @@
         PlayerTurn_LeadStart,
         PlayerTurn_LeadPlayCard,
         PlayerTurn_Start,
+        PlayerTurn_StealCheck,
         PlayerTurn_StealDecision,
         PlayerTurn_PlayCard,
 
         AwaitingPlayerInput,
 
         Scoring,
-        NewRound,
+        NewTurn,
+        TurnEnd,
+        TrickEnd,
 
         AwaitingReplayDecision,
         NewGame,

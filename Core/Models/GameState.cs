@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using TwentyFiveDotNet.Core.Config;
 
 namespace TwentyFiveDotNet.Core.Models
 {
     public class GameState
     {
-        // Core setup
         public IReadOnlyList<Player> Players => _players;
         private readonly List<Player> _players = new();
         public Deck Deck { get; private set; } = new Deck();
 
         // Turn structure
         public int CurrentPlayerIndex { get; private set; } = 0;
+        public int TrickNumber { get; private set; } = 1;
         public GamePhase CurrentPhase { get; private set; } = GamePhase.Initialize;
 
         // Cards in play
@@ -23,8 +24,8 @@ namespace TwentyFiveDotNet.Core.Models
         // Trump & trick info
         public Card? TrumpCard { get; private set; }
         public Card? LedCard { get; private set; }
-        public Card? RoundWinningCard { get; private set; }
-        public Player? RoundWinningPlayer { get; private set; }
+        public Card? TrickWinningCard { get; private set; }
+        public Player? TrickWinningPlayer { get; private set; }
         public Player? PendingPlayer { get; private set; }
         public List<Card>? PendingOptions { get; private set; } = new List<Card>();
         public PlayerDecisionType? PendingDecisionType { get; private set; }
@@ -53,24 +54,14 @@ namespace TwentyFiveDotNet.Core.Models
             return LedCard ?? throw new InvalidOperationException("LedCard not set");
         }
 
-        public Card GetRoundWinningCardOrThrow()
+        public Card GetTrickWinningCardOrThrow()
         {
-            return RoundWinningCard ?? throw new InvalidOperationException("RoundWinningCard not set");
+            return TrickWinningCard ?? throw new InvalidOperationException("TrickWinningCard not set");
         }
 
-        public Player GetRoundWinningPlayerOrThrow()
+        public Player GetTrickWinningPlayerOrThrow()
         {
-            return RoundWinningPlayer ?? throw new InvalidOperationException("RoundWinningPlayer not set");
-        }
-
-        public Player GetPendingPlayerOrThrow()
-        {
-            return PendingPlayer ?? throw new InvalidOperationException("PendingPlayer not set");
-        }
-
-        public List<Card> GetPendingOptionsOrThrow()
-        {
-            return PendingOptions ?? throw new InvalidOperationException("PendingOptions not set");
+            return TrickWinningPlayer ?? throw new InvalidOperationException("TrickWinningPlayer not set");
         }
 
         public Deck NewDeck()
@@ -102,8 +93,8 @@ namespace TwentyFiveDotNet.Core.Models
         }
         public void SetTrickResult(Player player, Card card)
         {
-            RoundWinningPlayer = player;
-            RoundWinningCard = card;
+            TrickWinningPlayer = player;
+            TrickWinningCard = card;
         }
         public void SetTrumpCard(Card card)
         {
@@ -153,14 +144,26 @@ namespace TwentyFiveDotNet.Core.Models
                 player.ClearHand();
         }
 
-        public void StartNewRound()
+        public void SetupTurn()
         {
             ClearPlayersHands();
             ClearPlayedCards();
             TrumpStolen = false;
             LedCard = null;
-            RoundWinningCard = null;
-            RoundWinningPlayer = null;
+            TrickWinningCard = null;
+            TrickWinningPlayer = null;
+            TrickNumber = 1;
+        }
+
+        public void IncreaseTrickCounter()
+        {
+            TrickNumber += 1;
+        }
+
+        public void NewGame()
+        {
+            SetupTurn();
+            ClearPlayerPoints();
         }
     }
 }

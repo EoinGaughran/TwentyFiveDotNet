@@ -69,12 +69,9 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
                 customConsole.WriteLine($"{player.Name} stole the trump card {card}.");
             };
 
-            _manager.OnTurnStarted += (player, isLeader) =>
+            _manager.OnPlayerTurnStarted += (player) =>
             {
-                if(isLeader)
-                    customConsole.WriteLine($"{player.Name} is leading the trick.");
-                else
-                    customConsole.WriteLine($"It's {player.Name}'s turn.");
+                customConsole.WriteLine($"It's {player.Name}'s turn.");
             };
 
             //Card Play
@@ -138,34 +135,37 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
 
             };
 
-            //Scoring/Rounds
+            //Scoring
             _manager.OnScoreChanged += (players) =>
             {
                 customConsole.PrintPlayersScores(players);
             };
 
-            _manager.OnRoundNewWinner += (winningCard, player) =>
+            _manager.OnTrickNewWinner += (winningCard, player, isDealer) =>
             {
+                if (isDealer)
+                {
+                    customConsole.WriteLine($"{player.Name} got their dealer's trick.");
+                }
                 customConsole.WriteLine($"{player.Name} is currently winning with the {winningCard}");
-
-                //customConsole.WriteLine($"{player.Name} got his dealer's trick.");
             };
 
-            _manager.OnRoundEnded += (winningCard, player) =>
+            _manager.OnTrickScored += (winningCard, player) =>
             {
                 customConsole.WriteLine($"{player.Name} won with the {winningCard}");
                 customConsole.WriteLine($"{player.Name} has received the trick worth 5 points.");
             };
 
-            _manager.OnNewRound += () =>
+            _manager.OnNewTrick += (leader, trickNumber) =>
             {
-                customConsole.WriteLine($"New Round!");
+                customConsole.WriteLine($"Trick {trickNumber} begins.");
+                customConsole.WriteLine($"{leader} will lead the trick.");
             };
 
             //Game State 
             _manager.OnGamePhaseChange += (gamePhase) =>
             {
-                customConsole.WriteLine($"The game state has changed to: {gamePhase}");
+                customConsole.WriteLine($"Game phase changed to: {gamePhase}");
             };
 
             _manager.OnGameOver += (winner) =>
