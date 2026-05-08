@@ -19,8 +19,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     public Player human;
 
-    [SerializeReference] public Button PlayCardButton;
-
     [SerializeField] private Main main;
 
     private List<PlayerUI> opponentUIs = new();
@@ -33,10 +31,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         _manager.OnStateSnapshot += OnStateSnapshot;
         _manager.OnGamePhaseChange += OnPhaseChange;
-
-        humanUI.OnCardSelected += EnablePlayCardButton;
-
-        PlayCardButton.interactable = false;
     }
 
     public bool PlayAgain() => false;
@@ -96,19 +90,12 @@ public class GameUI : MonoBehaviour, IGameInteraction
         //humanUI.ha
     }
 
-    public void EnablePlayCardButton(CardUI cardUI)
-    {
-        Debug.Log($"cardUI: {cardUI}");
-        PlayCardButton.interactable = cardUI != null;
-    }
-
     void OnDestroy()
     {
         if (_manager != null)
         {
             _manager.OnStateSnapshot -= OnStateSnapshot;
             _manager.OnGamePhaseChange -= OnPhaseChange;
-            humanUI.OnCardSelected -= EnablePlayCardButton;
         }
     }
 }

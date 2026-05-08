@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class PlayerUI : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class PlayerUI : MonoBehaviour
     private Player player;
     private CardUI selectedCard;
 
-    public event Action<CardUI> OnCardSelected;
+    public UnityEvent<bool> OnCardSelected;
 
     public void Bind(Player player)
     {
@@ -77,7 +78,7 @@ public class PlayerUI : MonoBehaviour
             selectedCard.SetSelected(true);
         }
 
-        OnCardSelected?.Invoke(selectedCard);
+        OnCardSelected?.Invoke(selectedCard != null);
     }
 
     public bool IsCardUINull(CardUI card)
