@@ -24,7 +24,7 @@ public class Main : MonoBehaviour
 
         runtimeSettings = new()
         {
-            GameMode = GameMode.Snapshot,
+            GameMode = GameMode.Main,
             HidePlayerHands = config.HidePlayerHands,
             DevMode = config.DevMode,
             Delay = config.DelayInMilliseconds,
@@ -38,7 +38,7 @@ public class Main : MonoBehaviour
 
         GameState gameState = runtimeSettings.GameMode switch
         {
-            GameMode.Main => TestGameBuilder.CreateBasicGame(rules), // temporary
+            GameMode.Main => UnityGameBuilder.CreateMainGame(rules, config), // temporary
             GameMode.Snapshot => TestGameBuilder.CreateBasicGame(rules),
             _ => throw new InvalidOperationException($"Unsupported GameMode: {runtimeSettings.GameMode}")
         };
