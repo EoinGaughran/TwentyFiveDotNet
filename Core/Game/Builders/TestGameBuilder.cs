@@ -10,6 +10,7 @@ namespace TwentyFiveDotNet.Core.Game.Builders
             GameState gameState = new();
 
             gameState.Deck.Add52CardsToDeck();
+            gameState.Deck.Shuffle();
             gameState.SetGamePhase(GamePhase.NotStarted);
 
             gameState.AddPlayers(new List<Player>

@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 public class CardUI : MonoBehaviour, IPointerClickHandler
 {
     public TextMeshProUGUI label;
+    public RectTransform CardVisual;
 
     private Card card;
     private int playerID;
@@ -27,6 +28,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
             label.text = card.ToString();
         }
 
+
+
         Debug.Log(card.ToString() + " cooards: "
             + "\n x position: " + transform.localPosition.x
             + "\n y position: " + transform.localPosition.y
@@ -45,6 +48,19 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public void SetSelected(bool selected)
     {
         float offset = selected ? 30f : 0f;
-        transform.localPosition = new Vector3(transform.localPosition.x, offset, transform.localPosition.z);
+        SetPositionSlot(
+           CardVisual.transform.localPosition.x,
+           offset
+           );
+
+    }
+
+    public void SetPositionSlot(float x, float y)
+    {
+        CardVisual.transform.localPosition =
+            new Vector3(
+                x,
+                y,
+                CardVisual.transform.localPosition.z);
     }
 }

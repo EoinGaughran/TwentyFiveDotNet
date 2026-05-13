@@ -30,7 +30,7 @@ public class PlayerUI : MonoBehaviour
     {
         UpdateText();
         RenderCardGroup(player.Hand, cardHandParent);
-        RenderCardGroup(player.PlayedCards, cardsPlayedParent);
+        RenderPlayedCards(player.PlayedCards, cardsPlayedParent);
     }
 
     public void UpdateText()
@@ -61,6 +61,39 @@ public class PlayerUI : MonoBehaviour
         }
     }
 
+    private void RenderPlayedCards(IReadOnlyList<Card> cardGroup, Transform cardParent)
+    {
+        // Clear existing cards
+        foreach (Transform child in cardParent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        float offset = 1f;
+
+        foreach (var card in cardGroup)
+        {
+            if (IsCardNull(card))
+                return;
+
+            GameObject cardHandGO = Instantiate(cardPrefab, cardParent, false);
+
+            RectTransform rect = cardHandGO.GetComponent<RectTransform>();
+
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+
+            rect.anchoredPosition = new Vector2(offset, -offset);
+            rect.localScale = Vector3.one;
+
+            CardUI cardUI = cardHandGO.GetComponent<CardUI>();
+            cardUI.Setup(card, player.Id);
+
+            offset += 3f;
+        }
+    }
+
     public void HandleCardClicked(CardUI card, int playerID)
     {
         if (playerID != 0) return;
@@ -76,6 +109,7 @@ public class PlayerUI : MonoBehaviour
         {
             selectedCard = card;
             selectedCard.SetSelected(true);
+            Debug.Log($"Card pressed: {selectedCard.GetCard()}");
         }
 
         OnCardSelected?.Invoke(selectedCard != null);
@@ -91,12 +125,22 @@ public class PlayerUI : MonoBehaviour
         return false;
     }
 
-    public bool IsCardNull(Card card)
+    public static bool IsCardNull(Card card)
     {
         if (card == null)
         {
             Debug.LogError("card is NULL");
             return true;
+        }
+        return false;
+    }
+
+    public static bool AreAnyCardsNull(IReadOnlyList<Card> cardGroup)
+    {
+        foreach (var card in cardGroup)
+        {
+            if (IsCardNull(card))
+                return true;
         }
         return false;
     }
