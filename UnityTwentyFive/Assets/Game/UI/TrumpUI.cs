@@ -1,31 +1,32 @@
 using TMPro;
+using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class DeckUI : MonoBehaviour, IPointerClickHandler
+public class TrumpUI : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private TextMeshProUGUI label;
 
     private RectTransform rectTransform;
 
-    private int cardNumber;
+    private Card TrumpCard;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
     }
 
-    public void Init(int initialCardNumber)
+    public void Init(Card trumpCard)
     {
-        cardNumber = initialCardNumber;
+        TrumpCard = trumpCard;
 
         SetupRect();
         Render();
     }
 
-    public void SetCardNumber(int newCardNumber)
+    public void SetTrumpCard(Card trumpCard)
     {
-        cardNumber = newCardNumber;
+        TrumpCard = trumpCard;
         Render();
     }
 
@@ -42,11 +43,11 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
 
     private void Render()
     {
-        label.text = cardNumber.ToString();
+        label.text = TrumpCard.ToString();
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        Debug.Log("Deck clicked.");
+        Debug.Log("Trump clicked.");
     }
 }
