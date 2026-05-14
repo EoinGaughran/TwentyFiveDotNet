@@ -13,26 +13,38 @@ public class PlayerPanelUI : MonoBehaviour
     public Player Human { get; private set; }
     public PlayerUI HumanUI => humanUI;
 
+    private readonly Dictionary<Player, PlayerUI> playerUIs = new();
+
     public void RenderPlayers(IReadOnlyList<Player> players)
     {
-        Human = players[0];
-        humanUI.Bind(Human);
+        playerUIs.Clear();
+
+        humanUI.Bind(players[0]);
+        playerUIs[players[0]] = humanUI;
 
         foreach (Transform child in opponentContainer)
         {
             Destroy(child.gameObject);
         }
 
-        opponentUIs.Clear();
-
         for (int i = 1; i < players.Count; i++)
         {
             GameObject opponentGO = Instantiate(opponentPrefab, opponentContainer);
-
             PlayerUI ui = opponentGO.GetComponent<PlayerUI>();
-            ui.Bind(players[i]);
 
-            opponentUIs.Add(ui);
+            ui.Bind(players[i]);
+            playerUIs[players[i]] = ui;
         }
+    }
+
+    public void RemoveCardFromPlayer(Player player, Card card)
+    {
+        if (!playerUIs.TryGetValue(player, out PlayerUI ui))
+        {
+            Debug.LogWarning($"No UI found for player {player.Name}");
+            return;
+        }
+
+        ui.RemoveCardFromHand(card);
     }
 }

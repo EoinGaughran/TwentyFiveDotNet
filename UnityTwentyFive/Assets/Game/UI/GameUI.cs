@@ -85,6 +85,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
     private void HandleCardDiscarded(Card discardedCard, Player cardPlayer)
     {
         Debug.Log($"{cardPlayer.Name} discarded {discardedCard}.");
+
+        playerPanelUI.RemoveCardFromPlayer(cardPlayer,discardedCard);
     }
 
     private void HandlePlayerSteal(Card trumpCard, Player stealingPlayer)

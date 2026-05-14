@@ -1234,8 +1234,8 @@ MonoBehaviour:
   cardHandParent: {fileID: 701388801}
   cardsPlayedParent: {fileID: 934067190}
   cardPrefab: {fileID: 1788753387}
-  NameTextUI: {fileID: 89918988}
-  ScoreTextUI: {fileID: 1825604776}
+  nameTextUI: {fileID: 89918988}
+  scoreTextUI: {fileID: 1825604776}
   OnCardSelected:
     m_PersistentCalls:
       m_Calls: []
@@ -3094,8 +3094,8 @@ MonoBehaviour:
   cardHandParent: {fileID: 322878795}
   cardsPlayedParent: {fileID: 1479997078}
   cardPrefab: {fileID: 852416131}
-  NameTextUI: {fileID: 241461182}
-  ScoreTextUI: {fileID: 906491865}
+  nameTextUI: {fileID: 241461182}
+  scoreTextUI: {fileID: 906491865}
   OnCardSelected:
     m_PersistentCalls:
       m_Calls:
