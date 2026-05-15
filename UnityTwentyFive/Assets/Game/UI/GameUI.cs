@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Core.Models;
 using TwentyFiveDotNet.Core.Config;
 using TwentyFiveDotNet.Core.Game;
@@ -17,6 +19,9 @@ public class GameUI : MonoBehaviour, IGameInteraction
     [SerializeField] private TrumpPanelUI trumpPanelUI;
     [SerializeField] private ConsoleLogUI ConsoleLogUI;
 
+    private PlayerDecisionType currentDecisionType;
+    private IReadOnlyList<Card> currentOptions;
+
     public void Init(GameManager manager, RuntimeSettings runtimeSettings)
     {
         _manager = manager;
@@ -31,6 +36,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _manager.OnPlayerSteal += HandlePlayerSteal;
         _manager.OnPlayerTurnStarted += HandlePlayerTurnStarted;
         _manager.OnCardPlayed += HandleCardPlayed;
+        _manager.OnPlayerInputRequest += HandlePlayerInput;
     }
 
     public bool PlayAgain() => false;
@@ -49,19 +55,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
         {
             main.SetAutoAdvance(false);
         }
-    }
 
-    public void PlayCardButtonPressed()
-    {
-        var card = playerPanelUI.HumanUI.GetSelectedCard();
-
-        if (card == null)
-        {
-            Debug.Log("No card selected.");
-            return;
-        }
-
-        Debug.Log($"Selected card was {card}.");
+        ConsoleLogUI.AppendText($"GamePhase: {gamePhase}");
     }
 
     private void HandleDealCompleted(GameState gameState)
@@ -106,6 +101,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
         Debug.Log($"{stealingPlayer.Name} stole {trumpCard}.");
 
         ConsoleLogUI.AppendText($"{stealingPlayer.Name} stole {trumpCard}.");
+
+
     }
 
     private void HandlePlayerTurnStarted(Player player)
@@ -120,6 +117,77 @@ public class GameUI : MonoBehaviour, IGameInteraction
         Debug.Log($"{cardPlayedEvent.Player.Name} played {cardPlayedEvent.PlayedCard}");
 
         ConsoleLogUI.AppendText($"{cardPlayedEvent.Player.Name} played {cardPlayedEvent.PlayedCard}");
+
+        playerPanelUI.RemoveCardFromPlayer(cardPlayedEvent.Player, cardPlayedEvent.PlayedCard);
+        playerPanelUI.RefreshPlayedCards(cardPlayedEvent.Player);
+    }
+
+    private void HandlePlayerInput(
+    Player player,
+    PlayerDecisionType decisionType,
+    IReadOnlyList<Card> options)
+    {
+        ConsoleLogUI.AppendText($"PlayerDecisionType: {decisionType}");
+
+        currentDecisionType = decisionType;
+        currentOptions = options;
+
+        switch (decisionType)
+        {
+            case PlayerDecisionType.FlipTrump:
+                ConsoleLogUI.AppendText($"{player.Name}, please flip over the trump card.");
+                deckPanelUI.AllowTrumpFlip();
+                break;
+
+            case PlayerDecisionType.LeadCard:
+                ConsoleLogUI.AppendText($"{player.Name}, please lead a card.");
+                playerPanelUI.HumanUI.AllowCardPlay(player);
+                break;
+
+            case PlayerDecisionType.StealTrump:
+                ConsoleLogUI.AppendText($"{player.Name}, please discard a card to steal the trump card.");
+                playerPanelUI.HumanUI.AllowCardPlay(player);
+                break;
+
+            case PlayerDecisionType.PlayCard:
+                if (options == null)
+                    throw new InvalidOperationException("Options was null");
+
+                ConsoleLogUI.AppendText($"{player.Name}, please play a card.");
+                playerPanelUI.HumanUI.ShowPlayableCards(options);
+                playerPanelUI.HumanUI.AllowCardPlay(player);
+                break;
+        }
+    }
+
+    public void SubmitSelectedCard()
+    {
+        var card = playerPanelUI.HumanUI.GetSelectedCard();
+
+        if (card == null)
+        {
+            Debug.Log("No card selected.");
+            return;
+        } 
+
+        Debug.Log($"Selected card was {card}.");
+
+        _manager.SubmitPlayerAction(card);
+
+        currentDecisionType = default;
+        currentOptions = null;
+
+        playerPanelUI.HumanUI.ResetPlayableCards();
+    }
+
+    public void SubmitFlipTrump()
+    {
+        _manager.SubmitPlayerAction(null);
+
+        Debug.Log($"Trump Flip Submitted.");
+
+        currentDecisionType = default;
+        currentOptions = null;
     }
 
     private void OnDestroy()
@@ -135,5 +203,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _manager.OnPlayerSteal -= HandlePlayerSteal;
         _manager.OnPlayerTurnStarted -= HandlePlayerTurnStarted;
         _manager.OnCardPlayed -= HandleCardPlayed;
+        _manager.OnPlayerInputRequest -= HandlePlayerInput;
     }
 }

@@ -19,4 +19,8 @@ public class DeckPanelUI : MonoBehaviour
             deckUI.SetCardNumber(cardCount);
         }
     }
+    public void AllowTrumpFlip()
+    {
+        //TO DO
+    }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
@@ -70,7 +71,7 @@ public class PlayerUI : MonoBehaviour
         }
     }
 
-    private void RenderPlayedCards()
+    public void RenderPlayedCards()
     {
         ClearCardParent(cardsPlayedParent, playedCardUIs);
 
@@ -165,6 +166,24 @@ public class PlayerUI : MonoBehaviour
         Destroy(cardUI.gameObject);
     }
 
+    public void AddCardToHand(Card card)
+    {
+        if (card == null)
+        {
+            Debug.LogError("Tried to add null card to hand.");
+            return;
+        }
+
+        if (!handCardUIs.TryGetValue(card, out CardUI cardUI))
+        {
+            Debug.LogWarning($"No CardUI found for card {card} in {player.Name}'s hand.");
+            return;
+        }
+
+        cardUI.OnCardClicked += HandleCardClicked;
+        handCardUIs.Add(card, cardUI);
+    }
+
     public void HandleCardClicked(CardUI cardUI, int playerID)
     {
         if (playerID != 0) return;
@@ -198,5 +217,31 @@ public class PlayerUI : MonoBehaviour
     public CardUI GetSelectedCardUI()
     {
         return selectedCard;
+    }
+
+    public void AllowCardPlay(Player player)
+    {
+        //TO DO
+    }
+
+    public void ShowPlayableCards(IReadOnlyList<Card> playableCards)
+    {
+        foreach (var kvp in handCardUIs)
+        {
+            Card card = kvp.Key;
+            CardUI cardUI = kvp.Value;
+
+            bool playable = playableCards.Contains(card);
+
+            cardUI.SetPlayable(playable);
+        }
+    }
+    public void ResetPlayableCards()
+    {
+        foreach (var kvp in handCardUIs)
+        {
+            CardUI cardUI = kvp.Value;
+            cardUI.SetPlayable(true);
+        }
     }
 }

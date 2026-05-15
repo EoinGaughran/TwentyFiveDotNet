@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 public class DeckUI : MonoBehaviour, IPointerClickHandler
@@ -9,6 +10,9 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
     private RectTransform rectTransform;
 
     private int cardNumber;
+
+    [Header("Events")]
+    public UnityEvent OnTrumpFliped;
 
     private void Awake()
     {
@@ -48,5 +52,6 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         Debug.Log("Deck clicked.");
+        OnTrumpFliped?.Invoke();
     }
 }

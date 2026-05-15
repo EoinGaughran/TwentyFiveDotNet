@@ -47,4 +47,26 @@ public class PlayerPanelUI : MonoBehaviour
 
         ui.RemoveCardFromHand(card);
     }
+
+    public void AddCardToPlayerHand(Player player, Card card)
+    {
+        if (!playerUIs.TryGetValue(player, out PlayerUI ui))
+        {
+            Debug.LogWarning($"No UI found for player {player.Name}");
+            return;
+        }
+
+        ui.AddCardToHand(card);
+    }
+
+    public void RefreshPlayedCards(Player player)
+    {
+        if (!playerUIs.TryGetValue(player, out PlayerUI ui))
+        {
+            Debug.LogWarning($"No UI found for player {player.Name}");
+            return;
+        }
+
+        ui.RenderPlayedCards();
+    }
 }

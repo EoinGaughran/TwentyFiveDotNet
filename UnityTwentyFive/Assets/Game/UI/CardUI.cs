@@ -3,11 +3,16 @@ using TMPro;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class CardUI : MonoBehaviour, IPointerClickHandler
 {
     public TextMeshProUGUI label;
     public RectTransform CardVisual;
+    [SerializeField] private Image cardImage;
+
+    private static readonly Color PlayableColor = Color.white;
+    private static readonly Color UnplayableColor = new Color(0.7f, 0.7f, 0.7f);
 
     private Card card;
     private int playerID;
@@ -53,6 +58,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
            offset
            );
 
+    }
+
+    public void SetPlayable(bool playable)
+    {
+        cardImage.color = playable
+            ? PlayableColor
+            : UnplayableColor;
     }
 
     public void SetPositionSlot(float x, float y)
