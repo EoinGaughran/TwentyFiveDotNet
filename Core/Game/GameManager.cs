@@ -412,7 +412,15 @@ namespace TwentyFiveDotNet.Core.Game
             bool isLeader = _turnManager.IsCurrentPlayerTheLeader();
             bool isDealer = _turnManager.IsCurrentPlayerTheDealer();
 
+            UpdatePlayedCards(
+                currentPlayer,
+                ledCard);
+
+            currentPlayer.RemoveCard(ledCard);
+            currentPlayer.AddCardToPlayedCards(ledCard);
+
             _gameState.SetLedCard(ledCard);
+
             OnCardPlayed?.Invoke(
                 new CardPlayedEvent(
                     currentPlayer,
@@ -428,13 +436,6 @@ namespace TwentyFiveDotNet.Core.Game
                 ledCard,
                 currentPlayer,
                 isDealer);
-
-            UpdatePlayedCards(
-                currentPlayer,
-                ledCard);
-
-            currentPlayer.RemoveCard(ledCard);
-            currentPlayer.AddCardToPlayedCards(ledCard);
 
             ChangeGamePhase(GamePhase.PlayerTurn_Start);
             return;
@@ -570,16 +571,19 @@ namespace TwentyFiveDotNet.Core.Game
             bool isLeader = _turnManager.IsCurrentPlayerTheLeader();
             bool isDealer = _turnManager.IsCurrentPlayerTheDealer();
 
+            UpdatePlayedCards(
+                currentPlayer,
+                chosenCard);
+
+            currentPlayer.RemoveCard(chosenCard);
+            currentPlayer.AddCardToPlayedCards(chosenCard);
+
             OnCardPlayed?.Invoke(
                 new CardPlayedEvent(
                 currentPlayer,
                 chosenCard,
                 trumpCard.Suit,
                 isLeader));
-
-            UpdatePlayedCards(
-                currentPlayer,
-                chosenCard);
 
             if (_rules.IsCardBetter(
                 chosenCard,
@@ -591,9 +595,6 @@ namespace TwentyFiveDotNet.Core.Game
                 currentPlayer,
                 ledCard);
             }
-
-            currentPlayer.RemoveCard(chosenCard);
-            currentPlayer.AddCardToPlayedCards(chosenCard);
 
             OnTrickNewWinner?.Invoke(
                 trickWinningCard,

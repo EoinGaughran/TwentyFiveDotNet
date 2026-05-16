@@ -15,8 +15,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
     [SerializeField] private Main main;
     [SerializeField] private PhaseUI phaseUI;
     [SerializeField] private PlayerPanelUI playerPanelUI;
-    [SerializeField] private DeckPanelUI deckPanelUI;
-    [SerializeField] private TrumpPanelUI trumpPanelUI;
+    [SerializeField] private TablePanelUI tablePanelUI;
     [SerializeField] private ConsoleLogUI ConsoleLogUI;
 
     private PlayerDecisionType currentDecisionType;
@@ -62,7 +61,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
     private void HandleDealCompleted(GameState gameState)
     {
         playerPanelUI.RenderPlayers(gameState.Players);
-        deckPanelUI.RenderDeckCount(gameState.Deck.Cards.Count);
+        tablePanelUI.RenderDeckCount(gameState.Deck.Cards.Count);
 
         ConsoleLogUI.AppendText($"{gameState.Players.Count} players added to game.");
         ConsoleLogUI.AppendText($"{gameState.Deck} created.");
@@ -75,7 +74,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         ConsoleLogUI.AppendText($"Dealer {player.Name} flipped the trump card. It's the {trumpData._trumpCard}");
 
-        trumpPanelUI.RenderTrump(trumpData._trumpCard);
+        tablePanelUI.RenderStatusCard(trumpData._trumpCard, StatusCardType.TrumpCard);
     }
 
     private void HandleRolesSelected(Player dealer, Player leader)
@@ -93,7 +92,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         ConsoleLogUI.AppendText($"{cardPlayer.Name} discarded {discardedCard}.");
 
-        playerPanelUI.RemoveCardFromPlayer(cardPlayer,discardedCard);
+        playerPanelUI.RemoveCardFromPlayer(cardPlayer, discardedCard);
     }
 
     private void HandlePlayerSteal(Card trumpCard, Player stealingPlayer)
@@ -102,7 +101,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         ConsoleLogUI.AppendText($"{stealingPlayer.Name} stole {trumpCard}.");
 
-
+        playerPanelUI.AddCardToPlayerHand(stealingPlayer, trumpCard);
     }
 
     private void HandlePlayerTurnStarted(Player player)
@@ -114,9 +113,20 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void HandleCardPlayed(CardPlayedEvent cardPlayedEvent)
     {
-        Debug.Log($"{cardPlayedEvent.Player.Name} played {cardPlayedEvent.PlayedCard}");
+        if (cardPlayedEvent.IsLeader)
+        {
+            Debug.Log($"{cardPlayedEvent.Player} led with the {cardPlayedEvent.PlayedCard}.");
 
-        ConsoleLogUI.AppendText($"{cardPlayedEvent.Player.Name} played {cardPlayedEvent.PlayedCard}");
+            ConsoleLogUI.AppendText($"{cardPlayedEvent.Player} led with the {cardPlayedEvent.PlayedCard}." +
+                $"\n Suit {cardPlayedEvent.PlayedCard.GetSuitSymbolUnicoded()} is leading.");
+
+            tablePanelUI.RenderStatusCard(cardPlayedEvent.PlayedCard, StatusCardType.LedCard);
+        }
+        else
+        {
+            Debug.Log($"{cardPlayedEvent.Player.Name} played the {cardPlayedEvent.PlayedCard}");
+            ConsoleLogUI.AppendText($"{cardPlayedEvent.Player.Name} played {cardPlayedEvent.PlayedCard}");
+        }
 
         playerPanelUI.RemoveCardFromPlayer(cardPlayedEvent.Player, cardPlayedEvent.PlayedCard);
         playerPanelUI.RefreshPlayedCards(cardPlayedEvent.Player);
@@ -136,7 +146,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         {
             case PlayerDecisionType.FlipTrump:
                 ConsoleLogUI.AppendText($"{player.Name}, please flip over the trump card.");
-                deckPanelUI.AllowTrumpFlip();
+                tablePanelUI.AllowTrumpFlip();
                 break;
 
             case PlayerDecisionType.LeadCard:

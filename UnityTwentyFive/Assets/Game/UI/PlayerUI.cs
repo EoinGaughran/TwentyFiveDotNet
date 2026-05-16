@@ -174,14 +174,10 @@ public class PlayerUI : MonoBehaviour
             return;
         }
 
-        if (!handCardUIs.TryGetValue(card, out CardUI cardUI))
-        {
-            Debug.LogWarning($"No CardUI found for card {card} in {player.Name}'s hand.");
-            return;
-        }
-
+        CardUI cardUI = CreateCardUI(card, cardHandParent);
         cardUI.OnCardClicked += HandleCardClicked;
-        handCardUIs.Add(card, cardUI);
+
+        handCardUIs[card] = cardUI;
     }
 
     public void HandleCardClicked(CardUI cardUI, int playerID)

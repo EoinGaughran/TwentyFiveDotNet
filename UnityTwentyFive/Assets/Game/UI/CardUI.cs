@@ -32,13 +32,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         {
             label.text = card.ToString();
         }
-
-
-
-        Debug.Log(card.ToString() + " cooards: "
-            + "\n x position: " + transform.localPosition.x
-            + "\n y position: " + transform.localPosition.y
-            + "\n z position: " + transform.localPosition.z);
     }
 
     public Card GetCard() => card;
