@@ -69,4 +69,18 @@ public class PlayerPanelUI : MonoBehaviour
 
         ui.RenderPlayedCards();
     }
+
+    public void PrintPlayersScores(IReadOnlyList<Player> players)
+    {
+        foreach (Player player in players)
+        {
+            if (!playerUIs.TryGetValue(player, out PlayerUI ui))
+            {
+                Debug.LogWarning($"No UI found for player {player.Name}");
+                return;
+            }
+
+            ui.RenderText();
+        }
+    }
 }

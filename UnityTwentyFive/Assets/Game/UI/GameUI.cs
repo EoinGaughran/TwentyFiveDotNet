@@ -12,11 +12,11 @@ public class GameUI : MonoBehaviour, IGameInteraction
     private GameManager _manager;
     private RuntimeSettings _runtimeSettings;
 
-    [SerializeField] private Main main;
-    [SerializeField] private PhaseUI phaseUI;
-    [SerializeField] private PlayerPanelUI playerPanelUI;
-    [SerializeField] private TablePanelUI tablePanelUI;
-    [SerializeField] private ConsoleLogUI ConsoleLogUI;
+    [SerializeField] private Main _main;
+    [SerializeField] private PhaseUI _phaseUI;
+    [SerializeField] private PlayerPanelUI _playerPanelUI;
+    [SerializeField] private TablePanelUI _tablePanelUI;
+    [SerializeField] private ConsoleLogUI _consoleLogUI;
 
     private PlayerDecisionType currentDecisionType;
     private IReadOnlyList<Card> currentOptions;
@@ -27,7 +27,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _runtimeSettings = runtimeSettings;
 
         _manager.OnStateSnapshot += HandleStateSnapshot;
-        _manager.OnGamePhaseChange += HandlePhaseChange;
         _manager.OnDealingCompleted += HandleDealCompleted;
         _manager.OnTrumpResolved += HandleTrumpResolved;
         _manager.OnRolesSelected += HandleRolesSelected;
@@ -36,100 +35,82 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _manager.OnPlayerTurnStarted += HandlePlayerTurnStarted;
         _manager.OnCardPlayed += HandleCardPlayed;
         _manager.OnPlayerInputRequest += HandlePlayerInput;
+        _manager.OnScoreChanged += HandleScoreChanged;
+        _manager.OnTrickNewWinner += HandleTrickNewWinner;
+        _manager.OnTrickScored += HandleTrickScored;
+        _manager.OnNewTrick += HandleNewTrick;
+        _manager.OnGamePhaseChange += HandleGamePhaseChange;
+        _manager.OnGameOver += HandleGameOver;
+        _manager.OnNewGame += HandleNewGame;
+        _manager.OnProgramClosed += HandleProgramClosed;
     }
 
     public bool PlayAgain() => false;
 
     private void HandleStateSnapshot(GameState gameState)
     {
-        phaseUI.Render(gameState.CurrentPhase);
-        playerPanelUI.RenderPlayers(gameState.Players);
-    }
-
-    private void HandlePhaseChange(GamePhase gamePhase)
-    {
-        phaseUI.Render(gamePhase);
-
-        if (_runtimeSettings.TestStateMode)
-        {
-            main.SetAutoAdvance(false);
-        }
-
-        ConsoleLogUI.AppendText($"GamePhase: {gamePhase}");
+        _phaseUI.Render(gameState.CurrentPhase);
+        _playerPanelUI.RenderPlayers(gameState.Players);
     }
 
     private void HandleDealCompleted(GameState gameState)
     {
-        playerPanelUI.RenderPlayers(gameState.Players);
-        tablePanelUI.RenderDeckCount(gameState.Deck.Cards.Count);
+        _playerPanelUI.RenderPlayers(gameState.Players);
+        _tablePanelUI.RenderDeckCount(gameState.Deck.Cards.Count);
 
-        ConsoleLogUI.AppendText($"{gameState.Players.Count} players added to game.");
-        ConsoleLogUI.AppendText($"{gameState.Deck} created.");
-        ConsoleLogUI.AppendText($"{gameState.Deck.Cards.Count} cards remain in {gameState.Deck}");
+        _consoleLogUI.AppendText($"{gameState.Players.Count} players added to game." +
+            $"\n{gameState.Deck} created." +
+            $"\n{gameState.Deck.Cards.Count} cards remain in {gameState.Deck}");
     }
 
     private void HandleTrumpResolved(TrumpData trumpData, Player player)
     {
-        Debug.Log($"Dealer {player.Name} flipped the trump card. It's the {trumpData._trumpCard}");
+        _consoleLogUI.AppendText($"Dealer {player.Name} flipped the trump card. It's the {trumpData._trumpCard}");
 
-        ConsoleLogUI.AppendText($"Dealer {player.Name} flipped the trump card. It's the {trumpData._trumpCard}");
-
-        tablePanelUI.RenderStatusCard(trumpData._trumpCard, StatusCardType.TrumpCard);
+        _tablePanelUI.RenderStatusCard(trumpData._trumpCard, StatusCardType.TrumpCard);
     }
 
     private void HandleRolesSelected(Player dealer, Player leader)
     {
-        Debug.Log($"{dealer} has been selected as the dealer.");
-        Debug.Log($"{leader} is leading the trick.");
-
-        ConsoleLogUI.AppendText($"{dealer} has been selected as the dealer.");
-        ConsoleLogUI.AppendText($"{leader} is leading the trick.");
+        _consoleLogUI.AppendText($"{dealer} has been selected as the dealer." +
+            $"\n{leader} is leading the trick.");
     }
 
     private void HandleCardDiscarded(Card discardedCard, Player cardPlayer)
     {
-        Debug.Log($"{cardPlayer.Name} discarded {discardedCard}.");
+        _consoleLogUI.AppendText($"{cardPlayer.Name} discarded {discardedCard}.");
 
-        ConsoleLogUI.AppendText($"{cardPlayer.Name} discarded {discardedCard}.");
-
-        playerPanelUI.RemoveCardFromPlayer(cardPlayer, discardedCard);
+        _playerPanelUI.RemoveCardFromPlayer(cardPlayer, discardedCard);
     }
 
     private void HandlePlayerSteal(Card trumpCard, Player stealingPlayer)
     {
-        Debug.Log($"{stealingPlayer.Name} stole {trumpCard}.");
+        _consoleLogUI.AppendText($"{stealingPlayer.Name} stole {trumpCard}.");
 
-        ConsoleLogUI.AppendText($"{stealingPlayer.Name} stole {trumpCard}.");
-
-        playerPanelUI.AddCardToPlayerHand(stealingPlayer, trumpCard);
+        _playerPanelUI.AddCardToPlayerHand(stealingPlayer, trumpCard);
     }
 
     private void HandlePlayerTurnStarted(Player player)
     {
-        Debug.Log($"It's {player.Name}'s turn.");
-
-        ConsoleLogUI.AppendText($"It's {player.Name}'s turn.");
+        _consoleLogUI.AppendText($"It's {player.Name}'s turn.");
     }
 
     private void HandleCardPlayed(CardPlayedEvent cardPlayedEvent)
     {
         if (cardPlayedEvent.IsLeader)
         {
-            Debug.Log($"{cardPlayedEvent.Player} led with the {cardPlayedEvent.PlayedCard}.");
-
-            ConsoleLogUI.AppendText($"{cardPlayedEvent.Player} led with the {cardPlayedEvent.PlayedCard}." +
+            _consoleLogUI.AppendText($"{cardPlayedEvent.Player} led with the {cardPlayedEvent.PlayedCard}." +
                 $"\n Suit {cardPlayedEvent.PlayedCard.GetSuitSymbolUnicoded()} is leading.");
 
-            tablePanelUI.RenderStatusCard(cardPlayedEvent.PlayedCard, StatusCardType.LedCard);
+            _tablePanelUI.RenderStatusCard(cardPlayedEvent.PlayedCard, StatusCardType.LedCard);
         }
         else
         {
-            Debug.Log($"{cardPlayedEvent.Player.Name} played the {cardPlayedEvent.PlayedCard}");
-            ConsoleLogUI.AppendText($"{cardPlayedEvent.Player.Name} played {cardPlayedEvent.PlayedCard}");
+            _consoleLogUI.AppendText($"{cardPlayedEvent.Player.Name} played {cardPlayedEvent.PlayedCard}");
         }
 
-        playerPanelUI.RemoveCardFromPlayer(cardPlayedEvent.Player, cardPlayedEvent.PlayedCard);
-        playerPanelUI.RefreshPlayedCards(cardPlayedEvent.Player);
+        _playerPanelUI.RemoveCardFromPlayer(cardPlayedEvent.Player, cardPlayedEvent.PlayedCard);
+        _playerPanelUI.RefreshPlayedCards(cardPlayedEvent.Player);
     }
 
     private void HandlePlayerInput(
@@ -137,7 +118,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
     PlayerDecisionType decisionType,
     IReadOnlyList<Card> options)
     {
-        ConsoleLogUI.AppendText($"PlayerDecisionType: {decisionType}");
+        _consoleLogUI.AppendText($"PlayerDecisionType: {decisionType}");
 
         currentDecisionType = decisionType;
         currentOptions = options;
@@ -145,59 +126,118 @@ public class GameUI : MonoBehaviour, IGameInteraction
         switch (decisionType)
         {
             case PlayerDecisionType.FlipTrump:
-                ConsoleLogUI.AppendText($"{player.Name}, please flip over the trump card.");
-                tablePanelUI.AllowTrumpFlip();
+                _consoleLogUI.AppendText($"{player.Name}, please flip over the trump card.");
+                _tablePanelUI.AllowTrumpFlip();
                 break;
 
             case PlayerDecisionType.LeadCard:
-                ConsoleLogUI.AppendText($"{player.Name}, please lead a card.");
-                playerPanelUI.HumanUI.AllowCardPlay(player);
+                _consoleLogUI.AppendText($"{player.Name}, please lead a card.");
+                _playerPanelUI.HumanUI.AllowCardPlay(player);
                 break;
 
             case PlayerDecisionType.StealTrump:
-                ConsoleLogUI.AppendText($"{player.Name}, please discard a card to steal the trump card.");
-                playerPanelUI.HumanUI.AllowCardPlay(player);
+                _consoleLogUI.AppendText($"{player.Name}, please discard a card to steal the trump card.");
+                _playerPanelUI.HumanUI.AllowCardPlay(player);
                 break;
 
             case PlayerDecisionType.PlayCard:
                 if (options == null)
                     throw new InvalidOperationException("Options was null");
 
-                ConsoleLogUI.AppendText($"{player.Name}, please play a card.");
-                playerPanelUI.HumanUI.ShowPlayableCards(options);
-                playerPanelUI.HumanUI.AllowCardPlay(player);
+                _consoleLogUI.AppendText($"{player.Name}, please play a card.");
+                _playerPanelUI.HumanUI.ShowPlayableCards(options);
+                _playerPanelUI.HumanUI.AllowCardPlay(player);
                 break;
         }
     }
 
     public void SubmitSelectedCard()
     {
-        var card = playerPanelUI.HumanUI.GetSelectedCard();
+        var card = _playerPanelUI.HumanUI.GetSelectedCard();
 
         if (card == null)
         {
-            Debug.Log("No card selected.");
+            _consoleLogUI.AppendText("No card selected.");
             return;
-        } 
+        }
 
-        Debug.Log($"Selected card was {card}.");
+        _consoleLogUI.AppendText($"Selected card was {card}.");
 
         _manager.SubmitPlayerAction(card);
 
         currentDecisionType = default;
         currentOptions = null;
 
-        playerPanelUI.HumanUI.ResetPlayableCards();
+        _playerPanelUI.HumanUI.ResetPlayableCards();
     }
 
     public void SubmitFlipTrump()
     {
         _manager.SubmitPlayerAction(null);
 
-        Debug.Log($"Trump Flip Submitted.");
+        _consoleLogUI.AppendText($"Trump Flip Submitted.");
 
         currentDecisionType = default;
         currentOptions = null;
+    }
+
+    //Scoring
+    private void HandleScoreChanged(IReadOnlyList<Player> players)
+    {
+        _playerPanelUI.PrintPlayersScores(players);
+    }
+
+    private void HandleTrickNewWinner(Card winningCard, Player player, bool isDealer)
+    {
+        if (isDealer)
+        {
+            _consoleLogUI.AppendText($"{player.Name} got their dealer's trick.");
+        }
+        _consoleLogUI.AppendText($"{player.Name} is currently winning with the {winningCard}.");
+    }
+
+    private void HandleTrickScored(Card winningCard, Player player)
+    {
+        _consoleLogUI.AppendText($"{player.Name} won with the {winningCard}" +
+            $"\n{player.Name} has received the trick worth 5 points.");
+    }
+
+    private void HandleNewTrick(Player leader, int trickNumber)
+    {
+        _consoleLogUI.AppendText($"Trick {trickNumber} begins." +
+            $"\n{leader} will lead the trick.");
+    }
+
+    //Game State 
+    private void HandleGamePhaseChange(GamePhase gamePhase)
+    {
+        _phaseUI.Render(gamePhase);
+
+        if (_runtimeSettings.TestStateMode)
+        {
+            _main.SetAutoAdvance(false);
+        }
+
+        _consoleLogUI.AppendText($"GamePhase: {gamePhase}");
+    }
+
+    private void HandleGameOver(Player winner)
+    {
+        _consoleLogUI.AppendText($"{winner} wins!" +
+            $"\nGame Over!");
+    }
+
+    private void HandleNewGame()
+    {
+        _consoleLogUI.AppendText($"The deck has been removed." +
+            $"\nPlayers hands have been cleared." +
+            $"\nPlayers scores have been cleared." +
+            $"\nThe list of played cards has been cleared.");
+    }
+
+    private void HandleProgramClosed()
+    {
+        _consoleLogUI.AppendText($"The game has ended. The program will now close.");
     }
 
     private void OnDestroy()
@@ -205,7 +245,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
         if (_manager == null) return;
 
         _manager.OnStateSnapshot -= HandleStateSnapshot;
-        _manager.OnGamePhaseChange -= HandlePhaseChange;
         _manager.OnDealingCompleted -= HandleDealCompleted;
         _manager.OnTrumpResolved -= HandleTrumpResolved;
         _manager.OnRolesSelected -= HandleRolesSelected;
@@ -214,5 +253,13 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _manager.OnPlayerTurnStarted -= HandlePlayerTurnStarted;
         _manager.OnCardPlayed -= HandleCardPlayed;
         _manager.OnPlayerInputRequest -= HandlePlayerInput;
+        _manager.OnScoreChanged -= HandleScoreChanged;
+        _manager.OnTrickNewWinner -= HandleTrickNewWinner;
+        _manager.OnTrickScored -= HandleTrickScored;
+        _manager.OnNewTrick -= HandleNewTrick;
+        _manager.OnGamePhaseChange -= HandleGamePhaseChange;
+        _manager.OnGameOver -= HandleGameOver;
+        _manager.OnNewGame -= HandleNewGame;
+        _manager.OnProgramClosed -= HandleProgramClosed;
     }
 }
