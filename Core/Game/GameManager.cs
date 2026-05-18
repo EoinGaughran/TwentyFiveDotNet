@@ -22,7 +22,7 @@ namespace TwentyFiveDotNet.Core.Game
         public event Action<GameState>? OnDealingCompleted;
 
         //Trump mechanics
-        public event Action<TrumpData, Player>? OnTrumpResolved;
+        public event Action<TrumpData, Player, Deck>? OnTrumpResolved;
         public event Action<Card, Player>? OnCardDiscarded;
 
         //Turn Flow
@@ -362,7 +362,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             TrumpData trumpData = new(trumpCard, display);
 
-            OnTrumpResolved?.Invoke(trumpData, dealer);
+            OnTrumpResolved?.Invoke(trumpData, dealer, deck);
 
             ChangeGamePhase(GamePhase.PlayerTurn_LeadStart);
             return;
@@ -371,9 +371,9 @@ namespace TwentyFiveDotNet.Core.Game
         private void PlayerTurn_LeadStart()
         {
             var trumpCard = _gameState.GetTrumpCardOrThrow();
-            var currentPlayer = _turnManager.GetCurrentPlayerOrThrow();
 
             _turnManager.ChangeToLeader();
+            var currentPlayer = _turnManager.GetCurrentPlayerOrThrow();
 
             bool isLeader = _turnManager.IsCurrentPlayerTheLeader();
 
@@ -410,7 +410,6 @@ namespace TwentyFiveDotNet.Core.Game
             var currentPlayer = _turnManager.GetCurrentPlayerOrThrow();
 
             bool isLeader = _turnManager.IsCurrentPlayerTheLeader();
-            bool isDealer = _turnManager.IsCurrentPlayerTheDealer();
 
             UpdatePlayedCards(
                 currentPlayer,
@@ -435,7 +434,7 @@ namespace TwentyFiveDotNet.Core.Game
             OnTrickNewWinner?.Invoke(
                 ledCard,
                 currentPlayer,
-                isDealer);
+                false);
 
             ChangeGamePhase(GamePhase.PlayerTurn_Start);
             return;
@@ -565,7 +564,6 @@ namespace TwentyFiveDotNet.Core.Game
             var trumpCard = _gameState.GetTrumpCardOrThrow();
             var ledCard = _gameState.GetLedCardOrThrow();
             var trickWinningCard = _gameState.GetTrickWinningCardOrThrow();
-            var trickWinningPlayer = _gameState.GetTrickWinningPlayerOrThrow();
             var currentPlayer = _turnManager.GetCurrentPlayerOrThrow();
 
             bool isLeader = _turnManager.IsCurrentPlayerTheLeader();
@@ -593,8 +591,11 @@ namespace TwentyFiveDotNet.Core.Game
             {
                 _gameState.SetTrickResult(
                 currentPlayer,
-                ledCard);
+                chosenCard);
             }
+
+            trickWinningCard = _gameState.GetTrickWinningCardOrThrow();
+            var trickWinningPlayer = _gameState.GetTrickWinningPlayerOrThrow();
 
             OnTrickNewWinner?.Invoke(
                 trickWinningCard,

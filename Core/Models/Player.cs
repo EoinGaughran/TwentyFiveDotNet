@@ -56,6 +56,11 @@ namespace TwentyFiveDotNet.Core.Models
                 throw new InvalidOperationException($"{Name}'s hand does not contain the {card}");
         }
 
+        public void ClearPlayedCards()
+        {
+            _playedCards.Clear();
+        }
+
         public List<Card> GetCards() => _hand;
         public void ClearHand() => _hand.Clear();
     }

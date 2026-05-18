@@ -1,3 +1,4 @@
+using System;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
 public class TablePanelUI : MonoBehaviour
@@ -13,9 +14,6 @@ public class TablePanelUI : MonoBehaviour
     [SerializeField] private GameObject statusCardPrefab;
 
     private DeckUI deckUI;
-    private readonly StatusCardUI trumpUI;
-    private readonly StatusCardUI ledCardUI;
-    private readonly StatusCardUI winningCardUI;
 
     public void RenderDeckCount(int cardCount)
     {
@@ -34,49 +32,32 @@ public class TablePanelUI : MonoBehaviour
         //TO DO
     }
 
-    public void RenderStatusCard(Card StatusCard, StatusCardType StatusCardType)
+    public void RenderStatusCard(Card StatusCard, StatusCardType statusCardType)
     {
-        StatusCardData statusCardData = GetStatusCardData(StatusCardType);
+        Transform transform = GetStatusCardTransform(statusCardType);
+ 
+        StatusCardUI statusCardUI = Instantiate(statusCardPrefab, transform).GetComponent<StatusCardUI>();
+        statusCardUI.Init(StatusCard, statusCardType);
 
-        StatusCardUI statusCardUI = statusCardData.StatusCardUI;
-        Transform transform = statusCardData.Transform;
-
-        if (statusCardUI == null)
-        {
-            statusCardUI = Instantiate(statusCardPrefab, transform).GetComponent<StatusCardUI>();
-            statusCardUI.Init(StatusCard, StatusCardType);
-        }
-        else
-        {
-            statusCardUI.SetStatusCard(StatusCard, StatusCardType);
-        }
     }
-    private StatusCardData GetStatusCardData(StatusCardType statusCardType)
+    private Transform GetStatusCardTransform(StatusCardType statusCardType)
     {
-        StatusCardUI statusCardUI = null;
-        Transform slot = null;
-
-        switch (statusCardType)
+        return statusCardType switch
         {
-            case StatusCardType.TrumpCard:
+            StatusCardType.TrumpCard => trumpSlot,
+            StatusCardType.LedCard => ledCardSlot,
+            StatusCardType.WinningCard => winningCardSlot,
+            _ => throw new ArgumentOutOfRangeException(nameof(statusCardType))
+        };
+    }
 
-                slot = trumpSlot;
-                statusCardUI = trumpUI;
-                break;
+    public void DestroyStatusCard(StatusCardType statusCardType)
+    {
+        Transform parent = GetStatusCardTransform(statusCardType);
 
-            case StatusCardType.LedCard:
-
-                slot = ledCardSlot;
-                statusCardUI = ledCardUI;
-                break;
-
-            case StatusCardType.WinningCard:
-
-                slot = winningCardSlot;
-                statusCardUI = winningCardUI;
-                break;
+        foreach (Transform child in parent)
+        {
+            Destroy(child.gameObject);
         }
-
-        return new StatusCardData(slot, statusCardUI);
     }
 }

@@ -134,6 +134,9 @@ namespace TwentyFiveDotNet.Core.Models
         public void ClearPlayedCards()
         {
             _playedCards.Clear();
+
+            foreach (var player in Players)
+                player.ClearPlayedCards();
         }
         public bool ArePlayersOutOfCards()
             => Players.All(p => p.Hand.Count == 0);

@@ -1792,11 +1792,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7336104130b63cc4d840761299529816, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameUI
-  main: {fileID: 1236668780}
-  phaseUI: {fileID: 1714941114}
-  playerPanelUI: {fileID: 1598150991}
-  tablePanelUI: {fileID: 2104605633}
-  ConsoleLogUI: {fileID: 499444921}
+  _main: {fileID: 1236668780}
+  _phaseUI: {fileID: 1714941114}
+  _playerPanelUI: {fileID: 1598150991}
+  _tablePanelUI: {fileID: 2104605633}
+  _consoleLogUI: {fileID: 499444921}
+  eventDelaySeconds: 0.5
 --- !u!4 &550039118
 Transform:
   m_ObjectHideFlags: 0
