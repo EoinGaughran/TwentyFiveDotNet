@@ -11,9 +11,6 @@ public class PlayerUI : MonoBehaviour
     [SerializeField] private Transform cardHandParent;
     [SerializeField] private Transform cardsPlayedParent;
 
-    [Header("Prefabs")]
-    [SerializeField] private GameObject cardPrefab;
-
     [Header("Text")]
     [SerializeField] private TextMeshProUGUI nameTextUI;
     [SerializeField] private TextMeshProUGUI scoreTextUI;
@@ -21,93 +18,100 @@ public class PlayerUI : MonoBehaviour
     [Header("Events")]
     public UnityEvent<bool> OnCardSelected;
 
-    private Player player;
+    private int playerID;
+    private string playerName;
     private CardUI selectedCard;
+    private bool cardPlayAllowed;
 
-    private readonly Dictionary<Card, CardUI> handCardUIs = new();
-    private readonly Dictionary<Card, CardUI> playedCardUIs = new();
+    private readonly Dictionary<int, CardUI> handCardUIs = new();
+    private readonly Dictionary<int, CardUI> playedCardUIs = new();
 
-    public void Bind(Player newPlayer)
+    public int PlayerID => playerID;
+    public Transform HandParent => cardHandParent;
+    public Transform PlayedCardsParent => cardsPlayedParent;
+
+    public void Bind(Player player)
     {
-        player = newPlayer;
-        Render();
+        playerID = player.Id;
+        playerName = player.Name;
+
+        cardPlayAllowed = false;
+        selectedCard = null;
+
+        RenderText(player.Name, player.Points);
+        ClearHand();
+        ClearPlayedCards();
     }
 
-    public void Render()
+    public void RenderText(string name, int points)
     {
-        if (player == null)
+        playerName = name;
+        nameTextUI.text = name;
+        scoreTextUI.text = "Score: " + points;
+    }
+
+    public void AddCardToHand(CardUI cardUI)
+    {
+        if (cardUI == null)
         {
-            Debug.LogError("PlayerUI.Render called before Bind.");
+            Debug.LogError("Tried to add null CardUI to hand.");
             return;
         }
 
-        RenderText();
-        RenderHand();
-        RenderPlayedCards();
+        int cardID = cardUI.GetCardID();
+
+        cardUI.transform.SetParent(cardHandParent, false);
+        cardUI.OnCardClicked -= HandleCardClicked;
+        cardUI.OnCardClicked += HandleCardClicked;
+
+        handCardUIs[cardID] = cardUI;
+        playedCardUIs.Remove(cardID);
     }
 
-    public void RenderText()
+    public void RemoveCardFromHand(int cardID)
     {
-        nameTextUI.text = player.Name;
-        scoreTextUI.text = "Score: " + player.Points;
-    }
-
-    private void RenderHand()
-    {
-        ClearCardParent(cardHandParent, handCardUIs);
-
-        foreach (Card card in player.Hand)
+        if (!handCardUIs.TryGetValue(cardID, out CardUI cardUI))
         {
-            if (card == null)
-            {
-                Debug.LogError("Null card found in player hand.");
-                continue;
-            }
-
-            CardUI cardUI = CreateCardUI(card, cardHandParent);
-            cardUI.OnCardClicked += HandleCardClicked;
-
-            handCardUIs[card] = cardUI;
+            Debug.LogWarning($"No CardUI found for card ID {cardID} in {playerName}'s hand.");
+            return;
         }
+
+        if (selectedCard == cardUI)
+            ClearSelectedCard();
+
+        cardUI.OnCardClicked -= HandleCardClicked;
+        handCardUIs.Remove(cardID);
     }
 
-    public void RenderPlayedCards()
+    public void AddCardToPlayedCards(CardUI cardUI)
     {
-        ClearCardParent(cardsPlayedParent, playedCardUIs);
-
-        float offset = 1f;
-
-        foreach (Card card in player.PlayedCards)
-        {
-            if (card == null)
-            {
-                Debug.LogError("Null card found in played cards.");
-                continue;
-            }
-
-            CardUI cardUI = CreateCardUI(card, cardsPlayedParent);
-            SetupCenteredOffset(cardUI.transform as RectTransform, offset);
-
-            playedCardUIs[card] = cardUI;
-
-            offset += 3f;
-        }
-    }
-
-    private CardUI CreateCardUI(Card card, Transform parent)
-    {
-        GameObject cardGO = Instantiate(cardPrefab, parent, false);
-
-        CardUI cardUI = cardGO.GetComponent<CardUI>();
-
         if (cardUI == null)
         {
-            Debug.LogError("Card prefab is missing CardUI component.");
-            return null;
+            Debug.LogError("Tried to add null CardUI to played cards.");
+            return;
         }
 
-        cardUI.Setup(card, player.Id);
-        return cardUI;
+        int cardID = cardUI.GetCardID();
+
+        RemoveCardFromHand(cardID);
+
+        cardUI.transform.SetParent(cardsPlayedParent, false);
+        cardUI.OnCardClicked -= HandleCardClicked;
+
+        playedCardUIs[cardID] = cardUI;
+
+        LayoutPlayedCards();
+    }
+
+    private void LayoutPlayedCards()
+    {
+        float offset = 1f;
+
+        foreach (CardUI cardUI in playedCardUIs.Values)
+        {
+            SetupCenteredOffset(cardUI.transform as RectTransform, offset);
+            offset += 3f;
+        }
     }
 
     private void SetupCenteredOffset(RectTransform rect, float offset)
@@ -119,95 +123,25 @@ public class PlayerUI : MonoBehaviour
         rect.localScale = Vector3.one;
     }
 
-    private void ClearCardParent(Transform parent, Dictionary<Card, CardUI> lookup)
+    public void AllowCardPlay()
     {
-        foreach (CardUI cardUI in lookup.Values)
-        {
-            if (cardUI != null)
-            {
-                cardUI.OnCardClicked -= HandleCardClicked;
-            }
-        }
-
-        lookup.Clear();
-
-        foreach (Transform child in parent)
-        {
-            Destroy(child.gameObject);
-        }
-
-        selectedCard = null;
-        OnCardSelected?.Invoke(false);
+        cardPlayAllowed = true;
     }
 
-    public void RemoveCardFromHand(Card card)
+    public void DisableCardPlay()
     {
-        if (card == null)
-        {
-            Debug.LogError("Tried to remove null card from hand.");
-            return;
-        }
-
-        if (!handCardUIs.TryGetValue(card, out CardUI cardUI))
-        {
-            Debug.LogWarning($"No CardUI found for card {card} in {player.Name}'s hand.");
-            return;
-        }
-
-        if (selectedCard == cardUI)
-        {
-            selectedCard = null;
-            OnCardSelected?.Invoke(false);
-        }
-
-        cardUI.OnCardClicked -= HandleCardClicked;
-        handCardUIs.Remove(card);
-
-        Destroy(cardUI.gameObject);
+        cardPlayAllowed = false;
+        ClearSelectedCard();
     }
 
-    public void AddCardToHand(Card card)
+    public bool CanHumanPlayCards()
     {
-        if (card == null)
-        {
-            Debug.LogError("Tried to add null card to hand.");
-            return;
-        }
-
-        CardUI cardUI = CreateCardUI(card, cardHandParent);
-        cardUI.OnCardClicked += HandleCardClicked;
-
-        handCardUIs[card] = cardUI;
+        return cardPlayAllowed;
     }
 
-    public void HandleCardClicked(CardUI cardUI, int playerID)
+    public int? GetSelectedCardID()
     {
-        if (playerID != 0) return;
-        if (cardUI == null) return;
-
-        if (selectedCard != null)
-        {
-            selectedCard.SetSelected(false);
-        }
-
-        if (selectedCard == cardUI)
-        {
-            selectedCard = null;
-        }
-        else
-        {
-            selectedCard = cardUI;
-            selectedCard.SetSelected(true);
-
-            Debug.Log($"Card pressed: {selectedCard.GetCard()}");
-        }
-
-        OnCardSelected?.Invoke(selectedCard != null);
-    }
-
-    public Card GetSelectedCard()
-    {
-        return selectedCard != null ? selectedCard.GetCard() : null;
+        return selectedCard != null ? selectedCard.GetCardID() : null;
     }
 
     public CardUI GetSelectedCardUI()
@@ -215,29 +149,70 @@ public class PlayerUI : MonoBehaviour
         return selectedCard;
     }
 
-    public void AllowCardPlay(Player player)
+    private void HandleCardClicked(CardUI cardUI)
     {
-        //TO DO
+        if (!cardPlayAllowed) return;
+        if (cardUI == null) return;
+        if (!handCardUIs.ContainsKey(cardUI.GetCardID())) return;
+        if (!cardUI.IsPlayable()) return;
+
+        if (selectedCard == cardUI)
+        {
+            ClearSelectedCard();
+            return;
+        }
+
+        if (selectedCard != null)
+            selectedCard.SetSelected(false);
+
+        selectedCard = cardUI;
+        selectedCard.SetSelected(true);
+
+        Debug.Log($"Card pressed, CardID: {selectedCard.GetCardID()}");
+        OnCardSelected?.Invoke(true);
     }
 
-    public void ShowPlayableCards(IReadOnlyList<Card> playableCards)
+    private void ClearSelectedCard()
+    {
+        if (selectedCard != null)
+            selectedCard.SetSelected(false);
+
+        selectedCard = null;
+        OnCardSelected?.Invoke(false);
+    }
+
+    public void ShowPlayableCards(IReadOnlyList<int> playableCardIDs)
     {
         foreach (var kvp in handCardUIs)
         {
-            Card card = kvp.Key;
+            int cardID = kvp.Key;
             CardUI cardUI = kvp.Value;
 
-            bool playable = playableCards.Contains(card);
-
+            bool playable = playableCardIDs.Contains(cardID);
             cardUI.SetPlayable(playable);
         }
     }
+
     public void ResetPlayableCards()
     {
-        foreach (var kvp in handCardUIs)
-        {
-            CardUI cardUI = kvp.Value;
+        foreach (CardUI cardUI in handCardUIs.Values)
             cardUI.SetPlayable(true);
+    }
+
+    public void ClearHand()
+    {
+        foreach (CardUI cardUI in handCardUIs.Values)
+        {
+            if (cardUI != null)
+                cardUI.OnCardClicked -= HandleCardClicked;
         }
+
+        handCardUIs.Clear();
+        ClearSelectedCard();
+    }
+
+    public void ClearPlayedCards()
+    {
+        playedCardUIs.Clear();
     }
 }

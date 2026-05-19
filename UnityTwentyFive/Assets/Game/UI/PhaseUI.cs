@@ -6,7 +6,7 @@ public class PhaseUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI currentPhase;
 
-    public void Render(GamePhase phase)
+    public void Render(string phase)
     {
         currentPhase.text = "Current Phase: " + phase;
     }

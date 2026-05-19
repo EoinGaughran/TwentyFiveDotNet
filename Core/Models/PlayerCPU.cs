@@ -15,7 +15,7 @@ namespace TwentyFiveDotNet.Core.Models
 
         public Card? Decide(
             PlayerDecisionType type,
-            List<Card>? options,
+            IReadOnlyList<Card>? options,
             Card? trump, Card? led)
         {
             return type switch
@@ -44,7 +44,7 @@ namespace TwentyFiveDotNet.Core.Models
             return _rules.GetWorstCard(_hand, TrumpCard);
         }
 
-        public Card ChooseCard(List<Card> legalCards, Card TrumpCard, Card LedCard)
+        public Card ChooseCard(IReadOnlyList<Card> legalCards, Card TrumpCard, Card LedCard)
         {
             return _rules.GetBestCard(legalCards, TrumpCard, LedCard);
         }

@@ -27,7 +27,7 @@ namespace TwentyFiveDotNet.Core.Models
         public Card? TrickWinningCard { get; private set; }
         public Player? TrickWinningPlayer { get; private set; }
         public Player? PendingPlayer { get; private set; }
-        public List<Card>? PendingOptions { get; private set; } = new List<Card>();
+        public IReadOnlyList<Card>? PendingOptions { get; private set; } = new List<Card>();
         public PlayerDecisionType? PendingDecisionType { get; private set; }
 
         public bool TrumpStolen { get; private set; } = false;
@@ -121,7 +121,7 @@ namespace TwentyFiveDotNet.Core.Models
             PendingPlayer = player;
         }
 
-        public void SetPendingOptions(List<Card>? options)
+        public void SetPendingOptions(IReadOnlyList<Card>? options)
         {
             PendingOptions = options;
         }

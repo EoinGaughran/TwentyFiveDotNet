@@ -28,7 +28,9 @@ namespace TwentyFiveDotNet.Core.Game
         //Turn Flow
         public event Action<Card, Player>? OnPlayerSteal;
         public event Action<Player>? OnPlayerTurnStarted;
-        public event Action<Player, PlayerDecisionType, List<Card>?>? OnPlayerInputRequest;
+        public event Action<Player, PlayerDecisionType, IReadOnlyList<Card>?>? OnPlayerInputRequest;
+        public event Action<Player, int>? OnNewTrick;
+        public event Action? OnHandEnd;
 
         //Card Play
         public event Action<CardPlayedEvent>? OnCardPlayed;
@@ -37,7 +39,6 @@ namespace TwentyFiveDotNet.Core.Game
         public event Action<List<Player>>? OnScoreChanged;
         public event Action<Card, Player, bool>? OnTrickNewWinner;
         public event Action<Card, Player>? OnTrickScored;
-        public event Action<Player, int>? OnNewTrick;
 
         //Game State
         public event Action<GamePhase>? OnGamePhaseChange;
@@ -188,9 +189,9 @@ namespace TwentyFiveDotNet.Core.Game
                     TrickEnd();
                     break;
 
-                case GamePhase.TurnEnd:
+                case GamePhase.HandEnd:
 
-                    TurnEnd();
+                    HandEnd();
                     break;
 
                 case GamePhase.NewGame:
@@ -211,26 +212,24 @@ namespace TwentyFiveDotNet.Core.Game
         private void RequestPlayerDecision(
             Player player,
             PlayerDecisionType type,
-            List<Card>? options)
+            IReadOnlyList<Card>? options)
         {
+            _gameState.SetPendingPlayer(player);
+            _gameState.SetPendingOptions(options);
+            _gameState.SetPendingDecisionType(type);
 
             if (player is PlayerCPU cpu)
             {
-                _gameState.SetPendingDecisionType(type);
                 var chosen = cpu.Decide(
                     type,
                     options,
                     _gameState.TrumpCard,
                     _gameState.LedCard);
 
-                SubmitPlayerAction(chosen);
+                SubmitPlayerAction(chosen?.Id);
             }
             else
             {
-                _gameState.SetPendingPlayer(player);
-                _gameState.SetPendingOptions(options);
-                _gameState.SetPendingDecisionType(type);
-
                 ChangeGamePhase(GamePhase.AwaitingPlayerInput);
 
                 OnPlayerInputRequest?.Invoke(
@@ -240,7 +239,7 @@ namespace TwentyFiveDotNet.Core.Game
             }
         }
 
-        public void SubmitPlayerAction(Card? chosenCard)
+        public void SubmitPlayerAction(int? chosenCardID)
         {
             switch (_gameState.PendingDecisionType)
             {
@@ -250,25 +249,31 @@ namespace TwentyFiveDotNet.Core.Game
                     break;
 
                 case PlayerDecisionType.LeadCard:
-                    var card = ValidateCard(chosenCard);
+                    var card = ValidateCard(chosenCardID);
                     SubmitLeadCard(card);
                     break;
 
                 case PlayerDecisionType.StealTrump:
-                    card = ValidateCard(chosenCard);
+                    card = ValidateCard(chosenCardID);
                     DiscardCard(card);
                     break;
 
                 case PlayerDecisionType.PlayCard:
-                    card = ValidateCard(chosenCard);
+                    card = ValidateCard(chosenCardID);
                     SubmitPlayerCard(card);
                     break;
             }
         }
 
-        public static Card ValidateCard(Card? chosenCard)
+        public Card ValidateCard(int? chosenCardID)
         {
-            return chosenCard ?? throw new InvalidOperationException("ChosenCard is null");
+            if (chosenCardID == null)
+                throw new InvalidOperationException("No card selected.");
+
+            var card = _gameState.PendingOptions
+                .FirstOrDefault(c => c.Id == chosenCardID.Value);
+
+            return card ?? throw new InvalidOperationException("Selected card is not legal.");
         }
 
         private void Initialize()
@@ -398,7 +403,7 @@ namespace TwentyFiveDotNet.Core.Game
             RequestPlayerDecision(
                     currentPlayer,
                     PlayerDecisionType.LeadCard,
-                    null
+                    currentPlayer.Hand
                     );
 
             return;
@@ -480,7 +485,7 @@ namespace TwentyFiveDotNet.Core.Game
             RequestPlayerDecision(
                     currentPlayer,
                     PlayerDecisionType.StealTrump,
-                    null
+                    currentPlayer.Hand
                     );
 
             return;
@@ -639,7 +644,7 @@ namespace TwentyFiveDotNet.Core.Game
 
             if (_gameState.ArePlayersOutOfCards())
             {
-                ChangeGamePhase(GamePhase.TurnEnd);
+                ChangeGamePhase(GamePhase.HandEnd);
                 return;
             }
 
@@ -650,8 +655,9 @@ namespace TwentyFiveDotNet.Core.Game
             return;
         }
 
-        public void TurnEnd()
+        public void HandEnd()
         {
+            OnHandEnd?.Invoke();
             ChangeGamePhase(GamePhase.RotateDealer);
             return;
         }

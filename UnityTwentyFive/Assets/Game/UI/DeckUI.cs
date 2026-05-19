@@ -10,6 +10,7 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
     private RectTransform rectTransform;
 
     private int cardNumber;
+    private bool TrumpDrawable;
 
     [Header("Events")]
     public UnityEvent OnTrumpFliped;
@@ -22,6 +23,7 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
     public void Init(int initialCardNumber)
     {
         cardNumber = initialCardNumber;
+        TrumpDrawable = false;
 
         SetupRect();
         Render();
@@ -49,9 +51,25 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
         label.text = cardNumber.ToString();
     }
 
+    public void SetTrumpToDrawable()
+    {
+        TrumpDrawable = true;
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
         Debug.Log("Deck clicked.");
-        OnTrumpFliped?.Invoke();
+
+        if(TrumpDrawable)
+        {
+            OnTrumpFliped?.Invoke();
+            TrumpDrawable=false;
+        }
+        else
+        {
+            Debug.Log("You can not draw a card right now.");
+        }
+
+        
     }
 }

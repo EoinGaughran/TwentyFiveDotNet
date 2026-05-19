@@ -36,7 +36,7 @@ namespace TwentyFiveDotNet.Core.Game
             WinningPlayer.AddPoints(_config.PointsPerTrick);
         }
 
-        public List<Card> GetPlayableCards(List<Card> hand, Card trumpCard, Card ledCard)
+        public IReadOnlyList<Card> GetPlayableCards(IReadOnlyList<Card> hand, Card trumpCard, Card ledCard)
         {
             bool ledIsTrump = IsTrump(ledCard, trumpCard);
 
@@ -182,7 +182,7 @@ namespace TwentyFiveDotNet.Core.Game
                 .ToList();
         }
 
-        public Card GetBestCard(List<Card> Set, Card TrumpCard, Card LedCard)
+        public Card GetBestCard(IReadOnlyList<Card> Set, Card TrumpCard, Card LedCard)
         {
             Card bestCard = Set[0];
 

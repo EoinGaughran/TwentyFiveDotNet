@@ -13,14 +13,14 @@ public class PlayerPanelUI : MonoBehaviour
     public Player Human { get; private set; }
     public PlayerUI HumanUI => humanUI;
 
-    private readonly Dictionary<Player, PlayerUI> playerUIs = new();
+    private readonly Dictionary<int, PlayerUI> playerUIs = new();
 
     public void RenderPlayers(IReadOnlyList<Player> players)
     {
         playerUIs.Clear();
 
         humanUI.Bind(players[0]);
-        playerUIs[players[0]] = humanUI;
+        playerUIs[players[0].Id] = humanUI;
 
         foreach (Transform child in opponentContainer)
         {
@@ -33,54 +33,60 @@ public class PlayerPanelUI : MonoBehaviour
             PlayerUI ui = opponentGO.GetComponent<PlayerUI>();
 
             ui.Bind(players[i]);
-            playerUIs[players[i]] = ui;
+
+            playerUIs[players[i].Id] = ui;
         }
     }
 
-    public void RemoveCardFromPlayer(Player player, Card card)
+    public void AllowCardPlay()
     {
-        if (!playerUIs.TryGetValue(player, out PlayerUI ui))
+        humanUI.AllowCardPlay();
+    }
+
+    public void RemoveCardFromPlayer(int playerID, int cardID)
+    {
+        if (!playerUIs.TryGetValue(playerID, out PlayerUI ui))
         {
-            Debug.LogWarning($"No UI found for player {player.Name}");
+            Debug.LogWarning($"No UI found for player ID {playerID}");
             return;
         }
 
-        ui.RemoveCardFromHand(card);
+        ui.RemoveCardFromHand(cardID);
     }
 
-    public void AddCardToPlayerHand(Player player, Card card)
+    public void AddCardToPlayerHand(int playerID, CardUI cardUI)
     {
-        if (!playerUIs.TryGetValue(player, out PlayerUI ui))
+        PlayerUI ui = GetPlayerUI(playerID);
+
+        ui.AddCardToHand(cardUI);
+    }
+    public PlayerUI GetPlayerUI(int playerID)
+    {
+        if (!playerUIs.TryGetValue(playerID, out PlayerUI ui))
         {
-            Debug.LogWarning($"No UI found for player {player.Name}");
-            return;
+            Debug.LogError($"No UI found for player ID {playerID}");
+
+            throw new KeyNotFoundException(
+                $"No PlayerUI exists for player ID {playerID}");
         }
 
-        ui.AddCardToHand(card);
+        return ui;
     }
 
-    public void RefreshPlayedCards(Player player)
+    public void MoveCardToPlayedCards(int playerID, CardUI card)
     {
-        if (!playerUIs.TryGetValue(player, out PlayerUI ui))
-        {
-            Debug.LogWarning($"No UI found for player {player.Name}");
-            return;
-        }
+        PlayerUI ui = GetPlayerUI(playerID);
 
-        ui.RenderPlayedCards();
+        ui.AddCardToPlayedCards(card);
     }
 
-    public void PrintPlayersScores(IReadOnlyList<Player> players)
+    public void PrintPlayersScores(IReadOnlyList<PlayerScoreViewData> players)
     {
-        foreach (Player player in players)
+        foreach (var player in players)
         {
-            if (!playerUIs.TryGetValue(player, out PlayerUI ui))
-            {
-                Debug.LogWarning($"No UI found for player {player.Name}");
-                return;
-            }
+            PlayerUI ui = GetPlayerUI(player.PlayerId);
 
-            ui.RenderText();
+            ui.RenderText(player.PlayerName, player.Score);
         }
     }
 }

@@ -20,7 +20,7 @@
 
         Scoring,
         NewTurn,
-        TurnEnd,
+        HandEnd,
         TrickEnd,
 
         AwaitingReplayDecision,

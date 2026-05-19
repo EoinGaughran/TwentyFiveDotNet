@@ -38,7 +38,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
                 customConsole.WriteLine($"{gameState.Deck.Cards.Count} cards remain in {gameState.Deck}");
             };
 
-            _manager.OnTrumpResolved += (trumpData, dealer) =>
+            _manager.OnTrumpResolved += (trumpData, dealer, deck) =>
             {
                 customConsole.WriteLine($"Dealer {dealer.Name} flipped the trump card. It's the {trumpData._trumpCard}");
 
@@ -46,6 +46,8 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
                 {
                     customConsole.WriteLine($"{kvp.Key} is worth: {kvp.Value}");
                 }
+
+                customConsole.WriteLine($"{deck} has {deck.Cards.Count} cards remaining.");
 
                 //customConsole.WriteLine($"Dealer {dealer.Name} has the Ace of Trumps. They may steal it.");
             };
@@ -103,7 +105,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
                         customConsole.ShowPlayableCards(player.Hand);
                         var chosenLeadCard = customConsole.RequestCardChoice(player.Hand.Count);
 
-                        _manager.SubmitPlayerAction(player.Hand[chosenLeadCard]);
+                        _manager.SubmitPlayerAction(player.Hand[chosenLeadCard].Id);
 
                         break;
 
@@ -114,7 +116,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
 
                         var chosenDroppedCard = customConsole.RequestCardChoice(player.Hand.Count);
 
-                        _manager.SubmitPlayerAction(player.Hand[chosenDroppedCard]);
+                        _manager.SubmitPlayerAction(player.Hand[chosenDroppedCard].Id);
 
                         break;
 
@@ -128,7 +130,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
 
                         var chosen = customConsole.RequestCardChoice(player.Hand.Count);
 
-                        _manager.SubmitPlayerAction(options[chosen]);
+                        _manager.SubmitPlayerAction(options[chosen].Id);
 
                         break;
                 }

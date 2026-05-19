@@ -29,7 +29,13 @@ public class TablePanelUI : MonoBehaviour
     }
     public void AllowTrumpFlip()
     {
-        //TO DO
+        if(deckUI == null)
+        {
+            Debug.LogWarning("There is no UI for Deck.");
+            return;
+        }
+
+        deckUI.SetTrumpToDrawable();
     }
 
     public void RenderStatusCard(Card StatusCard, StatusCardType statusCardType)
@@ -40,6 +46,15 @@ public class TablePanelUI : MonoBehaviour
         statusCardUI.Init(StatusCard, statusCardType);
 
     }
+
+    public void AddCardToStatusSlot(CardUI statusCard, StatusCardType statusCardType)
+    {
+        Transform transform = GetStatusCardTransform(statusCardType);
+
+        statusCard.transform.SetParent(transform, false);
+        statusCard.SetupRect();
+    }
+
     private Transform GetStatusCardTransform(StatusCardType statusCardType)
     {
         return statusCardType switch
