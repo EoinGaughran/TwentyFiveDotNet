@@ -72,23 +72,34 @@ public class GameUI : MonoBehaviour, IGameInteraction
     private void HandleDealCompleted(GameState gameState)
     {
         var players = gameState.Players.ToList();
+        var dealtHandsSnapshot = gameState.Players
+            .Select(player => new DealtPlayerSnapshot
+            {
+                PlayerId = player.Id,
+                Cards = player.Hand.ToList()
+            })
+            .ToList();
 
         var deckCount = gameState.Deck.Cards.Count;
-        var playerCount = players.Count;
+        var playerCount = dealtHandsSnapshot.Count;
         var deckName = gameState.Deck.ToString();
 
         EnqueueUI(() =>
         {
             _playerPanelUI.RenderPlayers(players);
 
-            foreach (var player in players)
+            foreach (var player in dealtHandsSnapshot)
             {
-                PlayerUI playerUI = _playerPanelUI.GetPlayerUI(player.Id);
+                PlayerUI playerUI = _playerPanelUI.GetPlayerUI(player.PlayerId);
 
-                foreach (var card in player.Hand)
+                foreach (var card in player.Cards)
                 {
-                    CardUI cardUI =
-                        _cardUIFactory.CreateCardUI(card);
+                    CardUI cardUI;
+
+                    if (player.PlayerId == 0)
+                        cardUI = _cardUIFactory.CreateCardUI(card, false);
+                    else
+                        cardUI = _cardUIFactory.CreateCardUI(card, true);
 
                     playerUI.AddCardToHand(cardUI);
                 }
@@ -117,7 +128,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
             //_tablePanelUI.RenderStatusCard(trumpCard, StatusCardType.TrumpCard);
 
-            CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard);
+            CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false);
             _tablePanelUI.AddCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
 
             _tablePanelUI.RenderDeckCount(deckCardCount);
@@ -209,15 +220,13 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 _consoleLogUI.AppendText($"{playerName} played {playedCard}");
             }
 
-            _playerPanelUI.RemoveCardFromPlayer(playerID, playedCardID);
-
             if (_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
             {
                 _playerPanelUI.MoveCardToPlayedCards(playerID, playedCardUI);
             }
             else
             {
-                Debug.LogError($"No CardUI found for card ID {playedCardUI}");
+                Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
             }
         });
     }
@@ -378,6 +387,9 @@ public class GameUI : MonoBehaviour, IGameInteraction
         EnqueueUI(() =>
         {
             _cardUIFactory.ClearAllCardUIs();
+
+            _tablePanelUI.DestroyStatusCard(StatusCardType.WinningCard);
+            _tablePanelUI.DestroyStatusCard(StatusCardType.LedCard);
         });
     }
 

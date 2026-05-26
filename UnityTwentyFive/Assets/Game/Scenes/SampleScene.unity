@@ -4082,6 +4082,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardUIFactory
   cardPrefab: {fileID: 852416131}
+  cardPrefabSmall: {fileID: 1788753387}
 --- !u!4 &1896355526
 Transform:
   m_ObjectHideFlags: 0

@@ -5,12 +5,20 @@ using UnityEngine;
 public class CardUIFactory : MonoBehaviour
 {
     [SerializeField] private GameObject cardPrefab;
+    [SerializeField] private GameObject cardPrefabSmall;
 
     private readonly Dictionary<int, CardUI> allCardUIs = new();
 
-    public CardUI CreateCardUI(Card card)
+    public CardUI CreateCardUI(Card card, bool sizeSmall)
     {
-        GameObject cardGO = Instantiate(cardPrefab);
+        GameObject _cardPrefab;
+
+        if (sizeSmall) 
+            _cardPrefab = cardPrefabSmall;
+        else
+            _cardPrefab = cardPrefab;
+
+        GameObject cardGO = Instantiate(_cardPrefab);
 
         CardUI cardUI = cardGO.GetComponent<CardUI>();
 
