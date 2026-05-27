@@ -68,12 +68,12 @@ public class PlayerUI : MonoBehaviour
         playedCardUIs.Remove(cardID);
     }
 
-    public void RemoveCardFromHand(int cardID)
+    public bool RemoveCardFromHand(int cardID)
     {
         if (!handCardUIs.TryGetValue(cardID, out CardUI cardUI))
         {
             Debug.LogWarning($"No CardUI found for card ID {cardID} in {playerName}'s hand.");
-            return;
+            return false;
         }
 
         if (selectedCard == cardUI)
@@ -81,6 +81,8 @@ public class PlayerUI : MonoBehaviour
 
         cardUI.OnCardClicked -= HandleCardClicked;
         handCardUIs.Remove(cardID);
+
+        return true;
     }
 
     public void AddCardToPlayedCards(CardUI cardUI)
@@ -151,10 +153,28 @@ public class PlayerUI : MonoBehaviour
 
     private void HandleCardClicked(CardUI cardUI)
     {
-        if (!cardPlayAllowed) return;
-        if (cardUI == null) return;
-        if (!handCardUIs.ContainsKey(cardUI.GetCardID())) return;
-        if (!cardUI.IsPlayable()) return;
+        if (!cardPlayAllowed)
+        {
+            Debug.Log($"Its not your turn.");
+            return;
+        }
+        
+        if (cardUI == null)
+        {
+            Debug.Log($"The UI for clicked card {cardUI} is null.");
+            return;
+        }
+
+        if (!handCardUIs.ContainsKey(cardUI.GetCardID()))
+        {
+            Debug.Log($"The clicked card does not exist in your hand.");
+            return;
+        }
+        if (!cardUI.IsPlayable())
+        {
+            Debug.Log($"This card cannot be played.");
+            return;
+        }
 
         if (selectedCard == cardUI)
         {

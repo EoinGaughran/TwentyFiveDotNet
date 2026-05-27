@@ -5,26 +5,28 @@ using UnityEngine;
 public class CardUIFactory : MonoBehaviour
 {
     [SerializeField] private GameObject cardPrefab;
-    [SerializeField] private GameObject cardPrefabSmall;
 
     private readonly Dictionary<int, CardUI> allCardUIs = new();
 
     public CardUI CreateCardUI(Card card, bool sizeSmall)
     {
-        GameObject _cardPrefab;
-
-        if (sizeSmall) 
-            _cardPrefab = cardPrefabSmall;
-        else
-            _cardPrefab = cardPrefab;
-
-        GameObject cardGO = Instantiate(_cardPrefab);
+        GameObject cardGO = Instantiate(cardPrefab);
 
         CardUI cardUI = cardGO.GetComponent<CardUI>();
 
         cardUI.Setup(card);
 
         allCardUIs[card.Id] = cardUI;
+
+        CardSize cardSize;
+
+        if(sizeSmall)
+            cardSize = CardSize.Small;
+        else
+            cardSize = CardSize.Large;
+
+        cardUI.SetCardSize(cardSize);
+        cardUI.SetupRect();
 
         return cardUI;
     }
@@ -36,6 +38,12 @@ public class CardUIFactory : MonoBehaviour
 
     public void ClearAllCardUIs()
     {
+        foreach (var cardUI in allCardUIs.Values)
+        {
+            if (cardUI != null)
+                Destroy(cardUI.gameObject);
+        }
+
         allCardUIs.Clear();
     }
 }

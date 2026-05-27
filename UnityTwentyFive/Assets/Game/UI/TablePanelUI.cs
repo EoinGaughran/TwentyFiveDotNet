@@ -15,17 +15,19 @@ public class TablePanelUI : MonoBehaviour
 
     private DeckUI deckUI;
 
-    public void RenderDeckCount(int cardCount)
+    public bool RenderDeckCount(int cardCount)
     {
         if (deckUI == null)
         {
             deckUI = Instantiate(deckPrefab, deckSlot).GetComponent<DeckUI>();
             deckUI.Init(cardCount);
+            return false;
         }
         else
         {
             deckUI.SetCardNumber(cardCount);
         }
+        return true;
     }
     public void AllowTrumpFlip()
     {

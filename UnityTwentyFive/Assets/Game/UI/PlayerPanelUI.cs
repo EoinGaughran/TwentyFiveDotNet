@@ -43,20 +43,26 @@ public class PlayerPanelUI : MonoBehaviour
         humanUI.AllowCardPlay();
     }
 
-    public void RemoveCardFromPlayer(int playerID, int cardID)
+    public bool RemoveCardFromPlayer(int playerID, int cardID)
     {
         if (!playerUIs.TryGetValue(playerID, out PlayerUI ui))
         {
             Debug.LogWarning($"No UI found for player ID {playerID}");
-            return;
+            return false;
         }
 
-        ui.RemoveCardFromHand(cardID);
+        if(ui.RemoveCardFromHand(cardID))
+            return true;
+
+        return false;
     }
 
     public void AddCardToPlayerHand(int playerID, CardUI cardUI)
     {
         PlayerUI ui = GetPlayerUI(playerID);
+
+        if(playerID != 0)
+            cardUI.SetCardSize(CardSize.Small);
 
         ui.AddCardToHand(cardUI);
     }

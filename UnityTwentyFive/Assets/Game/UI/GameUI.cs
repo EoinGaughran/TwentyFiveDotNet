@@ -105,12 +105,15 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 }
             }
 
-            _tablePanelUI.RenderDeckCount(deckCount);
-
-            _consoleLogUI.AppendText(
-                $"{playerCount} players added to game." +
-                $"\n{deckName} created." +
-                $"\n{deckCount} cards remain in {deckName}");
+            if(_tablePanelUI.RenderDeckCount(deckCount))
+            {
+                _consoleLogUI.AppendText(
+                    $"{playerCount} players added to game." +
+                    $"\n{deckName} created." +
+                    $"\n{deckCount} cards remain in {deckName}");
+            }
+            else
+                _consoleLogUI.AppendText("RenderDeckCount failed.");
         });
     }
 
@@ -156,9 +159,14 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         EnqueueUI(() =>
         {
-            _consoleLogUI.AppendText($"{cardPlayerName} discarded {discardedCardValue}.");
-
-            _playerPanelUI.RemoveCardFromPlayer(cardPlayerID, discardedCardID);
+            if(_playerPanelUI.RemoveCardFromPlayer(
+                cardPlayerID,
+                discardedCardID))
+            {
+                _consoleLogUI.AppendText($"{cardPlayerName} discarded {discardedCardValue}.");
+            }
+            else
+                Debug.LogError($"{cardPlayerName} failed to discard {discardedCardValue}.");
         });
     }
 
@@ -244,8 +252,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         EnqueueUI(() =>
         {
-            _playerPanelUI.HumanUI.AllowCardPlay();
-
             _consoleLogUI.AppendText($"PlayerDecisionType: {decisionTypeName}");
 
             currentDecisionType = decisionType;
@@ -299,6 +305,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
             currentDecisionType = default;
             currentOptions = null;
 
+            _playerPanelUI.HumanUI.DisableCardPlay();
             _playerPanelUI.HumanUI.ResetPlayableCards();
         }
         else

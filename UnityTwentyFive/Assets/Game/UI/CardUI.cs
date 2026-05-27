@@ -11,10 +11,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public TextMeshProUGUI label;
     public RectTransform CardVisual;
     [SerializeField] private Image cardImage;
+    [SerializeField] private RectTransform rectTransformVisual;
+    private RectTransform rectTransform;
 
     private static readonly Color PlayableColor = Color.white;
     private static readonly Color UnplayableColor = new(0.7f, 0.7f, 0.7f);
-    private RectTransform rectTransform;
 
     private int cardID;
     private int playerID;
@@ -50,7 +51,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
            CardVisual.transform.localPosition.x,
            offset
            );
-
     }
 
     public void SetPlayable(bool playable)
@@ -84,5 +84,23 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
         rectTransform.anchoredPosition = Vector2.zero;
         rectTransform.localScale = Vector3.one;
+    }
+
+    public void SetCardSize(CardSize size)
+    {
+        switch (size)
+        {
+            case CardSize.Small:
+                label.fontSize = 30;
+                rectTransformVisual.sizeDelta = new Vector2(90, 140);
+                rectTransform.sizeDelta = new Vector2(90, 140);
+                break;
+
+            case CardSize.Large:
+                label.fontSize = 50;
+                rectTransformVisual.sizeDelta = new Vector2(140, 200);
+                rectTransform.sizeDelta = new Vector2(140, 200);
+                break;
+        }
     }
 }
