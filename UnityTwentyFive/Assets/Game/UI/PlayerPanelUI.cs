@@ -78,12 +78,20 @@ public class PlayerPanelUI : MonoBehaviour
 
         return ui;
     }
-
-    public void MoveCardToPlayedCards(int playerID, CardUI card)
+        
+    public bool MoveCardToPlayedCards(int playerID, CardUI cardUI)
     {
         PlayerUI ui = GetPlayerUI(playerID);
 
-        ui.AddCardToPlayedCards(card);
+        if(!ui.AddCardToPlayedCards(cardUI))
+            return false;
+
+        int cardID = cardUI.GetCardID();
+
+        if(!ui.RemoveCardFromHand(cardID))
+            return false;
+
+        return true;
     }
 
     public void PrintPlayersScores(IReadOnlyList<PlayerScoreViewData> players)

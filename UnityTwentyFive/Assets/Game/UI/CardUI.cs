@@ -1,7 +1,7 @@
 using System;
+using System.Collections;
 using TMPro;
 using TwentyFiveDotNet.Core.Models;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -102,5 +102,32 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
                 rectTransform.sizeDelta = new Vector2(140, 200);
                 break;
         }
+    }
+
+    public void AnimateTo(Vector2 targetAnchoredPosition, float duration)
+    {
+        StartCoroutine(MoveTo(targetAnchoredPosition, duration));
+    }
+
+    private IEnumerator MoveTo(Vector2 target, float duration)
+    {
+        Vector2 start = rectTransform.anchoredPosition;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            // smooth ease
+            t = t * t * (3f - 2f * t);
+
+            rectTransform.anchoredPosition =
+                Vector2.Lerp(start, target, t);
+
+            yield return null;
+        }
+
+        rectTransform.anchoredPosition = target;
     }
 }

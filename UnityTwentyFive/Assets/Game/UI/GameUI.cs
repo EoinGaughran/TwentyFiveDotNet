@@ -159,14 +159,17 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         EnqueueUI(() =>
         {
-            if(_playerPanelUI.RemoveCardFromPlayer(
-                cardPlayerID,
-                discardedCardID))
+            if (_cardUIFactory.TryGetCardUI(discardedCardID, out var playedCardUI))
             {
-                _consoleLogUI.AppendText($"{cardPlayerName} discarded {discardedCardValue}.");
+                if (_playerPanelUI.MoveCardToPlayedCards(cardPlayerID, playedCardUI))
+                {
+                    _consoleLogUI.AppendText($"{cardPlayerName} discarded {discardedCardValue}.");
+                }
+                else
+                    Debug.LogError($"{cardPlayerName} failed to discard {discardedCardValue}.");
             }
             else
-                Debug.LogError($"{cardPlayerName} failed to discard {discardedCardValue}.");
+                Debug.LogError($"TryGetCardUI failed to retrieve playedCardUI from cardPlayerID:{cardPlayerID}");
         });
     }
 

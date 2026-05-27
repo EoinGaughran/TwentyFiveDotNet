@@ -85,24 +85,36 @@ public class PlayerUI : MonoBehaviour
         return true;
     }
 
-    public void AddCardToPlayedCards(CardUI cardUI)
+    public bool AddCardToPlayedCards(CardUI cardUI)
     {
         if (cardUI == null)
         {
             Debug.LogError("Tried to add null CardUI to played cards.");
-            return;
+            return false;
         }
 
         int cardID = cardUI.GetCardID();
 
-        RemoveCardFromHand(cardID);
-
-        cardUI.transform.SetParent(cardsPlayedParent, false);
         cardUI.OnCardClicked -= HandleCardClicked;
-
         playedCardUIs[cardID] = cardUI;
 
-        LayoutPlayedCards();
+        RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+
+        cardRect.SetParent(cardsPlayedParent, true);
+        SetupCardRect(cardRect, false);
+        cardUI.AnimateTo(Vector2.zero, 0.25f);
+
+        return true;
+    }
+    public void SetupCardRect(RectTransform rect, bool resetPosition)
+    {
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.localScale = Vector3.one;
+
+        if (resetPosition)
+            rect.anchoredPosition = Vector2.zero;
     }
 
     private void LayoutPlayedCards()
