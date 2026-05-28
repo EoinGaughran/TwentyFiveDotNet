@@ -102,7 +102,13 @@ public class PlayerUI : MonoBehaviour
 
         cardRect.SetParent(cardsPlayedParent, true);
         SetupCardRect(cardRect, false);
-        cardUI.AnimateTo(Vector2.zero, 0.25f);
+
+        int pCount = playedCardUIs.Count;
+        float offsetAmount = 4;
+        float offset = pCount * offsetAmount;
+        Vector2 destination = new(Vector2.zero.x + offset, Vector2.zero.y + offset);
+
+        cardUI.AnimateTo(destination, 0.25f);
 
         return true;
     }

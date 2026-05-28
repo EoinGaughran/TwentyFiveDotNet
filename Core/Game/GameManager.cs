@@ -597,15 +597,15 @@ namespace TwentyFiveDotNet.Core.Game
                 _gameState.SetTrickResult(
                 currentPlayer,
                 chosenCard);
+
+                trickWinningCard = _gameState.GetTrickWinningCardOrThrow();
+                var trickWinningPlayer = _gameState.GetTrickWinningPlayerOrThrow();
+
+                OnTrickNewWinner?.Invoke(
+                    trickWinningCard,
+                    trickWinningPlayer,
+                    isDealer);
             }
-
-            trickWinningCard = _gameState.GetTrickWinningCardOrThrow();
-            var trickWinningPlayer = _gameState.GetTrickWinningPlayerOrThrow();
-
-            OnTrickNewWinner?.Invoke(
-                trickWinningCard,
-                trickWinningPlayer,
-                isDealer);
 
             ChangeGamePhase(GamePhase.PlayerTurn_Start);
             return;

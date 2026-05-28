@@ -8,7 +8,7 @@ public class CardUIFactory : MonoBehaviour
 
     private readonly Dictionary<int, CardUI> allCardUIs = new();
 
-    public CardUI CreateCardUI(Card card, bool sizeSmall)
+    public CardUI CreateCardUI(Card card, bool sizeSmall, bool register)
     {
         GameObject cardGO = Instantiate(cardPrefab);
 
@@ -16,7 +16,8 @@ public class CardUIFactory : MonoBehaviour
 
         cardUI.Setup(card);
 
-        allCardUIs[card.Id] = cardUI;
+        if (register)
+            allCardUIs[card.Id] = cardUI;
 
         CardSize cardSize;
 

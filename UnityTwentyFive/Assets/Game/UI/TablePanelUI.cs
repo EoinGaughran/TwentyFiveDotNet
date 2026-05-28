@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
 public class TablePanelUI : MonoBehaviour
@@ -11,7 +12,8 @@ public class TablePanelUI : MonoBehaviour
     [SerializeField] private Transform trumpSlot;
     [SerializeField] private Transform ledCardSlot;
     [SerializeField] private Transform winningCardSlot;
-    [SerializeField] private GameObject statusCardPrefab;
+
+    private readonly Dictionary<StatusCardType, CardUI> statusCardUIs = new();
 
     private DeckUI deckUI;
 
@@ -40,21 +42,22 @@ public class TablePanelUI : MonoBehaviour
         deckUI.SetTrumpToDrawable();
     }
 
-    public void RenderStatusCard(Card StatusCard, StatusCardType statusCardType)
-    {
-        Transform transform = GetStatusCardTransform(statusCardType);
- 
-        StatusCardUI statusCardUI = Instantiate(statusCardPrefab, transform).GetComponent<StatusCardUI>();
-        statusCardUI.Init(StatusCard, statusCardType);
-
-    }
-
     public void AddCardToStatusSlot(CardUI statusCard, StatusCardType statusCardType)
     {
+        DestroyStatusCard(statusCardType);
+
         Transform transform = GetStatusCardTransform(statusCardType);
 
         statusCard.transform.SetParent(transform, false);
         statusCard.SetupRect();
+        statusCard.Highlight(3);
+
+        statusCardUIs[statusCardType] = statusCard;
+    }
+
+    public bool TryGetStatusCardUI(StatusCardType type, out CardUI cardUI)
+    {
+        return statusCardUIs.TryGetValue(type, out cardUI) && cardUI != null;
     }
 
     private Transform GetStatusCardTransform(StatusCardType statusCardType)
@@ -76,5 +79,7 @@ public class TablePanelUI : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+
+        statusCardUIs.Remove(statusCardType);
     }
 }

@@ -97,9 +97,9 @@ public class GameUI : MonoBehaviour, IGameInteraction
                     CardUI cardUI;
 
                     if (player.PlayerId == 0)
-                        cardUI = _cardUIFactory.CreateCardUI(card, false);
+                        cardUI = _cardUIFactory.CreateCardUI(card, false, true);
                     else
-                        cardUI = _cardUIFactory.CreateCardUI(card, true);
+                        cardUI = _cardUIFactory.CreateCardUI(card, true, true);
 
                     playerUI.AddCardToHand(cardUI);
                 }
@@ -129,9 +129,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
             _consoleLogUI.AppendText($"Dealer {playerName} flipped the trump card. It's the {trumpCard}." +
                 $"\n{deckCardCount} cards remain in {deckName}.");
 
-            //_tablePanelUI.RenderStatusCard(trumpCard, StatusCardType.TrumpCard);
+            CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false, true);
 
-            CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false);
             _tablePanelUI.AddCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
 
             _tablePanelUI.RenderDeckCount(deckCardCount);
@@ -182,17 +181,15 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         EnqueueUI(() =>
         {
-            _consoleLogUI.AppendText($"{stealingPlayerName} stole {trumpCardName}.");
-
-            if (_cardUIFactory.TryGetCardUI(trumpCardID, out var trumpCardUI))
+            if(_tablePanelUI.TryGetStatusCardUI(StatusCardType.TrumpCard, out var trumpCardUI))
             {
                 _playerPanelUI.AddCardToPlayerHand(stealingPlayerID, trumpCardUI);
+                _consoleLogUI.AppendText($"{stealingPlayerName} stole {trumpCardName}.");
             }
             else
             {
                 Debug.LogError($"No CardUI found for card ID {trumpCardID}");
             }
-
         });
     }
 
@@ -219,26 +216,25 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         EnqueueUI(() =>
         {
+            if (!_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
+                Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
+
             if (isLeader)
             {
                 _consoleLogUI.AppendText($"{playerName} led with the {playedCardName}." +
                     $"\n Suit {ledSuit} is leading.");
 
-                _tablePanelUI.RenderStatusCard(playedCard, StatusCardType.LedCard);
+                CardUI statusCardUI = _cardUIFactory.CreateCardUI(playedCard, false, false);
+
+                _tablePanelUI.AddCardToStatusSlot(statusCardUI, StatusCardType.LedCard);
             }
             else
             {
                 _consoleLogUI.AppendText($"{playerName} played {playedCard}");
             }
-
-            if (_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
-            {
-                _playerPanelUI.MoveCardToPlayedCards(playerID, playedCardUI);
-            }
-            else
-            {
-                Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
-            }
+            
+            if(!_playerPanelUI.MoveCardToPlayedCards(playerID, playedCardUI))
+                Debug.LogError($"Failed to move cardID {playedCardID} belonging to {playerName} to the played card area.");
         });
     }
 
@@ -344,10 +340,13 @@ public class GameUI : MonoBehaviour, IGameInteraction
         
     }
 
-    private void HandleTrickNewWinner(Card winningCard, Player player, bool isDealer)
+    private void HandleTrickNewWinner(Card wC, Player p, bool isD)
     {
-        var playerName = player.Name;
-        var winningCardName = winningCard.ToString();
+        var playedCard = wC;
+        var playerName = p.Name;
+        var winningCardName = wC.ToString();
+        var winningCardID = wC.Id;
+        var isDealer = isD;
 
         EnqueueUI(() =>
         {
@@ -355,12 +354,13 @@ public class GameUI : MonoBehaviour, IGameInteraction
             {
                 _consoleLogUI.AppendText($"{playerName} got their dealer's trick.");
             }
-            
-            _consoleLogUI.AppendText($"{playerName} is currently winning with the {winningCardName}.");
-            
-            _tablePanelUI.RenderStatusCard(winningCard, StatusCardType.WinningCard);
-        });
 
+            CardUI winningCardUI = _cardUIFactory.CreateCardUI(playedCard, false, false);
+
+            _consoleLogUI.AppendText($"{playerName} is currently winning with the {winningCardName}.");
+
+            _tablePanelUI.AddCardToStatusSlot(winningCardUI, StatusCardType.WinningCard);
+        });
     }
 
     private void HandleTrickScored(Card winningCard, Player player)

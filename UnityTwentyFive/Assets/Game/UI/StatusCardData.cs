@@ -3,8 +3,8 @@ using UnityEngine;
 public class StatusCardData
 {
     public Transform Transform { get; }
-    public StatusCardUI StatusCardUI { get; }
-    public StatusCardData(Transform transform, StatusCardUI statusCardUI)
+    public CardUI StatusCardUI { get; }
+    public StatusCardData(Transform transform, CardUI statusCardUI)
     {
         Transform = transform;
         StatusCardUI = statusCardUI;
