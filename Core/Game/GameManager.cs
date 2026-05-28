@@ -436,11 +436,6 @@ namespace TwentyFiveDotNet.Core.Game
                 currentPlayer,
                 ledCard);
 
-            OnTrickNewWinner?.Invoke(
-                ledCard,
-                currentPlayer,
-                false);
-
             ChangeGamePhase(GamePhase.PlayerTurn_Start);
             return;
         }

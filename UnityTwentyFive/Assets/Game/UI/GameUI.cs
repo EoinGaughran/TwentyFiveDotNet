@@ -185,6 +185,12 @@ public class GameUI : MonoBehaviour, IGameInteraction
             {
                 _playerPanelUI.AddCardToPlayerHand(stealingPlayerID, trumpCardUI);
                 _consoleLogUI.AppendText($"{stealingPlayerName} stole {trumpCardName}.");
+
+                CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false, false);
+
+                cardUI.SetTransparentStyle();
+
+                _tablePanelUI.AddCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
             }
             else
             {

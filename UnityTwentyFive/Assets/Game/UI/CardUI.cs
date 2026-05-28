@@ -11,6 +11,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public TextMeshProUGUI label;
     public RectTransform CardVisual;
     [SerializeField] private Image cardImage;
+    [SerializeField] private Outline cardOutline;
     [SerializeField] private RectTransform rectTransformVisual;
     private RectTransform rectTransform;
 
@@ -75,6 +76,19 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
                 CardVisual.transform.localPosition.z);
     }
 
+    public void SetTransparentStyle()
+    {
+        // fully transparent white
+        cardImage.color =
+            new Color(1f, 1f, 1f, 0.02f);
+
+        // white outline/stroke
+        cardOutline.effectColor = Color.white;
+
+        // white text
+        label.color = Color.white;
+    }
+
     public void SetupRect()
     {
         rectTransform.anchorMin =
@@ -129,5 +143,52 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         }
 
         rectTransform.anchoredPosition = target;
+    }
+    public void Highlight(int loops = 1)
+    {
+        StartCoroutine(HighlightRoutine(loops));
+    }
+
+    private IEnumerator HighlightRoutine(int loops)
+    {
+        Vector3 original = transform.localScale;
+        Vector3 enlarged = original * 1.1f;
+
+        float duration = 0.08f;
+
+        for (int i = 0; i < loops; i++)
+        {
+            float t = 0f;
+
+            // Scale up
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+
+                transform.localScale = Vector3.Lerp(
+                    original,
+                    enlarged,
+                    t / duration);
+
+                yield return null;
+            }
+
+            t = 0f;
+
+            // Scale down
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+
+                transform.localScale = Vector3.Lerp(
+                    enlarged,
+                    original,
+                    t / duration);
+
+                yield return null;
+            }
+        }
+
+        transform.localScale = original;
     }
 }

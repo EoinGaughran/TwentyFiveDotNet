@@ -1795,6 +1795,7 @@ MonoBehaviour:
   label: {fileID: 1995795357}
   CardVisual: {fileID: 239385036}
   cardImage: {fileID: 239385038}
+  cardOutline: {fileID: 2076022173}
   rectTransformVisual: {fileID: 239385036}
 --- !u!1 &879359746
 GameObject:
@@ -3944,6 +3945,17 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &2076022173 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8729141795487710573, guid: 8d46a8b742f4f5b4883a521771a1c124, type: 3}
+  m_PrefabInstance: {fileID: 1368930023}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
 --- !u!1 &2104605631
 GameObject:
   m_ObjectHideFlags: 0
@@ -4001,7 +4013,6 @@ MonoBehaviour:
   trumpSlot: {fileID: 1386106984}
   ledCardSlot: {fileID: 1782433757}
   winningCardSlot: {fileID: 879359747}
-  cardPrefab: {fileID: 0}
 --- !u!1 &2110570378
 GameObject:
   m_ObjectHideFlags: 0
