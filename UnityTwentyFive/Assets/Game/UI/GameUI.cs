@@ -406,6 +406,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
             _tablePanelUI.DestroyStatusCard(StatusCardType.WinningCard);
             _tablePanelUI.DestroyStatusCard(StatusCardType.LedCard);
+            _tablePanelUI.DestroyStatusCard(StatusCardType.TrumpCard);
         });
     }
 
