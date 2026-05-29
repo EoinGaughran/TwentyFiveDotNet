@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
 
@@ -19,22 +20,36 @@ public class PlayerPanelUI : MonoBehaviour
     {
         playerUIs.Clear();
 
-        humanUI.Bind(players[0]);
-        playerUIs[players[0].Id] = humanUI;
-
         foreach (Transform child in opponentContainer)
         {
             Destroy(child.gameObject);
         }
 
-        for (int i = 1; i < players.Count; i++)
+        Player humanPlayer = players.FirstOrDefault(p => p is PlayerHuman);
+
+        if (humanPlayer != null)
         {
+            Human = humanPlayer;
+            humanUI.gameObject.SetActive(true);
+            humanUI.Bind(humanPlayer);
+            playerUIs[humanPlayer.Id] = humanUI;
+        }
+        else
+        {
+            Human = null;
+            humanUI.gameObject.SetActive(false);
+        }
+
+        foreach (Player player in players)
+        {
+            if (player == humanPlayer)
+                continue;
+
             GameObject opponentGO = Instantiate(opponentPrefab, opponentContainer);
             PlayerUI ui = opponentGO.GetComponent<PlayerUI>();
 
-            ui.Bind(players[i]);
-
-            playerUIs[players[i].Id] = ui;
+            ui.Bind(player);
+            playerUIs[player.Id] = ui;
         }
     }
 

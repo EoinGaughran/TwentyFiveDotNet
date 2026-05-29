@@ -92,14 +92,16 @@ public class GameUI : MonoBehaviour, IGameInteraction
             {
                 PlayerUI playerUI = _playerPanelUI.GetPlayerUI(player.PlayerId);
 
+                bool isHuman = _playerPanelUI.Human != null &&
+                    player.PlayerId == _playerPanelUI.Human.Id;
+
                 foreach (var card in player.Cards)
                 {
-                    CardUI cardUI;
-
-                    if (player.PlayerId == 0)
-                        cardUI = _cardUIFactory.CreateCardUI(card, false, true);
-                    else
-                        cardUI = _cardUIFactory.CreateCardUI(card, true, true);
+                    CardUI cardUI = _cardUIFactory.CreateCardUI(
+                        card,
+                        !isHuman,
+                        true
+                    );
 
                     playerUI.AddCardToHand(cardUI);
                 }

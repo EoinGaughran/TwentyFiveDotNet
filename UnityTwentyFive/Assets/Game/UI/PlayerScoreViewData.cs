@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public readonly struct PlayerScoreViewData
 {
     public readonly int PlayerId;

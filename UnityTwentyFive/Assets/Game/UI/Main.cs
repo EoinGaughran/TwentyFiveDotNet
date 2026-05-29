@@ -36,12 +36,34 @@ public class Main : MonoBehaviour
 
         RulesEngine rules = new(config);
 
-        GameState gameState = runtimeSettings.GameMode switch
+        GameState gameState;
+
+        if (GameSessionData.pendingGameState != null)
         {
-            GameMode.Main => UnityGameBuilder.CreateMainGame(rules, config), // temporary
-            GameMode.Snapshot => TestGameBuilder.CreateBasicGame(rules),
-            _ => throw new InvalidOperationException($"Unsupported GameMode: {runtimeSettings.GameMode}")
-        };
+            Debug.Log("Loading GameState from setup scene.");
+
+            PendingGameState p = GameSessionData.pendingGameState;
+
+            gameState = UnityGameBuilder.CreateFromSetup(
+                rules,
+                config,
+                p.TotalPlayers,
+                p.PlayerName
+                );
+
+            GameSessionData.pendingGameState = null;
+        }
+        else
+        {
+            Debug.Log("No setup GameState found. Creating default test game.");
+
+            gameState = runtimeSettings.GameMode switch
+            {
+                GameMode.Main => UnityGameBuilder.CreateMainGame(rules, config),
+                GameMode.Snapshot => TestGameBuilder.CreateBasicGame(rules),
+                _ => throw new InvalidOperationException($"Unsupported GameMode: {runtimeSettings.GameMode}")
+            };
+        }
 
         _manager = new GameManager(rules, gameState);
 

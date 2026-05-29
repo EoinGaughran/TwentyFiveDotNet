@@ -23,7 +23,6 @@ public class TablePanelUI : MonoBehaviour
         {
             deckUI = Instantiate(deckPrefab, deckSlot).GetComponent<DeckUI>();
             deckUI.Init(cardCount);
-            return false;
         }
         else
         {

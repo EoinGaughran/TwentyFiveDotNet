@@ -34,4 +34,32 @@ public class UnityGameBuilder
 
         return gameState;
     }
+
+    public static GameState CreateFromSetup(
+        RulesEngine rulesEngine,
+        GameConfig config,
+        int totalPlayers,
+        string playerName)
+    {
+        GameState gameState = new();
+        
+        gameState.AddPlayer(new PlayerHuman(playerName));
+
+        int totalHumans = gameState.Players.Count;
+
+        for (int i = totalHumans; i < totalPlayers; i++)
+        {
+            gameState.AddPlayer(new PlayerCPU($"CPU Player {i + 1}", rulesEngine));
+        }
+
+        for (int i = 0; i < totalPlayers; i++)
+        {
+            gameState.Players[i].SetID(i);
+        }
+
+        gameState.Deck.Add52CardsToDeck();
+        gameState.Deck.Shuffle();
+
+        return gameState;
+    }
 }

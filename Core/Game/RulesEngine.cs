@@ -92,6 +92,12 @@ namespace TwentyFiveDotNet.Core.Game
         }
         public int GetCardScore(Card card, Card trumpCard)
         {
+            if (card == null)
+                throw new ArgumentNullException(nameof(card), "GetCardScore received a null card.");
+
+            if (trumpCard == null)
+                throw new ArgumentNullException(nameof(trumpCard), "GetCardScore received a null trump card.");
+
             int score = GetBaseScore(card);
 
             if (IsTrump(card, trumpCard))
@@ -110,6 +116,9 @@ namespace TwentyFiveDotNet.Core.Game
 
         public int GetBaseScore(Card card)
         {
+            if (card == null)
+                throw new ArgumentNullException(nameof(card), "GetBaseScore received a null card.");
+
             if (_config.CardRules.RedSuits.Contains(card.Suit))
             {
                 return _config.CardRules.BaseScoresRed.TryGetValue(card.Rank, out var score)
