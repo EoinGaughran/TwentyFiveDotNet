@@ -200,7 +200,21 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         transform.localScale = original;
     }
 
-    public void FlipToBack()
+    public void SetCardFlip(bool flipState)
+    {
+        flipped = flipState;
+        currentYRotation = 180f;
+        cardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
+
+        cardImage.sprite = flipped ? backSprite : frontSprite;
+        label.enabled = !flipped;
+
+        cardVisual.localScale = flipped
+            ? new Vector3(-1, 1, 1)
+            : new Vector3(1, 1, 1);
+    }
+
+    public void FlipCard()
     {
         StartCoroutine(FlipToBackRoutine());
     }

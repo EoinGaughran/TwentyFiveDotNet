@@ -36,6 +36,6 @@ public class TestSceneController : MonoBehaviour
 
         Debug.Log($"Card pressed, CardID: {cardUI.GetCardID()}. Its is a {cardUI.name}");
 
-        cardUI.FlipToBack();
+        cardUI.FlipCard();
     }
 }

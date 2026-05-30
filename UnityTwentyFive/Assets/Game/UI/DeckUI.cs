@@ -69,7 +69,5 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
         {
             Debug.Log("You can not draw a card right now.");
         }
-
-        
     }
 }

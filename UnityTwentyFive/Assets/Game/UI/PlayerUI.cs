@@ -100,8 +100,10 @@ public class PlayerUI : MonoBehaviour
 
         RectTransform cardRect = cardUI.GetComponent<RectTransform>();
 
+        Vector3 worldPosition = cardUI.transform.position;
         cardRect.SetParent(cardsPlayedParent, true);
-        SetupCardRect(cardRect, false);
+        cardUI.SetupRect();
+        cardUI.transform.position = worldPosition;
 
         int pCount = playedCardUIs.Count;
         float offsetAmount = 4;
