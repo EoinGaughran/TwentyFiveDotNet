@@ -21,8 +21,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     private int playerID;
     private bool isPlayable;
 
+
+    [SerializeField] private Sprite frontSprite;
     [SerializeField] private Sprite backSprite;
+    private bool flipped;
     public float flipDuration = 0.5f;
+    private float currentYRotation = 0f;
+    private bool isFlipping = false;
 
     public event Action<CardUI> OnCardClicked;
 
@@ -31,6 +36,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         cardID = card.Id;
         isPlayable = true;
         label.text = card.ToString();
+        flipped = false;
     }
 
     private void Awake()
@@ -201,28 +207,45 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public IEnumerator FlipToBackRoutine()
     {
+        if (isFlipping) yield break;
+        isFlipping = true;
+
+        float startAngle = currentYRotation;
+        float endAngle = startAngle + 180f;
+        float swapAngle = startAngle + 90f;
+
         float t = 0f;
         bool swapped = false;
 
         while (t < flipDuration)
         {
             t += Time.deltaTime;
-            float progress = t / flipDuration;
-            float angle = Mathf.Lerp(0f, 180f, progress);
 
-            cardVisual.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+            float progress = Mathf.Clamp01(t / flipDuration);
+            currentYRotation = Mathf.Lerp(startAngle, endAngle, progress);
 
-            if (!swapped && angle >= 90f)
+            cardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
+
+            if (!swapped && currentYRotation >= swapAngle)
             {
-                cardVisual.localScale = new Vector3(-1, 1, 1);
-                cardImage.sprite = backSprite;
-                label.enabled = false;
+                flipped = !flipped;
+
+                cardImage.sprite = flipped ? backSprite : frontSprite;
+                label.enabled = !flipped;
+
+                cardVisual.localScale = flipped
+                    ? new Vector3(-1, 1, 1)
+                    : new Vector3(1, 1, 1);
+
                 swapped = true;
             }
 
             yield return null;
         }
 
-        cardVisual.localRotation = Quaternion.Euler(0f, 180f, 0f);
+        currentYRotation = endAngle;
+        cardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
+
+        isFlipping = false;
     }
 }
