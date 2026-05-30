@@ -1793,10 +1793,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardUI
   label: {fileID: 1995795357}
-  CardVisual: {fileID: 239385036}
+  cardVisual: {fileID: 239385036}
   cardImage: {fileID: 239385038}
   cardOutline: {fileID: 2076022173}
-  rectTransformVisual: {fileID: 239385036}
+  backSprite: {fileID: 21300000, guid: 9a95f41f74c7d5846ba8f466549ca134, type: 3}
+  flipDuration: 0.5
 --- !u!1 &879359746
 GameObject:
   m_ObjectHideFlags: 0

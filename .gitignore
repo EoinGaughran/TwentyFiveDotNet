@@ -469,5 +469,7 @@ UnityTwentyFive/[Aa]ssets/[Pp]lugins/[Gg]enerated
 *.exe
 *.pdb
 
+*.pdf
+
 /Bugs
 /Notes

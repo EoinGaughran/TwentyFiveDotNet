@@ -9,10 +9,9 @@ using UnityEngine.UI;
 public class CardUI : MonoBehaviour, IPointerClickHandler
 {
     public TextMeshProUGUI label;
-    public RectTransform CardVisual;
+    [SerializeField] public RectTransform cardVisual;
     [SerializeField] private Image cardImage;
     [SerializeField] private Outline cardOutline;
-    [SerializeField] private RectTransform rectTransformVisual;
     private RectTransform rectTransform;
 
     private static readonly Color PlayableColor = Color.white;
@@ -21,6 +20,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     private int cardID;
     private int playerID;
     private bool isPlayable;
+
+    [SerializeField] private Sprite backSprite;
+    public float flipDuration = 0.5f;
 
     public event Action<CardUI> OnCardClicked;
 
@@ -49,7 +51,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     {
         float offset = selected ? 30f : 0f;
         SetPositionSlot(
-           CardVisual.transform.localPosition.x,
+           cardVisual.transform.localPosition.x,
            offset
            );
     }
@@ -69,11 +71,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void SetPositionSlot(float x, float y)
     {
-        CardVisual.transform.localPosition =
+        cardVisual.transform.localPosition =
             new Vector3(
                 x,
                 y,
-                CardVisual.transform.localPosition.z);
+                cardVisual.transform.localPosition.z);
     }
 
     public void SetTransparentStyle()
@@ -106,14 +108,14 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         {
             case CardSize.Small:
                 label.fontSize = 30;
-                rectTransformVisual.sizeDelta = new Vector2(90, 140);
-                rectTransform.sizeDelta = new Vector2(90, 140);
+                cardVisual.sizeDelta = new Vector2(90, 126);
+                rectTransform.sizeDelta = new Vector2(90, 126);
                 break;
 
             case CardSize.Large:
                 label.fontSize = 50;
-                rectTransformVisual.sizeDelta = new Vector2(140, 200);
-                rectTransform.sizeDelta = new Vector2(140, 200);
+                cardVisual.sizeDelta = new Vector2(140, 196);
+                rectTransform.sizeDelta = new Vector2(140, 196);
                 break;
         }
     }
@@ -190,5 +192,37 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         }
 
         transform.localScale = original;
+    }
+
+    public void FlipToBack()
+    {
+        StartCoroutine(FlipToBackRoutine());
+    }
+
+    public IEnumerator FlipToBackRoutine()
+    {
+        float t = 0f;
+        bool swapped = false;
+
+        while (t < flipDuration)
+        {
+            t += Time.deltaTime;
+            float progress = t / flipDuration;
+            float angle = Mathf.Lerp(0f, 180f, progress);
+
+            cardVisual.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+
+            if (!swapped && angle >= 90f)
+            {
+                cardVisual.localScale = new Vector3(-1, 1, 1);
+                cardImage.sprite = backSprite;
+                label.enabled = false;
+                swapped = true;
+            }
+
+            yield return null;
+        }
+
+        cardVisual.localRotation = Quaternion.Euler(0f, 180f, 0f);
     }
 }
