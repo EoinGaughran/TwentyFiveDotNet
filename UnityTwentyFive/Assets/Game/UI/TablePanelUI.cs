@@ -45,7 +45,7 @@ public class TablePanelUI : MonoBehaviour
     {
         if (card == null)
         {
-            Debug.LogWarning("TablePanelUI.DrawCardUIFromDeckUI: There is no UI for card.");
+            Debug.LogError("TablePanelUI.DrawCardUIFromDeckUI: There is no UI for card.");
             return;
         }
 
@@ -53,6 +53,11 @@ public class TablePanelUI : MonoBehaviour
         card.transform.SetParent(deckSlot, false);
         card.SetupRect();
         card.FlipCard();
+    }
+
+    public void RegisterStatusCardUI(CardUI statusCardUI, StatusCardType statusCardType)
+    {
+        statusCardUIs[statusCardType] = statusCardUI;
     }
 
     public void AddCardToStatusSlot(CardUI statusCard, StatusCardType statusCardType)
@@ -64,22 +69,14 @@ public class TablePanelUI : MonoBehaviour
         statusCard.transform.SetParent(transform, false);
         statusCard.SetupRect();
         statusCard.Highlight(3);
-
-        statusCardUIs[statusCardType] = statusCard;
     }
 
     public void MoveCardToStatusSlot(CardUI statusCard, StatusCardType statusCardType)
     {
-        DestroyStatusCard(statusCardType);
-
         Transform slotTransform = GetStatusCardTransform(statusCardType);
 
-        Vector3 worldPosition = statusCard.transform.position;
-
         statusCard.transform.SetParent(slotTransform, true);
-        statusCard.transform.position = worldPosition;
-
-        statusCard.AnimateTo(Vector2.zero, 1f);
+        statusCard.AnimateTo(Vector2.zero, 2f);
 
         statusCardUIs[statusCardType] = statusCard;
     }
