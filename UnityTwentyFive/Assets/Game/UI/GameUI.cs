@@ -12,7 +12,9 @@ using UnityEngine;
 public class GameUI : MonoBehaviour, IGameInteraction
 {
     private GameManager _manager;
-    private RuntimeSettings _runtimeSettings;
+
+    private UIActionQueue _actionQueue;
+    private HumanInputController _humanInputController;
 
     [SerializeField] private Main _main;
     [SerializeField] private PhaseUI _phaseUI;
@@ -22,16 +24,20 @@ public class GameUI : MonoBehaviour, IGameInteraction
     [SerializeField] private CardUIFactory _cardUIFactory;
     [SerializeField] private AnnouncementUI _announcementUI;
 
-    private Queue<(float time, Action action)> uiQueue = new();
-    private bool isPlayingQueue;
-
     private PlayerDecisionType currentDecisionType;
     private IReadOnlyList<int> currentOptions;
 
-    public void Init(GameManager manager, RuntimeSettings runtimeSettings)
+    public void Init(GameManager manager)
     {
         _manager = manager;
-        _runtimeSettings = runtimeSettings;
+        _actionQueue = gameObject.AddComponent<UIActionQueue>();
+        _humanInputController = new(
+            _manager,
+            _playerPanelUI,
+            _tablePanelUI,
+            _announcementUI,
+            _consoleLogUI
+            );
 
         _manager.OnStateSnapshot += HandleStateSnapshot;
         _manager.OnDealingCompleted += HandleDealCompleted;
@@ -60,7 +66,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var gamePhase = gS.CurrentPhase.ToString();
         var players = gS.Players.ToList();
 
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
             _phaseUI.Render(gamePhase);
             _playerPanelUI.RenderPlayers(players);
@@ -84,7 +90,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var playerCount = dealtHandsSnapshot.Count;
         var deckName = gameState.Deck.ToString();
 
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
             _playerPanelUI.RenderPlayers(players);
 
@@ -126,7 +132,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var deckCardCount = deck.Cards.Count;
         var deckName = deck.ToString();
 
-        EnqueueUI(5.0f, () =>
+        _actionQueue.EnqueueUI(5.0f, () =>
         {
             CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false, true);
 
@@ -136,7 +142,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
             _tablePanelUI.RegisterStatusCardUI(cardUI, StatusCardType.TrumpCard);
         });
 
-        EnqueueUI(3.0f, () =>
+        _actionQueue.EnqueueUI(3.0f, () =>
         {
             _tablePanelUI.TryGetStatusCardUI(StatusCardType.TrumpCard, out var cardUI);
             _tablePanelUI.MoveCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
@@ -151,7 +157,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var dealerName = dealer.Name;
         var leaderName = leader.Name;
 
-        EnqueueUI(1f, () =>
+        _actionQueue.EnqueueUI(1f, () =>
         {
             _consoleLogUI.AppendText($"{dealerName} has been selected as the dealer." +
                 $"\n{leaderName} is leading the trick.");
@@ -167,7 +173,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var discardedCardValue = discardedCard.ToString();
         var discardedCardID = discardedCard.Id;
 
-        EnqueueUI(2.0f, () =>
+        _actionQueue.EnqueueUI(2.0f, () =>
         {
             if (_cardUIFactory.TryGetCardUI(discardedCardID, out var playedCardUI))
             {
@@ -190,7 +196,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var trumpCardName = trumpCard.ToString();
         var trumpCardID = trumpCard.Id;
 
-        EnqueueUI(2.0f, () =>
+        _actionQueue.EnqueueUI(2.0f, () =>
         {
             if(_tablePanelUI.TryGetStatusCardUI(StatusCardType.TrumpCard, out var trumpCardUI))
             {
@@ -217,7 +223,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
     {
         var playerName = player.Name;
 
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
             _consoleLogUI.AppendText($"It's {playerName}'s turn.");
         });
@@ -232,12 +238,14 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var ledSuit = e.PlayedCard.GetSuitSymbolUnicoded();
         var isLeader = e.IsLeader;
         var playedCard = e.PlayedCard;
-        var playerScore = e.Player.Points;
 
-        EnqueueUI(2.0f, () =>
+        _actionQueue.EnqueueUI(2.0f, () =>
         {
             if (!_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
+            {
                 Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
+                return;
+            }
 
             if (isLeader)
             {
@@ -264,92 +272,27 @@ public class GameUI : MonoBehaviour, IGameInteraction
     IReadOnlyList<Card> o)
     {
         var playerName = p.Name;
-        var decisionTypeName = dT.ToString();
         var decisionType = dT;
-        var options = o?.Select(c => c.Id).ToList();
+        var optionIds = o?.Select(c => c.Id).ToList();
 
-
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
-            _consoleLogUI.AppendText($"PlayerDecisionType: {decisionTypeName}");
-
-            currentDecisionType = decisionType;
-            currentOptions = options;
-            string message;
-
-            switch (decisionType)
-            {
-                case PlayerDecisionType.FlipTrump:
-                    message = $"{playerName}, please flip over the trump card.";
-                    _consoleLogUI.AppendText(message);
-                    _announcementUI.Show(message);
-                    _tablePanelUI.AllowTrumpFlip();
-                    break;
-
-                case PlayerDecisionType.LeadCard:
-                    message = $"{playerName}, please lead a card.";
-                    _consoleLogUI.AppendText(message);
-                    _announcementUI.Show(message);
-                    _playerPanelUI.HumanUI.AllowCardPlay();
-                    break;
-
-                case PlayerDecisionType.StealTrump:
-                    message = $"{playerName}, please discard a card to steal the trump card.";
-                    _consoleLogUI.AppendText(message);
-                    _announcementUI.Show(message);
-                    _playerPanelUI.HumanUI.AllowCardPlay();
-                    break;
-
-                case PlayerDecisionType.PlayCard:
-                    if (options == null)
-                        throw new InvalidOperationException("Options was null");
-
-                    message = $"{playerName}, please play a card.";
-                    _consoleLogUI.AppendText(message);
-                    _announcementUI.Show(message);
-                    _playerPanelUI.HumanUI.ShowPlayableCards(options);
-                    _playerPanelUI.HumanUI.AllowCardPlay();
-                    break;
-            }
+            _humanInputController.BeginDecision(
+                playerName,
+                decisionType,
+                optionIds
+            );
         });
     }
 
     public void SubmitSelectedCard()
     {
-        if (_playerPanelUI.HumanUI.CanHumanPlayCards())
-        {
-            var cardID = _playerPanelUI.HumanUI.GetSelectedCardID();
-
-            if (cardID == null)
-            {
-                _consoleLogUI.AppendText("No card selected.");
-                return;
-            }
-
-            _consoleLogUI.AppendText($"Selected card was {cardID}.");
-
-            _manager.SubmitPlayerAction(cardID);
-
-            currentDecisionType = default;
-            currentOptions = null;
-
-            _playerPanelUI.HumanUI.DisableCardPlay();
-            _playerPanelUI.HumanUI.ResetPlayableCards();
-        }
-        else
-        {
-            Debug.Log("You cannot play cards, its not your turn.");
-        }
+        _humanInputController.SubmitSelectedCard();
     }
 
     public void SubmitFlipTrump()
     {
-        _manager.SubmitPlayerAction(null);
-            
-        _consoleLogUI.AppendText($"Trump Flip Submitted.");
-            
-        currentDecisionType = default;
-        currentOptions = null;
+        _humanInputController.SubmitFlipTrump();
     }
 
     //Scoring
@@ -362,7 +305,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
             p.Points))
         .ToList();
 
-        EnqueueUI(2f, () =>
+        _actionQueue.EnqueueUI(2f, () =>
         {
             _playerPanelUI.PrintPlayersScores(scoreData);
         });
@@ -377,7 +320,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var winningCardID = wC.Id;
         var isDealer = isD;
 
-        EnqueueUI(2.0f, () =>
+        _actionQueue.EnqueueUI(2.0f, () =>
         {
             if (isDealer)
             {
@@ -398,7 +341,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var playerName = player.Name;
         var winningCardName = winningCard.ToString();
 
-        EnqueueUI(2.0f, () =>
+        _actionQueue.EnqueueUI(2.0f, () =>
         {
             _consoleLogUI.AppendText($"{playerName} won with the {winningCardName}" +
             $"\n{playerName} has received the trick worth 5 points.");
@@ -411,11 +354,10 @@ public class GameUI : MonoBehaviour, IGameInteraction
     private void HandleNewTrick(Player leader, int trickNumber)
     {
         var leaderName = leader.Name;
-        var _trickNumber = trickNumber;
 
-        EnqueueUI(2.0f, () =>
+        _actionQueue.EnqueueUI(2.0f, () =>
         {
-            _consoleLogUI.AppendText($"Trick {_trickNumber} begins." +
+            _consoleLogUI.AppendText($"Trick {trickNumber} begins." +
                 $"\n{leaderName} will lead the trick.");
 
             _tablePanelUI.DestroyStatusCard(StatusCardType.WinningCard);
@@ -426,7 +368,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void HandleHandEnd()
     {
-        EnqueueUI(5.0f, () =>
+        _actionQueue.EnqueueUI(5.0f, () =>
         {
             _announcementUI.Show("Dealing new hand");
 
@@ -443,14 +385,9 @@ public class GameUI : MonoBehaviour, IGameInteraction
     {
         var _gamePhase = gamePhase.ToString();
 
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
             _phaseUI.Render(_gamePhase);
-
-            if (_runtimeSettings.TestStateMode)
-            {
-                _main.SetAutoAdvance(false);
-            }
 
             _consoleLogUI.AppendText($"GamePhase: {_gamePhase}");
         });
@@ -460,7 +397,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
     {
         var playerName = winner.Name;
 
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
             _announcementUI.Show($"{playerName} wins!");
 
@@ -471,7 +408,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void HandleNewGame()
     {
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
             _consoleLogUI.AppendText($"The deck has been removed." +
                 $"\nPlayers hands have been cleared." +
@@ -482,35 +419,12 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void HandleProgramClosed()
     {
-        EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(0f, () =>
         {
             _consoleLogUI.AppendText($"The game has ended. The program will now close.");
         });
     }
 
-    private void EnqueueUI(float time, Action action)
-    {
-        uiQueue.Enqueue((time, action));
-
-        if (!isPlayingQueue)
-            StartCoroutine(PlayUIQueue());
-    }
-
-    private IEnumerator PlayUIQueue()
-    {
-        isPlayingQueue = true;
-
-        while (uiQueue.Count > 0)
-        {
-            var item = uiQueue.Dequeue();
-
-            item.action.Invoke();
-
-            yield return new WaitForSeconds(item.time);
-        }
-
-        isPlayingQueue = false;
-    }
 
     private void OnDestroy()
     {

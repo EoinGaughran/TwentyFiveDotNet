@@ -73,7 +73,7 @@ public class Main : MonoBehaviour
             return;
         }
 
-        ui.Init(_manager, runtimeSettings);
+        ui.Init(_manager);
 
         if (runtimeSettings.SnapshotOnLaunch)
         {
