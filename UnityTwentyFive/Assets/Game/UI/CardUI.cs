@@ -24,7 +24,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     [SerializeField] private Sprite frontSprite;
     [SerializeField] private Sprite backSprite;
-    private bool flipped;
+    public bool Flipped { get; private set; }
     public float flipDuration = 0.5f;
     private float currentYRotation = 0f;
     private bool isFlipping = false;
@@ -36,7 +36,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         cardID = card.Id;
         isPlayable = true;
         label.text = card.ToString();
-        flipped = false;
+        Flipped = false;
     }
 
     private void Awake()
@@ -126,8 +126,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public void AnimateTo(Vector2 targetAnchoredPosition, float duration)
+    public void AnimateTo(Vector2 targetAnchoredPosition, Transform newParent, float duration)
     {
+        Vector3 worldPosition = transform.position;
+        rectTransform.SetParent(newParent, true);
+        SetupRect();
+        transform.position = worldPosition;
+
         StartCoroutine(MoveTo(targetAnchoredPosition, duration));
     }
 
@@ -202,14 +207,14 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void SetCardFlip(bool flipState)
     {
-        flipped = flipState;
+        Flipped = flipState;
         currentYRotation = 180f;
         cardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
 
-        cardImage.sprite = flipped ? backSprite : frontSprite;
-        label.enabled = !flipped;
+        cardImage.sprite = Flipped ? backSprite : frontSprite;
+        label.enabled = !Flipped;
 
-        cardVisual.localScale = flipped
+        cardVisual.localScale = Flipped
             ? new Vector3(-1, 1, 1)
             : new Vector3(1, 1, 1);
     }
@@ -242,12 +247,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
             if (!swapped && currentYRotation >= swapAngle)
             {
-                flipped = !flipped;
+                Flipped = !Flipped;
 
-                cardImage.sprite = flipped ? backSprite : frontSprite;
-                label.enabled = !flipped;
+                cardImage.sprite = Flipped ? backSprite : frontSprite;
+                label.enabled = !Flipped;
 
-                cardVisual.localScale = flipped
+                cardVisual.localScale = Flipped
                     ? new Vector3(-1, 1, 1)
                     : new Vector3(1, 1, 1);
 

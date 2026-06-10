@@ -8,7 +8,7 @@ public class CardUIFactory : MonoBehaviour
 
     private readonly Dictionary<int, CardUI> allCardUIs = new();
 
-    public CardUI CreateCardUI(Card card, bool sizeSmall, bool register)
+    public CardUI CreateCardUI(Card card, bool isCPU, bool register)
     {
         GameObject cardGO = Instantiate(cardPrefab);
 
@@ -21,8 +21,12 @@ public class CardUIFactory : MonoBehaviour
 
         CardSize cardSize;
 
-        if(sizeSmall)
+        if(isCPU)
+        {
             cardSize = CardSize.Small;
+            cardUI.SetCardFlip(true);
+        }
+            
         else
             cardSize = CardSize.Large;
 

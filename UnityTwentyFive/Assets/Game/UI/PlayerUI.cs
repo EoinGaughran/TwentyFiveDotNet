@@ -58,14 +58,13 @@ public class PlayerUI : MonoBehaviour
             return;
         }
 
-        int cardID = cardUI.GetCardID();
+        cardUI.AnimateTo(Vector2.zero, cardHandParent, 0.5f);
 
-        cardUI.transform.SetParent(cardHandParent, false);
         cardUI.OnCardClicked -= HandleCardClicked;
         cardUI.OnCardClicked += HandleCardClicked;
 
+        int cardID = cardUI.GetCardID();
         handCardUIs[cardID] = cardUI;
-        playedCardUIs.Remove(cardID);
     }
 
     public bool RemoveCardFromHand(int cardID)
@@ -98,19 +97,12 @@ public class PlayerUI : MonoBehaviour
         cardUI.OnCardClicked -= HandleCardClicked;
         playedCardUIs[cardID] = cardUI;
 
-        RectTransform cardRect = cardUI.GetComponent<RectTransform>();
-
-        Vector3 worldPosition = cardUI.transform.position;
-        cardRect.SetParent(cardsPlayedParent, true);
-        cardUI.SetupRect();
-        cardUI.transform.position = worldPosition;
-
         int pCount = playedCardUIs.Count;
         float offsetAmount = 4;
         float offset = pCount * offsetAmount;
         Vector2 destination = new(Vector2.zero.x + offset, Vector2.zero.y + offset);
 
-        cardUI.AnimateTo(destination, 0.25f);
+        cardUI.AnimateTo(destination, cardsPlayedParent, 0.25f);
 
         return true;
     }

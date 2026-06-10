@@ -75,8 +75,7 @@ public class TablePanelUI : MonoBehaviour
     {
         Transform slotTransform = GetStatusCardTransform(statusCardType);
 
-        statusCard.transform.SetParent(slotTransform, true);
-        statusCard.AnimateTo(Vector2.zero, 2f);
+        statusCard.AnimateTo(Vector2.zero, slotTransform, 2f);
 
         statusCardUIs[statusCardType] = statusCard;
     }

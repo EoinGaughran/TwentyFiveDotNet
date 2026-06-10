@@ -8,6 +8,7 @@ using TwentyFiveDotNet.Core.Game;
 using TwentyFiveDotNet.Core.Interfaces;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
+using static UnityEngine.LowLevelPhysics2D.PhysicsLayers;
 
 public class GameUI : MonoBehaviour, IGameInteraction
 {
@@ -168,10 +169,27 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void HandleCardDiscarded(Card discardedCard, Player cardPlayer)
     {
+        var player = cardPlayer;
         var cardPlayerName = cardPlayer.Name;
         var cardPlayerID = cardPlayer.Id;
         var discardedCardValue = discardedCard.ToString();
         var discardedCardID = discardedCard.Id;
+
+        if (player is PlayerHuman)
+        {
+            _actionQueue.EnqueueUI(2.0f, () =>
+            {
+                if (_cardUIFactory.TryGetCardUI(discardedCardID, out var cardUI))
+                {
+                    cardUI.FlipCard();
+                }
+                else
+                {
+                    Debug.LogError($"No CardUI found for card ID {discardedCardID} belonging to {cardPlayerName}");
+                    return;
+                }
+            });
+        }
 
         _actionQueue.EnqueueUI(2.0f, () =>
         {
@@ -191,6 +209,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void HandlePlayerSteal(Card trumpCard, Player stealingPlayer)
     {
+        var player = stealingPlayer;
         var stealingPlayerName = stealingPlayer.Name;
         var stealingPlayerID = stealingPlayer.Id;
         var trumpCardName = trumpCard.ToString();
@@ -206,9 +225,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 _consoleLogUI.AppendText($"{stealingPlayerName} stole {trumpCardName}.");
 
                 CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false, false);
-
                 cardUI.SetTransparentStyle();
-
                 _tablePanelUI.AddCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
 
             }
@@ -217,6 +234,22 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 Debug.LogError($"No CardUI found for card ID {trumpCardID}");
             }
         });
+
+        if (player is PlayerCPU)
+        {
+            _actionQueue.EnqueueUI(2.0f, () =>
+            {
+                if (_cardUIFactory.TryGetCardUI(trumpCardID, out var playedCardUI))
+                {
+                    playedCardUI.FlipCard();
+                }
+                else
+                {
+                    Debug.LogError($"No CardUI found for card ID {trumpCardID} belonging to {stealingPlayerName}");
+                    return;
+                }
+            });
+        }
     }
 
     private void HandlePlayerTurnStarted(Player player)
@@ -231,6 +264,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void HandleCardPlayed(CardPlayedEvent e)
     {
+        var player = e.Player;
         var playerName = e.Player.Name;
         var playerID = e.Player.Id;
         var playedCardName = e.PlayedCard.ToString();
@@ -238,6 +272,22 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var ledSuit = e.PlayedCard.GetSuitSymbolUnicoded();
         var isLeader = e.IsLeader;
         var playedCard = e.PlayedCard;
+
+        if(player is PlayerCPU)
+        {
+            _actionQueue.EnqueueUI(2.0f, () =>
+            {
+                if (_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
+                {
+                    playedCardUI.FlipCard();
+                }
+                else
+                {
+                    Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
+                    return;
+                }
+            });
+        }
 
         _actionQueue.EnqueueUI(2.0f, () =>
         {
