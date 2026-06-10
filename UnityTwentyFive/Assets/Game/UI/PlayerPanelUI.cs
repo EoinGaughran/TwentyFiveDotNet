@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TwentyFiveDotNet.Core.Models;
@@ -16,6 +17,11 @@ public class PlayerPanelUI : MonoBehaviour
 
     private readonly Dictionary<int, PlayerUI> playerUIs = new();
 
+    public event Action<string> OnNotification;
+    private void RegisterPlayerUI(PlayerUI playerUI)
+    {
+        playerUI.OnNotification += HandlePlayerNotification;
+    }
     public void RenderPlayers(IReadOnlyList<Player> players)
     {
         playerUIs.Clear();
@@ -33,6 +39,7 @@ public class PlayerPanelUI : MonoBehaviour
             humanUI.gameObject.SetActive(true);
             humanUI.Bind(humanPlayer);
             playerUIs[humanPlayer.Id] = humanUI;
+            RegisterPlayerUI(humanUI);
         }
         else
         {
@@ -51,6 +58,11 @@ public class PlayerPanelUI : MonoBehaviour
             ui.Bind(player);
             playerUIs[player.Id] = ui;
         }
+    }
+
+    private void HandlePlayerNotification(string message)
+    {
+        OnNotification?.Invoke(message);
     }
 
     public void AllowCardPlay()

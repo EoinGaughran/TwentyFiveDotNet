@@ -129,7 +129,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public void AnimateTo(Vector2 targetAnchoredPosition, Transform newParent, float duration)
     {
         Vector3 worldPosition = transform.position;
-        rectTransform.SetParent(newParent, true);
+        rectTransform.SetParent(newParent, false);
         SetupRect();
         transform.position = worldPosition;
 

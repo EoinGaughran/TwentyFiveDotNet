@@ -43,21 +43,21 @@ public class HumanInputController
         switch (decisionType)
         {
             case PlayerDecisionType.FlipTrump:
-                message = $"{playerName}, please flip over the trump card.";
+                message = $"{playerName}, please flip over the trump card";
                 _consoleLogUI.AppendText(message);
                 _announcementUI.Show(message);
                 _tablePanelUI.AllowTrumpFlip();
                 break;
 
             case PlayerDecisionType.LeadCard:
-                message = $"{playerName}, please lead a card.";
+                message = $"{playerName}, please lead a card";
                 _consoleLogUI.AppendText(message);
                 _announcementUI.Show(message);
                 _playerPanelUI.HumanUI.AllowCardPlay();
                 break;
 
             case PlayerDecisionType.StealTrump:
-                message = $"{playerName}, please discard a card to steal the trump card.";
+                message = $"{playerName}, please discard a card to steal the trump card";
                 _consoleLogUI.AppendText(message);
                 _announcementUI.Show(message);
                 _playerPanelUI.HumanUI.AllowCardPlay();
@@ -67,7 +67,7 @@ public class HumanInputController
                 if (optionIds == null)
                     throw new InvalidOperationException("Options was null");
 
-                message = $"{playerName}, please play a card.";
+                message = $"{playerName}, please play a card";
                 _consoleLogUI.AppendText(message);
                 _announcementUI.Show(message);
                 _playerPanelUI.HumanUI.ShowPlayableCards(optionIds);

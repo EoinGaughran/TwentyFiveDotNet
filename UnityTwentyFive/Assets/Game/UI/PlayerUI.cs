@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -30,6 +31,8 @@ public class PlayerUI : MonoBehaviour
     public Transform HandParent => cardHandParent;
     public Transform PlayedCardsParent => cardsPlayedParent;
 
+    public event Action<string> OnNotification;
+
     public void Bind(Player player)
     {
         playerID = player.Id;
@@ -58,7 +61,9 @@ public class PlayerUI : MonoBehaviour
             return;
         }
 
-        cardUI.AnimateTo(Vector2.zero, cardHandParent, 0.5f);
+        //cardUI.AnimateTo(Vector2.zero, cardHandParent, 0.5f);
+
+        cardUI.transform.SetParent(cardHandParent, false);
 
         cardUI.OnCardClicked -= HandleCardClicked;
         cardUI.OnCardClicked += HandleCardClicked;
@@ -167,7 +172,8 @@ public class PlayerUI : MonoBehaviour
     {
         if (!cardPlayAllowed)
         {
-            Debug.Log($"Its not your turn.");
+            Debug.Log("It's not your turn.");
+            OnNotification?.Invoke("Its not your turn.");
             return;
         }
         
@@ -185,6 +191,7 @@ public class PlayerUI : MonoBehaviour
         if (!cardUI.IsPlayable())
         {
             Debug.Log($"This card cannot be played.");
+            OnNotification?.Invoke("This card cannot be played");
             return;
         }
 

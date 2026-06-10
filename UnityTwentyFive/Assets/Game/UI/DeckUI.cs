@@ -48,7 +48,9 @@ public class DeckUI : MonoBehaviour, IPointerClickHandler
 
     private void Render()
     {
-        label.text = cardNumber.ToString();
+        label.text =
+            "Deck" +
+            "\n" + cardNumber.ToString() + " cards";
     }
 
     public void SetTrumpToDrawable()

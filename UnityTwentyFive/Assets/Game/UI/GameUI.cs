@@ -1,9 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Models;
-using TwentyFiveDotNet.Core.Config;
 using TwentyFiveDotNet.Core.Game;
 using TwentyFiveDotNet.Core.Interfaces;
 using TwentyFiveDotNet.Core.Models;
@@ -25,9 +22,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
     [SerializeField] private CardUIFactory _cardUIFactory;
     [SerializeField] private AnnouncementUI _announcementUI;
 
-    private PlayerDecisionType currentDecisionType;
-    private IReadOnlyList<int> currentOptions;
-
     public void Init(GameManager manager)
     {
         _manager = manager;
@@ -39,6 +33,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
             _announcementUI,
             _consoleLogUI
             );
+
+        _playerPanelUI.OnNotification += HandleNotification;
 
         _manager.OnStateSnapshot += HandleStateSnapshot;
         _manager.OnDealingCompleted += HandleDealCompleted;
@@ -58,6 +54,11 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _manager.OnGameOver += HandleGameOver;
         _manager.OnNewGame += HandleNewGame;
         _manager.OnProgramClosed += HandleProgramClosed;
+    }
+
+    public void HandleNotification(string message)
+    {
+        _announcementUI.Show(message);
     }
 
     public bool PlayAgain() => false;
@@ -141,13 +142,13 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
             _tablePanelUI.DrawCardUIFromDeckUI(cardUI);
             _tablePanelUI.RegisterStatusCardUI(cardUI, StatusCardType.TrumpCard);
+            _tablePanelUI.RenderDeckCount(deckCardCount);
         });
 
         _actionQueue.EnqueueUI(3.0f, () =>
         {
             _tablePanelUI.TryGetStatusCardUI(StatusCardType.TrumpCard, out var cardUI);
             _tablePanelUI.MoveCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
-            _tablePanelUI.RenderDeckCount(deckCardCount);
 
             _consoleLogUI.AppendText($"{deckCardCount} cards remain in {deckName}.");
         });
@@ -163,7 +164,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
             _consoleLogUI.AppendText($"{dealerName} has been selected as the dealer." +
                 $"\n{leaderName} is leading the trick.");
 
-            _announcementUI.Show($"{leaderName} will lead");
+            _announcementUI.Show($"{dealerName} is dealing");
         });
     }
 
@@ -375,6 +376,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
             if (isDealer)
             {
                 _consoleLogUI.AppendText($"{playerName} got their dealer's trick.");
+                _announcementUI.Show($"{playerName} got their dealer's trick.");
             }
 
             CardUI winningCardUI = _cardUIFactory.CreateCardUI(playedCard, false, false);
@@ -408,7 +410,9 @@ public class GameUI : MonoBehaviour, IGameInteraction
         _actionQueue.EnqueueUI(2.0f, () =>
         {
             _consoleLogUI.AppendText($"Trick {trickNumber} begins." +
-                $"\n{leaderName} will lead the trick.");
+            $"\n{leaderName} will lead the trick.");
+
+            _announcementUI.Show($"Trick {trickNumber}: {leaderName} leads");
 
             _tablePanelUI.DestroyStatusCard(StatusCardType.WinningCard);
             _tablePanelUI.DestroyStatusCard(StatusCardType.LedCard);
@@ -478,6 +482,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
     private void OnDestroy()
     {
+        _playerPanelUI.OnNotification -= HandleNotification;
+
         if (_manager == null) return;
 
         _manager.OnStateSnapshot -= HandleStateSnapshot;
