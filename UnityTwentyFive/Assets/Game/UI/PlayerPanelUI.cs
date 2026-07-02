@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
+using UnityEngine.UI;
 
 public struct DealPacket
 {
@@ -119,7 +120,7 @@ public class PlayerPanelUI : MonoBehaviour
 
         return ui;
     }
-        
+
     public bool MoveCardToPlayedCards(int playerID, CardUI cardUI)
     {
         PlayerUI ui = GetPlayerUI(playerID);

@@ -8,11 +8,11 @@ using UnityEngine.UI;
 
 public class CardUI : MonoBehaviour, IPointerClickHandler
 {
-    public TextMeshProUGUI label;
-    [SerializeField] public RectTransform cardVisual;
-    [SerializeField] private Image cardImage;
-    [SerializeField] private Outline cardOutline;
-    public RectTransform rectTransform;
+    public TextMeshProUGUI Label;
+    [SerializeField] public RectTransform CardVisual;
+    [SerializeField] private Image CardImage;
+    [SerializeField] private Outline CardOutline;
+    public RectTransform RectTransform;
 
     private static readonly Color PlayableColor = Color.white;
     private static readonly Color UnplayableColor = new(0.7f, 0.7f, 0.7f);
@@ -35,20 +35,20 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     {
         cardID = card.Id;
         isPlayable = true;
-        label.text = card.ToString();
+        Label.text = card.ToString();
         Flipped = false;
     }
     public CardUI Clone(Transform parent)
     {
         CardUI clone = Instantiate(this, parent, false);
         clone.name = name + "_Anim";
-        SetupRect();
+        clone.SetupRect();
         return clone;
     }
 
     private void Awake()
     {
-        rectTransform = GetComponent<RectTransform>();
+        RectTransform = GetComponent<RectTransform>();
     }
 
     public int GetCardID() => cardID;
@@ -64,7 +64,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     {
         float offset = selected ? 30f : 0f;
         SetPositionSlot(
-           cardVisual.transform.localPosition.x,
+           CardVisual.transform.localPosition.x,
            offset
            );
     }
@@ -72,7 +72,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public void SetPlayable(bool playable)
     {
         isPlayable = playable;
-        cardImage.color = playable
+        CardImage.color = playable
             ? PlayableColor
             : UnplayableColor;
     }
@@ -84,41 +84,41 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void SetHidden(bool state)
     {
-        cardImage.enabled = !state;
-        label.enabled = !state; 
+        CardImage.enabled = !state;
+        Label.enabled = !state; 
     }
 
     public void SetPositionSlot(float x, float y)
     {
-        cardVisual.transform.localPosition =
+        CardVisual.transform.localPosition =
             new Vector3(
                 x,
                 y,
-                cardVisual.transform.localPosition.z);
+                CardVisual.transform.localPosition.z);
     }
 
     public void SetTransparentStyle()
     {
         // fully transparent white
-        cardImage.color =
+        CardImage.color =
             new Color(1f, 1f, 1f, 0.02f);
 
         // white outline/stroke
-        cardOutline.effectColor = Color.white;
+        CardOutline.effectColor = Color.white;
 
         // white text
-        label.color = Color.white;
+        Label.color = Color.white;
     }
 
     public void SetupRect()
     {
-        rectTransform.anchorMin =
-        rectTransform.anchorMax =
-        rectTransform.pivot =
+        RectTransform.anchorMin =
+        RectTransform.anchorMax =
+        RectTransform.pivot =
             new Vector2(0.5f, 0.5f);
 
-        rectTransform.anchoredPosition = Vector2.zero;
-        rectTransform.localScale = Vector3.one;
+        RectTransform.anchoredPosition = Vector2.zero;
+        RectTransform.localScale = Vector3.one;
     }
 
     public void SetCardSize(CardSize size)
@@ -126,15 +126,15 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         switch (size)
         {
             case CardSize.Small:
-                label.fontSize = 30;
-                cardVisual.sizeDelta = new Vector2(90, 126);
-                rectTransform.sizeDelta = new Vector2(90, 126);
+                Label.fontSize = 30;
+                CardVisual.sizeDelta = new Vector2(90, 126);
+                RectTransform.sizeDelta = new Vector2(90, 126);
                 break;
 
             case CardSize.Large:
-                label.fontSize = 50;
-                cardVisual.sizeDelta = new Vector2(140, 196);
-                rectTransform.sizeDelta = new Vector2(140, 196);
+                Label.fontSize = 50;
+                CardVisual.sizeDelta = new Vector2(140, 196);
+                RectTransform.sizeDelta = new Vector2(140, 196);
                 break;
         }
     }
@@ -142,7 +142,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public void AnimateTo(Vector2 targetAnchoredPosition, Transform newParent, float duration)
     {
         Vector3 worldPosition = transform.position;
-        rectTransform.SetParent(newParent, false);
+        RectTransform.SetParent(newParent, false);
         SetupRect();
         transform.position = worldPosition;
 
@@ -151,7 +151,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     private IEnumerator MoveTo(Vector2 target, float duration)
     {
-        Vector2 start = rectTransform.anchoredPosition;
+        Vector2 start = RectTransform.anchoredPosition;
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -162,18 +162,18 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
             // smooth ease
             t = t * t * (3f - 2f * t);
 
-            rectTransform.anchoredPosition =
+            RectTransform.anchoredPosition =
                 Vector2.Lerp(start, target, t);
 
             yield return null;
         }
 
-        rectTransform.anchoredPosition = target;
+        RectTransform.anchoredPosition = target;
     }
 
     public IEnumerator AnimateTo(Vector3 targetWorldPosition, float duration)
     {
-        Vector3 start = rectTransform.position;
+        Vector3 start = RectTransform.position;
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -182,13 +182,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
             float t = elapsed / duration;
             t = t * t * (3f - 2f * t);
 
-            rectTransform.position =
+            RectTransform.position =
                 Vector3.Lerp(start, targetWorldPosition, t);
 
             yield return null;
         }
 
-        rectTransform.position = targetWorldPosition;
+        RectTransform.position = targetWorldPosition;
     }
     public void Highlight(int loops = 1)
     {
@@ -242,12 +242,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     {
         Flipped = flipState;
         currentYRotation = 180f;
-        cardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
+        CardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
 
-        cardImage.sprite = Flipped ? backSprite : frontSprite;
-        label.enabled = !Flipped;
+        CardImage.sprite = Flipped ? backSprite : frontSprite;
+        Label.enabled = !Flipped;
 
-        cardVisual.localScale = Flipped
+        CardVisual.localScale = Flipped
             ? new Vector3(-1, 1, 1)
             : new Vector3(1, 1, 1);
     }
@@ -276,16 +276,16 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
             float progress = Mathf.Clamp01(t / flipDuration);
             currentYRotation = Mathf.Lerp(startAngle, endAngle, progress);
 
-            cardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
+            CardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
 
             if (!swapped && currentYRotation >= swapAngle)
             {
                 Flipped = !Flipped;
 
-                cardImage.sprite = Flipped ? backSprite : frontSprite;
-                label.enabled = !Flipped;
+                CardImage.sprite = Flipped ? backSprite : frontSprite;
+                Label.enabled = !Flipped;
 
-                cardVisual.localScale = Flipped
+                CardVisual.localScale = Flipped
                     ? new Vector3(-1, 1, 1)
                     : new Vector3(1, 1, 1);
 
@@ -296,7 +296,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         }
 
         currentYRotation = endAngle;
-        cardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
+        CardVisual.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
 
         isFlipping = false;
     }
