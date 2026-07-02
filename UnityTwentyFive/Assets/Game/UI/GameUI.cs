@@ -21,8 +21,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
     [SerializeField] private CardUIFactory _cardUIFactory;
     [SerializeField] private AnnouncementUI _announcementUI;
 
-    [SerializeField] private Transform AnimationLayer;
-
     public void Init(GameManager manager)
     {
         _manager = manager;
@@ -92,12 +90,11 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         var deckCount = gameState.Deck.Cards.Count;
         var deckTransform = _tablePanelUI.GetDeckSlot();
+        var dealtCardUIs = new List<DealtPlayerCardUISnapshot>();
 
-        _actionQueue.EnqueueUI(5f, () =>
+        _actionQueue.EnqueueUI(1f, () =>
         {
             _playerPanelUI.RenderPlayers(players);
-
-            var dealtCardUIs = new List<DealtPlayerCardUISnapshot>();
 
             foreach (var player in dealtHandsSnapshot)
             {
@@ -107,8 +104,6 @@ public class GameUI : MonoBehaviour, IGameInteraction
                     player.PlayerId == _playerPanelUI.Human.Id;
 
                 var cardUIs = new List<CardUI>();
-                var cardAnimUIs = new List<CardUI>();
-                var cardAnimUIsDest = new List<Vector2>();
 
                 foreach (var card in player.Cards)
                 {
@@ -120,39 +115,29 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
                     cardUIs.Add( cardUI );
 
-                    CardUI cardAnimUI = _cardUIFactory.CreateAnimationCardUI(
-                        card,
-                        !isHuman,
-                        AnimationLayer
-                    );
-
-                    cardAnimUIs.Add(cardAnimUI);
-
                     cardUI.SetHidden( true );
                     playerUI.SetUpCardInHand(cardUI);
                     cardUI.SetupRect();
-
-                    cardAnimUI.SetHidden(true);
-                    cardAnimUI.transform.position = deckTransform.position;
                 }
 
                 dealtCardUIs.Add(new DealtPlayerCardUISnapshot
                 {
                     PlayerId = player.PlayerId,
                     CardUIs = cardUIs,
-                    CardAnimUIs = cardAnimUIs,
                 });
             }
 
             if (!_tablePanelUI.RenderDeckCount(deckCount))
                 _consoleLogUI.AppendText("RenderDeckCount failed.");
+        });
 
+        _actionQueue.EnqueueUI(0f, () =>
             _playerPanelUI.AnimateDealToPlayers(
                 dealtCardUIs,
+                deckTransform.position,
                 0,
                 1
-            );
-        });
+        ));
     }
 
     private void HandleTrumpResolved(TrumpData trumpData, Player player, Deck deck)

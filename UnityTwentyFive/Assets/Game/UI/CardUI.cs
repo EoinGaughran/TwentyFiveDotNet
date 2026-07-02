@@ -12,7 +12,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     [SerializeField] public RectTransform cardVisual;
     [SerializeField] private Image cardImage;
     [SerializeField] private Outline cardOutline;
-    private RectTransform rectTransform;
+    public RectTransform rectTransform;
 
     private static readonly Color PlayableColor = Color.white;
     private static readonly Color UnplayableColor = new(0.7f, 0.7f, 0.7f);
@@ -37,6 +37,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         isPlayable = true;
         label.text = card.ToString();
         Flipped = false;
+    }
+    public CardUI Clone(Transform parent)
+    {
+        CardUI clone = Instantiate(this, parent, false);
+        clone.name = name + "_Anim";
+        SetupRect();
+        return clone;
     }
 
     private void Awake()
@@ -142,11 +149,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         StartCoroutine(MoveTo(targetAnchoredPosition, duration));
     }
 
-    public IEnumerator AnimateTo(Vector2 targetAnchoredPosition, float duration)
-    {
-        yield return MoveTo(targetAnchoredPosition, duration);
-    }
-
     private IEnumerator MoveTo(Vector2 target, float duration)
     {
         Vector2 start = rectTransform.anchoredPosition;
@@ -167,6 +169,26 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         }
 
         rectTransform.anchoredPosition = target;
+    }
+
+    public IEnumerator AnimateTo(Vector3 targetWorldPosition, float duration)
+    {
+        Vector3 start = rectTransform.position;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            t = t * t * (3f - 2f * t);
+
+            rectTransform.position =
+                Vector3.Lerp(start, targetWorldPosition, t);
+
+            yield return null;
+        }
+
+        rectTransform.position = targetWorldPosition;
     }
     public void Highlight(int loops = 1)
     {

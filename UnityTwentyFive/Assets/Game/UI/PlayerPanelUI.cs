@@ -2,10 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework.Internal;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
-using static UnityEditor.U2D.ScriptablePacker;
 
 public struct DealPacket
 {
@@ -22,8 +20,8 @@ public class PlayerPanelUI : MonoBehaviour
 {
     [SerializeField] private PlayerUI humanUI;
     [SerializeField] private Transform opponentContainer;
-    [SerializeField] private RectTransform AnimationLayer;
     [SerializeField] private GameObject opponentPrefab;
+    [SerializeField] private CardAnimator _animateCardManager;
 
     private readonly List<PlayerUI> opponentUIs = new();
 
@@ -139,6 +137,7 @@ public class PlayerPanelUI : MonoBehaviour
 
     public IEnumerator AnimateDealToPlayers(
     List<DealtPlayerCardUISnapshot> dealtCardAnimUIs,
+    Vector3 startPosition,
     int leaderPlayerId,
     int dealerPlayerId)
     {
@@ -148,42 +147,19 @@ public class PlayerPanelUI : MonoBehaviour
 
         foreach (int playerId in playerIdsInTurnOrder)
         {
-            yield return DealCardsToPlayer(snapshots[playerId]);
+            yield return DealCardsToPlayer(snapshots[playerId], startPosition);
         }
     }
 
     private IEnumerator DealCardsToPlayer(
-    DealtPlayerCardUISnapshot player)
+    DealtPlayerCardUISnapshot player,
+    Vector3 startPosition)
     {
-        for (int i = 0; i < player.CardAnimUIs.Count; i++)
+        Debug.Log($"{this} called. player.CardUIs.Count: {player.CardUIs.Count}");
+
+        for (int i = 0; i < player.CardUIs.Count; i++)
         {
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(
-                null,
-                player.CardUIs[i].transform.position);
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                AnimationLayer,
-                screenPoint,
-                null,
-                out Vector2 dest);
-
-            player.CardAnimUIs[i].SetHidden(false);     
-
-            Debug.Log(
-                "CardAnim is animating from x: "
-                + screenPoint.x
-                + ", y: "
-                + screenPoint.y
-                + " to x: "
-                + dest.x
-                + ", y: "
-                + dest.y
-                );
-
-            yield return player.CardAnimUIs[i].AnimateTo(dest, 0.1f);
-
-            player.CardUIs[i].SetHidden(false);
-            Destroy(player.CardAnimUIs[i].gameObject);
+            yield return _animateCardManager.AnimateMove(player.CardUIs[i], startPosition);
 
             yield return new WaitForSeconds(0.12f);
         }

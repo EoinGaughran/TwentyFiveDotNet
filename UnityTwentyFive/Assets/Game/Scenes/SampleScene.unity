@@ -352,7 +352,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 20540244}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.50372237
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1003,7 +1003,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 410994079}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.5
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1439,7 +1439,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.000076293945, y: 151.49994}
+  m_AnchoredPosition: {x: 0, y: 151.50002}
   m_SizeDelta: {x: 400, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &499444919
@@ -1606,7 +1606,6 @@ MonoBehaviour:
   _consoleLogUI: {fileID: 499444921}
   _cardUIFactory: {fileID: 1896355525}
   _announcementUI: {fileID: 1955038759}
-  AnimationLayer: {fileID: 852259870}
 --- !u!4 &550039118
 Transform:
   m_ObjectHideFlags: 0
@@ -1780,6 +1779,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 852259870}
+  - component: {fileID: 852259871}
   m_Layer: 5
   m_Name: AnimationLayer
   m_TagString: Untagged
@@ -1806,6 +1806,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &852259871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 852259869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9aa754b9e156b214dac941a1b7b39f76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimateCard
+  AnimationLayer: {fileID: 852259870}
 --- !u!1 &852416131 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5799743530036222913, guid: 8d46a8b742f4f5b4883a521771a1c124, type: 3}
@@ -3112,8 +3125,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPanelUI
   humanUI: {fileID: 2024604662}
   opponentContainer: {fileID: 1119154803}
-  AnimationLayer: {fileID: 852259870}
   opponentPrefab: {fileID: 715761205}
+  _animateCardManager: {fileID: 852259871}
 --- !u!4 &1598150992
 Transform:
   m_ObjectHideFlags: 0

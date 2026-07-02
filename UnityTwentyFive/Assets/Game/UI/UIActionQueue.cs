@@ -5,12 +5,24 @@ using UnityEngine;
 
 public class UIActionQueue : MonoBehaviour
 {
-    private readonly Queue<(float delayAfter, Action action)> queue = new();
+    private readonly Queue<(float delayAfter, Func<IEnumerator> coroutine)> queue = new();
     private bool isPlaying;
 
     public void EnqueueUI(float delayAfter, Action action)
     {
-        queue.Enqueue((delayAfter, action));
+        EnqueueUI(delayAfter, () => RunAction(action));
+    }
+    private IEnumerator RunAction(Action action)
+    {
+        action?.Invoke();
+        yield break;
+    }
+
+    public void EnqueueUI(
+    float delayAfter,
+    Func<IEnumerator> coroutine)
+    {
+        queue.Enqueue((delayAfter, coroutine));
 
         if (!isPlaying)
             StartCoroutine(Play());
@@ -23,7 +35,8 @@ public class UIActionQueue : MonoBehaviour
         while (queue.Count > 0)
         {
             var item = queue.Dequeue();
-            item.action?.Invoke();
+
+            yield return StartCoroutine(item.coroutine());
 
             if (item.delayAfter > 0f)
                 yield return new WaitForSeconds(item.delayAfter);
