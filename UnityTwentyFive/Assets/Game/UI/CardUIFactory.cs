@@ -8,16 +8,13 @@ public class CardUIFactory : MonoBehaviour
 
     private readonly Dictionary<int, CardUI> allCardUIs = new();
 
-    public CardUI CreateCardUI(Card card, bool isCPU, bool register)
+    private CardUI CreateCardUI(Card card, bool isCPU, Transform parent)
     {
-        GameObject cardGO = Instantiate(cardPrefab);
+        GameObject cardGO = Instantiate(cardPrefab, parent, false);
 
         CardUI cardUI = cardGO.GetComponent<CardUI>();
 
         cardUI.Setup(card);
-
-        if (register)
-            allCardUIs[card.Id] = cardUI;
 
         CardSize cardSize;
 
@@ -32,6 +29,22 @@ public class CardUIFactory : MonoBehaviour
 
         cardUI.SetCardSize(cardSize);
         cardUI.SetupRect();
+
+        return cardUI;
+    }
+
+    public CardUI CreateHandCardUI(Card card, bool isCPU, Transform parent)
+    {
+        CardUI cardUI = CreateCardUI(card, isCPU, parent);
+
+        allCardUIs[card.Id] = cardUI;
+
+        return cardUI;
+    }
+
+    public CardUI CreateAnimationCardUI(Card card, bool isCPU, Transform parent)
+    {
+        CardUI cardUI = CreateCardUI(card, isCPU, parent);
 
         return cardUI;
     }

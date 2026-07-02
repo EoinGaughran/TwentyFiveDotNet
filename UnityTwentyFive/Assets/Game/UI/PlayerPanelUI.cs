@@ -1,13 +1,28 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework.Internal;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
+using static UnityEditor.U2D.ScriptablePacker;
 
+public struct DealPacket
+{
+    public int PlayerId;
+    public int CardCount;
+
+    public DealPacket(int playerId, int cardCount)
+    {
+        PlayerId = playerId;
+        CardCount = cardCount;
+    }
+}
 public class PlayerPanelUI : MonoBehaviour
 {
     [SerializeField] private PlayerUI humanUI;
     [SerializeField] private Transform opponentContainer;
+    [SerializeField] private RectTransform AnimationLayer;
     [SerializeField] private GameObject opponentPrefab;
 
     private readonly List<PlayerUI> opponentUIs = new();
@@ -91,7 +106,8 @@ public class PlayerPanelUI : MonoBehaviour
         if(playerID != 0)
             cardUI.SetCardSize(CardSize.Small);
 
-        ui.AddCardToHand(cardUI);
+        ui.SetUpCardInHand(cardUI);
+        //cardUI.AnimateTo
     }
     public PlayerUI GetPlayerUI(int playerID)
     {
@@ -119,6 +135,75 @@ public class PlayerPanelUI : MonoBehaviour
             return false;
 
         return true;
+    }
+
+    public IEnumerator AnimateDealToPlayers(
+    List<DealtPlayerCardUISnapshot> dealtCardAnimUIs,
+    int leaderPlayerId,
+    int dealerPlayerId)
+    {
+        Dictionary<int, DealtPlayerCardUISnapshot> snapshots = dealtCardAnimUIs.ToDictionary(x => x.PlayerId);
+
+        List<int> playerIdsInTurnOrder = GetPlayerIdsStartingFromLeader(leaderPlayerId);
+
+        foreach (int playerId in playerIdsInTurnOrder)
+        {
+            yield return DealCardsToPlayer(snapshots[playerId]);
+        }
+    }
+
+    private IEnumerator DealCardsToPlayer(
+    DealtPlayerCardUISnapshot player)
+    {
+        for (int i = 0; i < player.CardAnimUIs.Count; i++)
+        {
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(
+                null,
+                player.CardUIs[i].transform.position);
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                AnimationLayer,
+                screenPoint,
+                null,
+                out Vector2 dest);
+
+            player.CardAnimUIs[i].SetHidden(false);     
+
+            Debug.Log(
+                "CardAnim is animating from x: "
+                + screenPoint.x
+                + ", y: "
+                + screenPoint.y
+                + " to x: "
+                + dest.x
+                + ", y: "
+                + dest.y
+                );
+
+            yield return player.CardAnimUIs[i].AnimateTo(dest, 0.1f);
+
+            player.CardUIs[i].SetHidden(false);
+            Destroy(player.CardAnimUIs[i].gameObject);
+
+            yield return new WaitForSeconds(0.12f);
+        }
+
+        yield return new WaitForSeconds(0.25f);
+    }
+
+    private List<int> GetPlayerIdsStartingFromLeader(int leaderPlayerId)
+    {
+        var playerIds = playerUIs.Keys.ToList();
+
+        int leaderIndex = playerIds.IndexOf(leaderPlayerId);
+
+        if (leaderIndex < 0)
+            throw new InvalidOperationException($"Leader player ID {leaderPlayerId} not found.");
+
+        return playerIds
+            .Skip(leaderIndex)
+            .Concat(playerIds.Take(leaderIndex))
+            .ToList();
     }
 
     public void PrintPlayersScores(IReadOnlyList<PlayerScoreViewData> players)

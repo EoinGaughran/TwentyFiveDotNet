@@ -5,6 +5,7 @@ using TMPro;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class PlayerUI : MonoBehaviour
 {
@@ -53,7 +54,7 @@ public class PlayerUI : MonoBehaviour
         scoreTextUI.text = "Score: " + points;
     }
 
-    public void AddCardToHand(CardUI cardUI)
+    public void SetUpCardInHand(CardUI cardUI)
     {
         if (cardUI == null)
         {
@@ -61,9 +62,7 @@ public class PlayerUI : MonoBehaviour
             return;
         }
 
-        //cardUI.AnimateTo(Vector2.zero, cardHandParent, 0.5f);
-
-        cardUI.transform.SetParent(cardHandParent, false);
+        RectTransform rectTransform = cardHandParent.GetComponent<RectTransform>();
 
         cardUI.OnCardClicked -= HandleCardClicked;
         cardUI.OnCardClicked += HandleCardClicked;

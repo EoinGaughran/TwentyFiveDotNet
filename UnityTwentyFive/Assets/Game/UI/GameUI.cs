@@ -5,7 +5,6 @@ using TwentyFiveDotNet.Core.Game;
 using TwentyFiveDotNet.Core.Interfaces;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
-using static UnityEngine.LowLevelPhysics2D.PhysicsLayers;
 
 public class GameUI : MonoBehaviour, IGameInteraction
 {
@@ -21,6 +20,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
     [SerializeField] private ConsoleLogUI _consoleLogUI;
     [SerializeField] private CardUIFactory _cardUIFactory;
     [SerializeField] private AnnouncementUI _announcementUI;
+
+    [SerializeField] private Transform AnimationLayer;
 
     public void Init(GameManager manager)
     {
@@ -80,6 +81,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
     private void HandleDealCompleted(GameState gameState)
     {
         var players = gameState.Players.ToList();
+
         var dealtHandsSnapshot = gameState.Players
             .Select(player => new DealtPlayerSnapshot
             {
@@ -89,12 +91,13 @@ public class GameUI : MonoBehaviour, IGameInteraction
             .ToList();
 
         var deckCount = gameState.Deck.Cards.Count;
-        var playerCount = dealtHandsSnapshot.Count;
-        var deckName = gameState.Deck.ToString();
+        var deckTransform = _tablePanelUI.GetDeckSlot();
 
-        _actionQueue.EnqueueUI(0f, () =>
+        _actionQueue.EnqueueUI(5f, () =>
         {
             _playerPanelUI.RenderPlayers(players);
+
+            var dealtCardUIs = new List<DealtPlayerCardUISnapshot>();
 
             foreach (var player in dealtHandsSnapshot)
             {
@@ -103,27 +106,52 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 bool isHuman = _playerPanelUI.Human != null &&
                     player.PlayerId == _playerPanelUI.Human.Id;
 
+                var cardUIs = new List<CardUI>();
+                var cardAnimUIs = new List<CardUI>();
+                var cardAnimUIsDest = new List<Vector2>();
+
                 foreach (var card in player.Cards)
                 {
-                    CardUI cardUI = _cardUIFactory.CreateCardUI(
+                    CardUI cardUI = _cardUIFactory.CreateHandCardUI(
                         card,
                         !isHuman,
-                        true
+                        playerUI.HandParent
                     );
 
-                    playerUI.AddCardToHand(cardUI);
+                    cardUIs.Add( cardUI );
+
+                    CardUI cardAnimUI = _cardUIFactory.CreateAnimationCardUI(
+                        card,
+                        !isHuman,
+                        AnimationLayer
+                    );
+
+                    cardAnimUIs.Add(cardAnimUI);
+
+                    cardUI.SetHidden( true );
+                    playerUI.SetUpCardInHand(cardUI);
+                    cardUI.SetupRect();
+
+                    cardAnimUI.SetHidden(true);
+                    cardAnimUI.transform.position = deckTransform.position;
                 }
+
+                dealtCardUIs.Add(new DealtPlayerCardUISnapshot
+                {
+                    PlayerId = player.PlayerId,
+                    CardUIs = cardUIs,
+                    CardAnimUIs = cardAnimUIs,
+                });
             }
 
-            if(_tablePanelUI.RenderDeckCount(deckCount))
-            {
-                _consoleLogUI.AppendText(
-                    $"{playerCount} players added to game." +
-                    $"\n{deckName} created." +
-                    $"\n{deckCount} cards remain in {deckName}");
-            }
-            else
+            if (!_tablePanelUI.RenderDeckCount(deckCount))
                 _consoleLogUI.AppendText("RenderDeckCount failed.");
+
+            _playerPanelUI.AnimateDealToPlayers(
+                dealtCardUIs,
+                0,
+                1
+            );
         });
     }
 
@@ -133,10 +161,12 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var trumpCard = trumpData._trumpCard;
         var deckCardCount = deck.Cards.Count;
         var deckName = deck.ToString();
+        var deckTransform = _tablePanelUI.GetDeckSlot();
 
         _actionQueue.EnqueueUI(5.0f, () =>
         {
-            CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false, true);
+
+            CardUI cardUI = _cardUIFactory.CreateHandCardUI(trumpCard, false, deckTransform);
 
             _consoleLogUI.AppendText($"Dealer {playerName} flipped the trump card. It's the {trumpCard}.");
 
@@ -215,6 +245,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var stealingPlayerID = stealingPlayer.Id;
         var trumpCardName = trumpCard.ToString();
         var trumpCardID = trumpCard.Id;
+        var trumpTransform = _tablePanelUI.GetStatusCardTransform(StatusCardType.TrumpCard);
 
         _actionQueue.EnqueueUI(2.0f, () =>
         {
@@ -225,9 +256,10 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 _playerPanelUI.AddCardToPlayerHand(stealingPlayerID, trumpCardUI);
                 _consoleLogUI.AppendText($"{stealingPlayerName} stole {trumpCardName}.");
 
-                CardUI cardUI = _cardUIFactory.CreateCardUI(trumpCard, false, false);
+                CardUI cardUI = _cardUIFactory.CreateAnimationCardUI(trumpCard, false, trumpTransform);
                 cardUI.SetTransparentStyle();
-                _tablePanelUI.AddCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
+                cardUI.SetupRect();
+                //_tablePanelUI.AddCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
 
             }
             else
@@ -273,8 +305,9 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var ledSuit = e.PlayedCard.GetSuitSymbolUnicoded();
         var isLeader = e.IsLeader;
         var playedCard = e.PlayedCard;
+        var ledCardTransform = _tablePanelUI.GetStatusCardTransform(StatusCardType.LedCard);
 
-        if(player is PlayerCPU)
+        if (player is PlayerCPU)
         {
             _actionQueue.EnqueueUI(2.0f, () =>
             {
@@ -303,7 +336,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 _consoleLogUI.AppendText($"{playerName} led with the {playedCardName}." +
                     $"\n Suit {ledSuit} is leading.");
 
-                CardUI statusCardUI = _cardUIFactory.CreateCardUI(playedCard, false, false);
+                CardUI statusCardUI = _cardUIFactory.CreateAnimationCardUI(playedCard, false, ledCardTransform);
 
                 _tablePanelUI.AddCardToStatusSlot(statusCardUI, StatusCardType.LedCard);
             }
@@ -370,6 +403,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var winningCardName = wC.ToString();
         var winningCardID = wC.Id;
         var isDealer = isD;
+        var playerUI = _playerPanelUI.GetPlayerUI(p.Id);
+        var winningCardTransform = _tablePanelUI.GetStatusCardTransform(StatusCardType.WinningCard);
 
         _actionQueue.EnqueueUI(2.0f, () =>
         {
@@ -379,7 +414,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 _announcementUI.Show($"{playerName} got their dealer's trick.");
             }
 
-            CardUI winningCardUI = _cardUIFactory.CreateCardUI(playedCard, false, false);
+            CardUI winningCardUI = _cardUIFactory.CreateAnimationCardUI(playedCard, false, winningCardTransform);
 
             _consoleLogUI.AppendText($"{playerName} is currently winning with the {winningCardName}.");
 
@@ -453,7 +488,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
 
         _actionQueue.EnqueueUI(0f, () =>
         {
-            _announcementUI.Show($"{playerName} wins!");
+            _announcementUI.Show($"{playerName} wins the game!");
 
             _consoleLogUI.AppendText($"{playerName} wins!" +
                 $"\nGame Over!");

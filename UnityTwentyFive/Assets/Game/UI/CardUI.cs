@@ -75,6 +75,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         return isPlayable;
     }
 
+    public void SetHidden(bool state)
+    {
+        cardImage.enabled = !state;
+        label.enabled = !state; 
+    }
+
     public void SetPositionSlot(float x, float y)
     {
         cardVisual.transform.localPosition =
@@ -134,6 +140,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         transform.position = worldPosition;
 
         StartCoroutine(MoveTo(targetAnchoredPosition, duration));
+    }
+
+    public IEnumerator AnimateTo(Vector2 targetAnchoredPosition, float duration)
+    {
+        yield return MoveTo(targetAnchoredPosition, duration);
     }
 
     private IEnumerator MoveTo(Vector2 target, float duration)

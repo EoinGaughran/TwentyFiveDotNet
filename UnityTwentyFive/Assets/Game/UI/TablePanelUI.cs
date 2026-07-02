@@ -5,7 +5,7 @@ using UnityEngine;
 public class TablePanelUI : MonoBehaviour
 {
     [Header("Deck")]
-    [SerializeField] private Transform deckSlot;
+    [SerializeField] public Transform deckSlot;
     [SerializeField] private GameObject deckPrefab;
 
     [Header("Status Card")]
@@ -85,7 +85,7 @@ public class TablePanelUI : MonoBehaviour
         return statusCardUIs.TryGetValue(type, out cardUI) && cardUI != null;
     }
 
-    private Transform GetStatusCardTransform(StatusCardType statusCardType)
+    public Transform GetStatusCardTransform(StatusCardType statusCardType)
     {
         return statusCardType switch
         {
@@ -94,6 +94,11 @@ public class TablePanelUI : MonoBehaviour
             StatusCardType.WinningCard => winningCardSlot,
             _ => throw new ArgumentOutOfRangeException(nameof(statusCardType))
         };
+    }
+
+    public Transform GetDeckSlot()
+    {
+        return deckSlot;
     }
 
     public void DestroyStatusCard(StatusCardType statusCardType)
