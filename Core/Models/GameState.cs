@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using TwentyFiveDotNet.Core.Config;
 
 namespace TwentyFiveDotNet.Core.Models
 {
@@ -20,6 +18,11 @@ namespace TwentyFiveDotNet.Core.Models
         // Cards in play
         public IReadOnlyList<PlayedCard> PlayedCards => _playedCards;
         private readonly List<PlayedCard> _playedCards = new();
+
+        // Turn
+        public Player? CurrentPlayer { get; private set; }
+        public Player? Leader { get; private set; }
+        public Player? Dealer { get; private set; }
 
         // Trump & trick info
         public Card? TrumpCard { get; private set; }
@@ -87,6 +90,83 @@ namespace TwentyFiveDotNet.Core.Models
         {
             _playedCards.Add(new PlayedCard(player, card));
         }
+
+        public Player GetCurrentPlayerOrThrow()
+        {
+            return CurrentPlayer ?? throw new InvalidOperationException("CurrentPlayer was never set");
+        }
+        public Player GetDealerOrThrow()
+        {
+            return Dealer ?? throw new InvalidOperationException("Dealer player was never set");
+        }
+
+        public Player RotateCurrentPlayer()
+        {
+            var player = GetCurrentPlayerOrThrow();
+            CurrentPlayer = NextPlayer(player);
+            return CurrentPlayer;
+        }
+
+        public Player NextPlayer(Player player)
+        {
+            int index = _players.IndexOf(player);
+
+            if (index == -1)
+                throw new InvalidOperationException("Player not found in player list");
+
+            int nextIndex = (index + 1) % _players.Count;
+            return _players[nextIndex];
+        }
+
+        public void ChangeToPlayer(Player player)
+        {
+            CurrentPlayer = player;
+        }
+        public void SetLeader(Player player)
+        {
+            Leader = player;
+        }
+        public void SetLeader()
+        {
+            Leader = CurrentPlayer;
+        }
+
+        public Player SetDealer(Player player)
+        {
+            Dealer = player;
+            return Dealer ?? throw new InvalidOperationException("The dealer was never set");
+        }
+        public Player AssignRandomDealer(Random _rng)
+        {
+            return SetDealer(_players[_rng.Next(0, _players.Count)]);
+        }
+        public Player RotateDealer()
+        {
+            var player = GetDealerOrThrow();
+            Dealer = NextPlayer(player);
+            return Dealer;
+        }
+
+        public void ChangeToLeader()
+        {
+            CurrentPlayer = Leader;
+        }
+
+        public void ChangeToDealer()
+        {
+            CurrentPlayer = Dealer;
+        }
+
+        public bool IsCurrentPlayerTheLeader()
+        {
+            return CurrentPlayer == Leader;
+        }
+
+        public bool IsCurrentPlayerTheDealer()
+        {
+            return CurrentPlayer == Dealer;
+        }
+
         public void SetLedCard(Card card)
         {
             LedCard = card;
