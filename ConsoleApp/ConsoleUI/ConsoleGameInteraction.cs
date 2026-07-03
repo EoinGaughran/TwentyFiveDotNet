@@ -29,13 +29,11 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
 
             _manager.OnDealingCompleted += (gameState) =>
             {
-                customConsole.WriteLine($"{gameState.Deck} was created.");
-                customConsole.WriteLine($"{gameState.Deck} was shuffled.");
                 customConsole.WriteLine("Dealing cards...");
 
-                customConsole.PrintPlayersHands(gameState.GetPlayersOrThrow());
+                customConsole.PrintPlayersHands(gameState.Players);
 
-                customConsole.WriteLine($"{gameState.Deck.Cards.Count} cards remain in {gameState.Deck}");
+                customConsole.WriteLine($"{gameState.DeckCount} cards remain in deck");
             };
 
             _manager.OnTrumpResolved += (trumpData, dealer, deck) =>

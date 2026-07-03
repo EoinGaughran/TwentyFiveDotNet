@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TwentyFiveDotNet.Core.Models;
 
 namespace TwentyFiveDotNet.Core.Models
 {
@@ -20,18 +21,18 @@ namespace TwentyFiveDotNet.Core.Models
         private readonly List<PlayedCard> _playedCards = new();
 
         // Turn
-        public Player? CurrentPlayer { get; private set; }
-        public Player? Leader { get; private set; }
-        public Player? Dealer { get; private set; }
+        private Player? CurrentPlayer;
+        private Player? Leader;
+        private Player? Dealer;
 
         // Trump & trick info
-        public Card? TrumpCard { get; private set; }
-        public Card? LedCard { get; private set; }
-        public Card? TrickWinningCard { get; private set; }
-        public Player? TrickWinningPlayer { get; private set; }
-        public Player? PendingPlayer { get; private set; }
-        public IReadOnlyList<Card>? PendingOptions { get; private set; } = new List<Card>();
-        public PlayerDecisionType? PendingDecisionType { get; private set; }
+        private Card? TrumpCard;
+        private Card? LedCard;
+        private Card? TrickWinningCard;
+        private Player? TrickWinningPlayer;
+        private Player? PendingPlayer;
+        private IReadOnlyList<Card>? PendingOptions = new List<Card>();
+        private PlayerDecisionType? PendingDecisionType;
 
         public bool TrumpStolen { get; private set; } = false;
 
@@ -65,6 +66,34 @@ namespace TwentyFiveDotNet.Core.Models
         public Player GetTrickWinningPlayerOrThrow()
         {
             return TrickWinningPlayer ?? throw new InvalidOperationException("TrickWinningPlayer not set");
+        }
+
+        public Player GetPendingPlayerOrThrow()
+        {
+            return PendingPlayer ?? throw new InvalidOperationException($"{PendingPlayer} not set");
+        }
+
+        public IReadOnlyList<Card> GetPendingOptionsOrThrow()
+        {
+            return PendingOptions ?? throw new InvalidOperationException($"{PendingOptions} not set");
+        }
+
+        public PlayerDecisionType GetPendingDecisionTypeOrThrow()
+        {
+            return PendingDecisionType ?? throw new InvalidOperationException($"{PendingDecisionType} not set");
+        }
+        public void SetPendingPlayerOrThrow(Player value)
+        {
+            PendingPlayer = value;
+        }
+
+        public void SetPendingOptionsOrThrow(IReadOnlyList<Card> value)
+        {
+            PendingOptions = value;
+        }
+        public void SetPendingDecisionTypeOrThrow(PlayerDecisionType value)
+        {
+            PendingDecisionType = value;
         }
 
         public Deck NewDeck()
@@ -247,6 +276,28 @@ namespace TwentyFiveDotNet.Core.Models
         {
             SetupTurn();
             ClearPlayerPoints();
+        }
+
+        public GameSnapshot CreateSnapshot()
+        {
+            return new GameSnapshot
+            {
+                Players = Players.ToList(),
+                PlayedCards = PlayedCards.ToList(),
+                DeckCount = Deck.Cards.Count,
+                CurrentPhase = CurrentPhase,
+                TrickNumber = TrickNumber,
+                TrumpStolen = TrumpStolen,
+
+                Dealer = Dealer,
+                Leader = Leader,
+                CurrentPlayer = CurrentPlayer,
+
+                TrumpCard = TrumpCard,
+                LedCard = LedCard,
+                TrickWinningCard = TrickWinningCard,
+                TrickWinningPlayer = TrickWinningPlayer
+            };
         }
     }
 }

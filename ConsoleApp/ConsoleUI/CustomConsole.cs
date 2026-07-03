@@ -72,7 +72,7 @@ namespace TwentyFiveDotNet.ConsoleApp.ConsoleUI
             }
         }
 
-        public void PrintPlayersHands(List<Player> players)
+        public void PrintPlayersHands(IReadOnlyList<Player> players)
         {
             foreach (var player in players)
             {

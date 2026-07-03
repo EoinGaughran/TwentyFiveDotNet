@@ -18,7 +18,7 @@ namespace TwentyFiveDotNet.Core.Game
 
         //Dealing
         public event Action<Player, Player>? OnRolesSelected;
-        public event Action<GameState>? OnDealingCompleted;
+        public event Action<GameSnapshot>? OnDealingCompleted;
 
         //Trump mechanics
         public event Action<TrumpData, Player, Deck>? OnTrumpResolved;
@@ -215,13 +215,32 @@ namespace TwentyFiveDotNet.Core.Game
             _gameState.SetPendingOptions(options);
             _gameState.SetPendingDecisionType(type);
 
+            Card? trumpCard = null;
+            Card? ledCard = null;
+
             if (player is PlayerCPU cpu)
             {
+                switch(type)
+                {
+                    case PlayerDecisionType.LeadCard:
+                        trumpCard = _gameState.GetTrumpCardOrThrow();
+                        break;
+
+                    case PlayerDecisionType.StealTrump:
+                        trumpCard = _gameState.GetTrumpCardOrThrow();
+                        break;
+
+                    case PlayerDecisionType.PlayCard:
+                        trumpCard = _gameState.GetTrumpCardOrThrow();
+                        ledCard = _gameState.GetLedCardOrThrow();
+                        break;
+                }
+
                 var chosen = cpu.Decide(
                     type,
                     options,
-                    _gameState.TrumpCard,
-                    _gameState.LedCard);
+                    trumpCard,
+                    ledCard);
 
                 SubmitPlayerAction(chosen?.Id);
             }
@@ -238,7 +257,9 @@ namespace TwentyFiveDotNet.Core.Game
 
         public void SubmitPlayerAction(int? chosenCardID)
         {
-            switch (_gameState.PendingDecisionType)
+            var pendingDecisionType = _gameState.GetPendingDecisionTypeOrThrow();
+
+            switch (pendingDecisionType)
             {
 
                 case PlayerDecisionType.FlipTrump:
@@ -264,10 +285,12 @@ namespace TwentyFiveDotNet.Core.Game
 
         public Card ValidateCard(int? chosenCardID)
         {
+            var pendingOptions = _gameState.GetPendingOptionsOrThrow();
+
             if (chosenCardID == null)
                 throw new InvalidOperationException("No card selected.");
 
-            var card = _gameState.PendingOptions
+            var card = pendingOptions
                 .FirstOrDefault(c => c.Id == chosenCardID.Value);
 
             return card ?? throw new InvalidOperationException("Selected card is not legal.");
@@ -328,7 +351,7 @@ namespace TwentyFiveDotNet.Core.Game
                 DealCards(deck, players, dealer);
             }
 
-            OnDealingCompleted?.Invoke(_gameState);
+            OnDealingCompleted?.Invoke(_gameState.CreateSnapshot());
 
             _gameState.SetTrumpCard(deck.Draw());
 
