@@ -36,7 +36,7 @@ public class UIActionQueue : MonoBehaviour
         {
             var item = queue.Dequeue();
 
-            yield return StartCoroutine(item.coroutine());
+            yield return item.coroutine();
 
             if (item.delayAfter > 0f)
                 yield return new WaitForSeconds(item.delayAfter);

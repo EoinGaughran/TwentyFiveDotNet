@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Models;
@@ -234,32 +235,17 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var trumpCardID = trumpCard.Id;
         var trumpTransform = _tablePanelUI.GetStatusCardTransform(StatusCardType.TrumpCard);
 
-        
-        if(_tablePanelUI.TryGetStatusCardUI(StatusCardType.TrumpCard, out var trumpCardUI))
-        {
-            _actionQueue.EnqueueUI(0f, () =>
-                _playerPanelUI.MoveCardToPlayerHand(stealingPlayerID, trumpCardUI)
-            );
-
-            _actionQueue.EnqueueUI(0f, () =>
-            {
-                _consoleLogUI.AppendText($"{stealingPlayerName} stole {trumpCardName}.");
-                _announcementUI.Show($"{stealingPlayerName} stole the Trump Card");
-            });
-
-            _actionQueue.EnqueueUI(0f, () =>
-                _tablePanelUI.CreateGhostTrump(trumpCardUI)
-            );
-        }
-        else
-        {
-            Debug.LogError($"No CardUI found for card ID {trumpCardID}");
-        }
-
+        _actionQueue.EnqueueUI(
+            2.0f,
+            () => HandlePlayerStealRoutine(
+                stealingPlayerID,
+                stealingPlayerName,
+                trumpCardName,
+                trumpCardID));
 
         if (player is PlayerCPU)
         {
-            _actionQueue.EnqueueUI(2.0f, () =>
+            _actionQueue.EnqueueUI(0f, () =>
             {
                 if (_cardUIFactory.TryGetCardUI(trumpCardID, out var playedCardUI))
                 {
@@ -271,6 +257,35 @@ public class GameUI : MonoBehaviour, IGameInteraction
                     return;
                 }
             });
+        }
+    }
+
+    private IEnumerator HandlePlayerStealRoutine(
+    int stealingPlayerID,
+    string stealingPlayerName,
+    string trumpCardName,
+    int trumpCardID)
+    {
+        if (_tablePanelUI.TryGetStatusCardUI(
+            StatusCardType.TrumpCard,
+            out var trumpCardUI))
+        {
+            yield return _playerPanelUI.MoveCardToPlayerHand(
+                stealingPlayerID,
+                trumpCardUI);
+
+            _consoleLogUI.AppendText(
+                $"{stealingPlayerName} stole {trumpCardName}.");
+
+            _announcementUI.Show(
+                $"{stealingPlayerName} stole the Trump Card");
+
+            _tablePanelUI.CreateGhostTrump(trumpCardUI);
+        }
+        else
+        {
+            Debug.LogError(
+                $"No CardUI found for card ID {trumpCardID}");
         }
     }
 
@@ -287,56 +302,66 @@ public class GameUI : MonoBehaviour, IGameInteraction
     private void HandleCardPlayed(CardPlayedEvent e)
     {
         var player = e.Player;
-        var playerName = e.Player.Name;
-        var playerID = e.Player.Id;
+        var playerName = player.Name;
+        var playerID = player.Id;
         var playedCardName = e.PlayedCard.ToString();
         var playedCardID = e.PlayedCard.Id;
         var ledSuit = e.PlayedCard.GetSuitSymbolUnicoded();
         var isLeader = e.IsLeader;
-        var playedCard = e.PlayedCard;
-        var ledCardTransform = _tablePanelUI.GetStatusCardTransform(StatusCardType.LedCard);
+
+        _actionQueue.EnqueueUI(
+            2f,
+            () => HandleCardPlayedRoutine(
+                player,
+                playerName,
+                playerID,
+                playedCardID,
+                playedCardName,
+                ledSuit,
+                isLeader));
+    }
+
+    private IEnumerator HandleCardPlayedRoutine(
+    Player player,
+    string playerName,
+    int playerID,
+    int playedCardID,
+    string playedCardName,
+    string ledSuit,
+    bool isLeader)
+    {
+        if (!_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
+        {
+            Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
+            yield break;
+        }
 
         if (player is PlayerCPU)
         {
-            _actionQueue.EnqueueUI(2.0f, () =>
-            {
-                if (_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
-                {
-                    playedCardUI.FlipCard();
-                }
-                else
-                {
-                    Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
-                    return;
-                }
-            });
+            playedCardUI.FlipCard();
+            yield return new WaitForSeconds(1f);
         }
 
-        _actionQueue.EnqueueUI(2.0f, () =>
+        yield return _playerPanelUI.MoveCardToPlayedCards(
+            playerID,
+            playedCardUI);
+
+        yield return new WaitForSeconds(1f);
+
+        if (isLeader)
         {
-            if (!_cardUIFactory.TryGetCardUI(playedCardID, out var playedCardUI))
-            {
-                Debug.LogError($"No CardUI found for card ID {playedCardID} belonging to {playerName}");
-                return;
-            }
+            _consoleLogUI.AppendText(
+                $"{playerName} led with the {playedCardName}.\nSuit {ledSuit} is leading.");
 
-            if (isLeader)
-            {
-                _consoleLogUI.AppendText($"{playerName} led with the {playedCardName}." +
-                    $"\n Suit {ledSuit} is leading.");
-
-                CardUI statusCardUI = _cardUIFactory.CreateInfoCardUI(playedCard, false, ledCardTransform);
-
-                _tablePanelUI.AddCardToStatusSlot(statusCardUI, StatusCardType.LedCard);
-            }
-            else
-            {
-                _consoleLogUI.AppendText($"{playerName} played {playedCard}");
-            }
-            
-            if(!_playerPanelUI.MoveCardToPlayedCards(playerID, playedCardUI))
-                Debug.LogError($"Failed to move cardID {playedCardID} belonging to {playerName} to the played card area.");
-        });
+            yield return _tablePanelUI.AddCardToStatusSlot(
+                playedCardUI,
+                StatusCardType.LedCard);
+        }
+        else
+        {
+            _consoleLogUI.AppendText(
+                $"{playerName} played {playedCardName}");
+        }
     }
 
     private void HandlePlayerInput(

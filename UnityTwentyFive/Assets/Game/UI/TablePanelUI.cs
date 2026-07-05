@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TwentyFiveDotNet.Core.Models;
 using UnityEngine;
@@ -61,14 +62,22 @@ public class TablePanelUI : MonoBehaviour
         statusCardUIs[statusCardType] = statusCardUI;
     }
 
-    public void AddCardToStatusSlot(CardUI statusCard, StatusCardType statusCardType)
+    public IEnumerator AddCardToStatusSlot(CardUI playedCard, StatusCardType statusCardType)
     {
         DestroyStatusCard(statusCardType);
 
         Transform transform = GetStatusCardTransform(statusCardType);
+        CardUI statusCard = playedCard.Clone(transform);
 
-        statusCard.transform.SetParent(transform, false);
-        statusCard.SetupRect();
+        statusCard.SetCardSize(CardSize.Large);
+        statusCard.SetHidden(true);
+
+        Vector3 startPosition = playedCard.transform.position;
+
+        yield return _animateCardManager.AnimateMove(statusCard, startPosition);
+
+        yield return new WaitForSeconds(0.12f);
+
         statusCard.Highlight(3);
     }
 
