@@ -12,6 +12,7 @@ public class TablePanelUI : MonoBehaviour
     [SerializeField] private Transform trumpSlot;
     [SerializeField] private Transform ledCardSlot;
     [SerializeField] private Transform winningCardSlot;
+    [SerializeField] private CardAnimator _animateCardManager;
 
     private readonly Dictionary<StatusCardType, CardUI> statusCardUIs = new();
 
@@ -69,6 +70,13 @@ public class TablePanelUI : MonoBehaviour
         statusCard.transform.SetParent(transform, false);
         statusCard.SetupRect();
         statusCard.Highlight(3);
+    }
+
+    public void CreateGhostTrump(CardUI trumpCard)
+    {
+        CardUI ghostTrump = trumpCard.Clone(trumpSlot);
+        ghostTrump.SetTransparentStyle();
+        ghostTrump.SetCardSize(CardSize.Large);
     }
 
     public void MoveCardToStatusSlot(CardUI statusCard, StatusCardType statusCardType)

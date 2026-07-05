@@ -98,15 +98,22 @@ public class PlayerPanelUI : MonoBehaviour
         return false;
     }
 
-    public void AddCardToPlayerHand(int playerID, CardUI cardUI)
+    public IEnumerator MoveCardToPlayerHand(int playerID, CardUI cardUI)
     {
         PlayerUI ui = GetPlayerUI(playerID);
 
         if(playerID != 0)
             cardUI.SetCardSize(CardSize.Small);
 
+        Vector3 startPosition = cardUI.transform.position;
+
+        cardUI.transform.SetParent(ui.HandParent, false);
+
         ui.SetUpCardInHand(cardUI);
-        //cardUI.AnimateTo
+
+        yield return _animateCardManager.AnimateMove(cardUI, startPosition);
+
+        yield return new WaitForSeconds(0.12f);
     }
     public PlayerUI GetPlayerUI(int playerID)
     {
@@ -148,7 +155,18 @@ public class PlayerPanelUI : MonoBehaviour
 
         foreach (int playerId in playerIdsInTurnOrder)
         {
-            yield return DealCardsToPlayer(snapshots[playerId], startPosition);
+            var amount = playerId == dealerPlayerId ? 2 : 3;
+
+            for (int i = 0; i < amount; i++)
+                yield return DealCardsToPlayer(snapshots[playerId], startPosition);
+        }
+
+        foreach (int playerId in playerIdsInTurnOrder)
+        {
+            var amount = playerId == dealerPlayerId ? 3 : 2;
+
+            for (int i = 0; i < amount; i++)
+                yield return DealCardsToPlayer(snapshots[playerId], startPosition);
         }
     }
 
@@ -158,14 +176,12 @@ public class PlayerPanelUI : MonoBehaviour
     {
         Debug.Log($"{this} called. player.CardUIs.Count: {player.CardUIs.Count}");
 
-        for (int i = 0; i < player.CardUIs.Count; i++)
-        {
-            yield return _animateCardManager.AnimateMove(player.CardUIs[i], startPosition);
+        CardUI card = player.CardUIs[player.NextCardIndex];
+        player.NextCardIndex++;
 
-            yield return new WaitForSeconds(0.12f);
-        }
+        yield return _animateCardManager.AnimateMove(card, startPosition);
 
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(0.12f);
     }
 
     private List<int> GetPlayerIdsStartingFromLeader(int leaderPlayerId)

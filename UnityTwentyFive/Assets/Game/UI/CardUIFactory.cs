@@ -42,7 +42,7 @@ public class CardUIFactory : MonoBehaviour
         return cardUI;
     }
 
-    public CardUI CreateAnimationCardUI(Card card, bool isCPU, Transform parent)
+    public CardUI CreateInfoCardUI(Card card, bool isCPU, Transform parent)
     {
         CardUI cardUI = CreateCardUI(card, isCPU, parent);
 

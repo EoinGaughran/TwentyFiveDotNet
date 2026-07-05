@@ -76,9 +76,9 @@ public class GameUI : MonoBehaviour, IGameInteraction
         });
     }
 
-    private void HandleDealCompleted(GameState gameState)
+    private void HandleDealCompleted(GameSnapshot gameState)
     {
-        var players = gameState.Players.ToList();
+        var players = gameState.Players;
 
         var dealtHandsSnapshot = gameState.Players
             .Select(player => new DealtPlayerSnapshot
@@ -88,9 +88,11 @@ public class GameUI : MonoBehaviour, IGameInteraction
             })
             .ToList();
 
-        var deckCount = gameState.Deck.Cards.Count;
+        var deckCount = gameState.DeckCount;
         var deckTransform = _tablePanelUI.GetDeckSlot();
         var dealtCardUIs = new List<DealtPlayerCardUISnapshot>();
+        var dealerID = gameState.Dealer.Id;
+        var leaderID = gameState.Leader.Id;
 
         _actionQueue.EnqueueUI(1f, () =>
         {
@@ -135,8 +137,8 @@ public class GameUI : MonoBehaviour, IGameInteraction
             _playerPanelUI.AnimateDealToPlayers(
                 dealtCardUIs,
                 deckTransform.position,
-                0,
-                1
+                leaderID,
+                dealerID
         ));
     }
 
@@ -232,26 +234,28 @@ public class GameUI : MonoBehaviour, IGameInteraction
         var trumpCardID = trumpCard.Id;
         var trumpTransform = _tablePanelUI.GetStatusCardTransform(StatusCardType.TrumpCard);
 
-        _actionQueue.EnqueueUI(2.0f, () =>
+        
+        if(_tablePanelUI.TryGetStatusCardUI(StatusCardType.TrumpCard, out var trumpCardUI))
         {
-            if(_tablePanelUI.TryGetStatusCardUI(StatusCardType.TrumpCard, out var trumpCardUI))
-            {
-                _announcementUI.Show($"{stealingPlayerName} stole the Trump Card");
+            _actionQueue.EnqueueUI(0f, () =>
+                _playerPanelUI.MoveCardToPlayerHand(stealingPlayerID, trumpCardUI)
+            );
 
-                _playerPanelUI.AddCardToPlayerHand(stealingPlayerID, trumpCardUI);
+            _actionQueue.EnqueueUI(0f, () =>
+            {
                 _consoleLogUI.AppendText($"{stealingPlayerName} stole {trumpCardName}.");
+                _announcementUI.Show($"{stealingPlayerName} stole the Trump Card");
+            });
 
-                CardUI cardUI = _cardUIFactory.CreateAnimationCardUI(trumpCard, false, trumpTransform);
-                cardUI.SetTransparentStyle();
-                cardUI.SetupRect();
-                //_tablePanelUI.AddCardToStatusSlot(cardUI, StatusCardType.TrumpCard);
+            _actionQueue.EnqueueUI(0f, () =>
+                _tablePanelUI.CreateGhostTrump(trumpCardUI)
+            );
+        }
+        else
+        {
+            Debug.LogError($"No CardUI found for card ID {trumpCardID}");
+        }
 
-            }
-            else
-            {
-                Debug.LogError($"No CardUI found for card ID {trumpCardID}");
-            }
-        });
 
         if (player is PlayerCPU)
         {
@@ -321,7 +325,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 _consoleLogUI.AppendText($"{playerName} led with the {playedCardName}." +
                     $"\n Suit {ledSuit} is leading.");
 
-                CardUI statusCardUI = _cardUIFactory.CreateAnimationCardUI(playedCard, false, ledCardTransform);
+                CardUI statusCardUI = _cardUIFactory.CreateInfoCardUI(playedCard, false, ledCardTransform);
 
                 _tablePanelUI.AddCardToStatusSlot(statusCardUI, StatusCardType.LedCard);
             }
@@ -399,7 +403,7 @@ public class GameUI : MonoBehaviour, IGameInteraction
                 _announcementUI.Show($"{playerName} got their dealer's trick.");
             }
 
-            CardUI winningCardUI = _cardUIFactory.CreateAnimationCardUI(playedCard, false, winningCardTransform);
+            CardUI winningCardUI = _cardUIFactory.CreateInfoCardUI(playedCard, false, winningCardTransform);
 
             _consoleLogUI.AppendText($"{playerName} is currently winning with the {winningCardName}.");
 

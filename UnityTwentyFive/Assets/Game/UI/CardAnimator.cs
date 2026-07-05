@@ -10,6 +10,9 @@ public class CardAnimator : MonoBehaviour
         CardUI AnimCardUI = cardUI.Clone(AnimationLayer);
 
         AnimCardUI.transform.position = startPosition;
+
+        Debug.Log($"Moving {AnimCardUI} from {startPosition} to {cardUI.transform.position}");
+
         cardUI.SetHidden(true);
         AnimCardUI.SetHidden(true);
 

@@ -18,7 +18,7 @@ public class TestSceneController : MonoBehaviour
             Rank = Card.Ranks.Two
         };
 
-        testCardUI = _cardUIFactory.CreateAnimationCardUI(testCard, true, cardSlot);
+        testCardUI = _cardUIFactory.CreateInfoCardUI(testCard, true, cardSlot);
 
         testCardUI.SetupRect();
 
